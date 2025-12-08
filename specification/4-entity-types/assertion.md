@@ -38,6 +38,34 @@ assertions:
 - Entity ID is the map key (`assertion-john-birth-date`)
 - IDs can be descriptive or random, 1-64 alphanumeric/hyphens
 
+## Fields
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Entity ID (map key) | string | Unique identifier (alphanumeric/hyphens, 1-64 chars) |
+| `subject` | string | The entity this assertion is about |
+| `claim` OR `participant` | string/object | Either a claim string or participant object (mutually exclusive) |
+| `citations` OR `sources` | array | At least one required for evidence |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `value` | string | The concluded value of the claim (not used with participant) |
+| `confidence` | string | Confidence level (defined in archive vocabulary) |
+| `notes` | string | General notes about the assertion |
+| `tags` | array | Tags for categorization |
+
+### Participant Object Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `person` | string | Yes | Reference to the person entity |
+| `role` | string | No | Role of the participant |
+| `notes` | string | No | Notes about this participant |
+
 ## Required Fields
 
 ### Entity ID (map key)
@@ -60,11 +88,11 @@ Example:
 subject: person-john-smith
 ```
 
-### `claim`
+### `claim` (or `participant`)
 
-- Type: String
-- Required: Yes
-- Description: The property or fact being claimed
+- Type: String (for `claim`) or Object (for `participant`)
+- Required: One of `claim` or `participant` must be present (mutually exclusive)
+- Description: Either a property/fact being claimed, or a participant object for event/relationship participation
 
 Common claim types:
 - `born_on` - Birth date
@@ -84,6 +112,15 @@ claim: occupation
 At least ONE of the following is required:
 - `citations` - Array of citation IDs
 - `sources` - Array of source IDs (direct source references)
+
+**When to use each:**
+
+- **`citations`** (preferred): When you have specific details about where in a source the evidence is found - page 23, entry 145, specific URL. This is rigorous and allows others to find the exact evidence.
+
+- **`sources`** (direct): When the source doesn't need sub-location details:
+  - Single-page documents (birth certificate) where a citation adds no value
+  - Photographs or brief documents without meaningful subdivisions
+  - Preliminary research where you'll add specific citations later
 
 Example:
 ```yaml
@@ -110,7 +147,6 @@ participant:
 
 **Key Points:**
 - When `participant` is present, `claim` and `value` must NOT be present
-- When `participant` is present, the implicit claim is "participant"
 - Useful for representing conflicting evidence about who participated in an event or relationship
 
 Example:
@@ -145,11 +181,13 @@ value: blacksmith
 - Required: No
 - Description: Confidence level based on evidence quality
 
-Standard levels:
-- `high` - Multiple primary sources agree
-- `medium` - Some conflicting evidence, but preponderance supports
-- `low` - Limited evidence, requires more research
+Confidence levels and their criteria are defined in each archive's `vocabularies/confidence-levels.glx` file. The standard vocabulary provides these defaults:
+- `high` - Multiple high-quality sources agree, minimal uncertainty
+- `medium` - Some evidence supports conclusion, but conflicts or gaps exist
+- `low` - Limited evidence, significant uncertainty
 - `disputed` - Multiple sources conflict, resolution unclear
+
+Archives can customize these descriptions or add additional levels to match their research methodology.
 
 **See [Vocabularies - Confidence Levels](vocabularies.md#confidence-levels-vocabulary) for:**
 - Customizing confidence level definitions for your archive
@@ -161,68 +199,11 @@ Example:
 confidence: high
 ```
 
-### `research_notes`
-
-- Type: String
-- Required: No
-- Description: Detailed research notes explaining the conclusion
-
-Example:
-```yaml
-research_notes: |
-  Two conflicting sources:
-  - Birth certificate: January 15, 1850 (preferred, higher quality)
-  - Baptism record: January 20, 1850 (5-day delay common)
-  
-  Certificate takes precedence as primary direct evidence.
-```
-
-### `evidence_type`
-
-- Type: String
-- Required: No
-- Description: Quality classification of evidence
-
-Values:
-- `primary-direct` - Created at time of event by witness
-- `primary-indirect` - Created at time, but not direct witness
-- `secondary-direct` - Later account from witness
-- `secondary-indirect` - Later account from non-witness
-
-Example:
-```yaml
-evidence_type: primary-direct
-```
-
-### `type`
-
-- Type: String
-- Required: No
-- Description: Classification of assertion type
-
-Example:
-```yaml
-type: biographical
-```
-
 ### `notes`
 
 - Type: String
 - Required: No
 - Description: General notes about the assertion
-
-### Provenance Fields
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `modified_at` | datetime | When last modified |
-| `modified_by` | string | Who last modified |
-
-Example:
-```yaml
-modified_at: "2024-03-20T14:15:00Z"
-modified_by: researcher-john
-```
 
 ### `tags`
 
@@ -302,7 +283,7 @@ assertions:
     citations:
       - citation-family-letter
     confidence: low
-    research_notes: |
+    notes: |
       Conflicting evidence about paternity:
       - Birth certificate (primary source): John Smith
       - Family letter (secondary source): Thomas Brown
@@ -341,7 +322,6 @@ assertions:
       - citation-trade-directory
       - citation-parish-record
     confidence: high
-    evidence_type: secondary-direct
 ```
 
 ### Assertion with Conflicting Evidence
@@ -357,7 +337,7 @@ assertions:
       - citation-birth-cert       # Says March 10
       - citation-family-bible      # Says March 12
     confidence: medium
-    research_notes: |
+    notes: |
       Birth certificate (primary source) says March 10, 1852.
       Family Bible (secondary source) says March 12, 1852.
       
@@ -380,7 +360,6 @@ assertions:
       - citation-1851-census
       - citation-directory-1851
     confidence: high
-    evidence_type: primary-direct
     notes: "Residence at time of 1851 census"
     tags:
       - census-derived
@@ -399,7 +378,7 @@ assertions:
     citations:
       - citation-death-cert-age
     confidence: low
-    research_notes: |
+    notes: |
       No birth record found. Age at death (1900) reported as 75,
       suggesting birth around 1825. However, age reporting in 
       death certificates is often approximate.
@@ -414,25 +393,18 @@ assertions:
 
 ## Evidence Quality and Confidence
 
-Assertions connect evidence quality (from citations) to confidence in conclusions:
-
-### Citation Quality Scale (GEDCOM QUAY)
-
-| Quality | Description | Example |
-|---------|-------------|---------|
-| 0 | Unreliable | Unverified online tree |
-| 1 | Questionable | Secondary source with errors |
-| 2 | Secondary | Death certificate for birth info |
-| 3 | Primary | Birth certificate |
+Assertions connect evidence (from citations) to conclusions with a certain level of confidence.
 
 ### Assertion Confidence
 
+The standard vocabulary defines these default confidence levels (archives may customize):
+
 | Confidence | Criteria | Example |
 |------------|----------|---------|
-| `high` | Multiple quality-3 sources agree | 3 birth certificates with same date |
-| `medium` | Preponderance of evidence, some conflict | 2 sources agree, 1 disagrees |
-| `low` | Limited evidence, needs research | Only one low-quality source |
-| `disputed` | Conflicting evidence, no clear resolution | Multiple primary sources disagree |
+| `high` | Multiple high-quality sources agree, minimal uncertainty | 3 birth certificates with same date |
+| `medium` | Some evidence supports, but conflicts or gaps exist | 2 sources agree, 1 disagrees |
+| `low` | Limited evidence, significant uncertainty | Only one low-quality source |
+| `disputed` | Multiple sources conflict, resolution unclear | Multiple primary sources disagree |
 
 ## Validation Rules
 
@@ -441,7 +413,6 @@ Assertions connect evidence quality (from citations) to confidence in conclusion
 - All citation references must point to existing Citation entities
 - All source references must point to existing Source entities
 - `confidence` should be one of: `high`, `medium`, `low`, `disputed`
-- `evidence_type` should follow standard classifications if used
 
 ## File Organization
 
@@ -522,8 +493,11 @@ GENEALOGIX Equivalent:
 persons:
   person-john-smith:
     properties:
-      given_name: "John"
-      family_name: "Smith"
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
 
 assertions:
   assertion-john-birth:

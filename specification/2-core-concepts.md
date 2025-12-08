@@ -42,16 +42,14 @@ citations:
   citation-birth-certificate:
     source: source-gro-register
     locator: "Certificate 1850-LEEDS-00145"
-    quality: 3
-    transcription: "John Smith, born January 15, 1850"
+    text_from_source: "John Smith, born January 15, 1850"
 ```
 
 ### Benefits of This Approach
 1. **Multiple Evidence**: One assertion can reference multiple citations
-2. **Quality Assessment**: Each citation includes evidence quality (0-3 scale)
-3. **Conflicting Evidence**: Multiple assertions can exist for the same fact
-4. **Research Transparency**: Clear audit trail from source to conclusion
-5. **Confidence Levels**: Assertions can express certainty based on evidence
+2. **Conflicting Evidence**: Multiple assertions can exist for the same fact
+3. **Research Transparency**: Clear audit trail from source to conclusion
+4. **Confidence Levels**: Assertions can express certainty based on evidence
 
 ### Entity Properties vs. Assertions
 
@@ -62,8 +60,11 @@ In addition to assertions (which provide evidence), GENEALOGIX entities can have
 persons:
   person-john:
     properties:
-      given_name: "John"
-      family_name: "Smith"
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
       born_on: "1850-01-15"
       occupation: "blacksmith"
     notes: "Initial data entry"
@@ -114,56 +115,6 @@ Location   Material  Reference  Evidence  Conclusion
 - Links between citation and assertion or directly to sources
 - See [Media Entity](4-entity-types/media.md) for details
 
-### Quality Rating Scale
-
-GENEALOGIX supports a **0-3 quality scale** primarily for GEDCOM compatibility:
-
-| Rating | GEDCOM QUAY Equivalent |
-|--------|------------------------|
-| **3** | QUAY 3 |
-| **2** | QUAY 2 |
-| **1** | QUAY 1 |
-| **0** | QUAY 0 |
-
-**Important Notes:**
-- **Meaning is archive-defined**: Each archive can define what these ratings mean in their `vocabularies/quality-ratings.glx` file
-- **GEDCOM compatibility**: This scale provides 1:1 mapping with GEDCOM 5.5.1 QUAY values
-- **Quality is optional**: Archives can omit citation quality ratings entirely
-- **Use confidence instead**: Researchers can rely solely on assertion `confidence` levels (high/medium/low/disputed) rather than citation quality
-
-**Example Quality Vocabulary (Optional):**
-```yaml
-# vocabularies/quality-ratings.glx
-quality_ratings:
-  3:
-    label: "Primary source"
-    description: "Original document created at time of event"
-  2:
-    label: "Secondary source"
-    description: "Record created after event"
-  1:
-    label: "Questionable"
-    description: "Conflicting or unreliable evidence"
-  0:
-    label: "Estimated"
-    description: "No direct evidence, estimated from other data"
-```
-
-### Evidence Quality Assessment
-
-Genealogists traditionally evaluate evidence quality along multiple dimensions:
-
-**Common Dimensions:**
-- **Primary vs Secondary**: When was information recorded relative to event?
-- **Direct vs Indirect**: Does source explicitly state the fact?
-- **Original vs Derivative**: First-hand account or copy/transcription?
-- **Informant**: Who provided the information and their relationship to facts?
-
-**GENEALOGIX Approach:**
-- Quality dimensions inform the **citation quality rating** (if used)
-- Overall assessment captured in **assertion confidence level**
-- Detailed analysis documented in **research notes**
-
 ### Evidence Chain Example
 
 ```yaml
@@ -184,7 +135,6 @@ citations:
   citation-john-birth:
     source: source-birth-register
     locator: "Volume 23, Page 145, Entry 23"
-    quality: 3
 
 # assertions/assertion-john-born.glx
 assertions:
@@ -221,8 +171,6 @@ assertions:
       - citation-1851-census
       - citation-trade-directory
       - citation-parish-record
-    created_by: researcher-jane-smith
-    created_at: "2024-03-15T10:00:00Z"
 ```
 
 #### 2. Change Tracking with Git
@@ -248,7 +196,7 @@ assertions:
     claim: birth_date
     value: "1850-01-15"
     confidence: medium
-    research_notes: |
+    notes: |
       Two conflicting sources:
       - Birth certificate: January 15, 1850 (preferred, higher quality)
       - Baptism record: January 20, 1850 (5-day delay common)
@@ -264,9 +212,9 @@ assertions:
 Assertions include confidence levels based on evidence quality:
 ```yaml
 confidence_levels:
-  high:    "Multiple primary sources agree"
-  medium:  "Some conflicting evidence, but preponderance supports"
-  low:     "Limited evidence, requires more research"
+  high:    "Multiple high-quality sources agree, minimal uncertainty"
+  medium:  "Some evidence supports conclusion, but conflicts or gaps exist"
+  low:     "Limited evidence, significant uncertainty"
   disputed: "Multiple sources conflict, resolution unclear"
 ```
 
@@ -416,13 +364,19 @@ places:
 persons:
   person-john-smith:
     properties:
-      given_name: "John"
-      family_name: "Smith"
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
 
   person-mary-brown:
     properties:
-      given_name: "Mary"
-      family_name: "Brown"
+      name:
+        value: "Mary Brown"
+        fields:
+          given: "Mary"
+          surname: "Brown"
 
 events:
   event-wedding:
@@ -444,12 +398,27 @@ Unlike traditional genealogy formats with fixed type systems, GENEALOGIX uses **
 
 ### Why Archive-Level Vocabularies?
 
-1. **Autonomy**: No dependency on external registries or services
-2. **Flexibility**: Each archive can define types specific to its research context
-3. **Versioning**: Vocabulary changes are tracked with the archive in Git
-4. **Offline Work**: No internet connection required for validation
-5. **Collaboration**: Teams discuss and agree on types within their repository
-6. **Standards + Custom**: Provides standard types while allowing extensions
+This is one of GENEALOGIX's most powerful features: **each archive controls its own type system**.
+
+#### Freedom and Flexibility
+Unlike formats with centrally-defined types, GLX lets each archive define exactly what it needs:
+
+- **Genealogy**: Use standard relationship types (marriage, parent-child, adoption)
+- **Colonial History**: Add custom types (indenture, manumission, land_grant)
+- **Religious Studies**: Define custom events (ordination, investiture, pilgrimage)
+- **Biography**: Create domain-specific relationships (mentor-mentee, patron-artist)
+- **Local History**: Track community roles (town_selectman, guild_master)
+- **And more**: Any research domain with people, events, and relationships
+
+#### Autonomy Without Chaos
+You get both standardization AND flexibility:
+
+1. **Standard starter vocabularies**: New archives begin with common genealogy types
+2. **Extend as needed**: Add custom types specific to your research
+3. **Archive-owned**: No central committee, no approval process
+4. **Git-versioned**: Vocabulary changes tracked with your data
+5. **Validated**: The CLI ensures all used types are defined
+6. **Collaborative**: Teams discuss and agree on types within the repository
 
 ### Standard Vocabulary Files
 
@@ -464,28 +433,64 @@ vocabularies/
   participant-roles.glx   # Principal, witness, godparent, etc.
   media-types.glx         # Photo, document, audio, etc.
   confidence-levels.glx   # High, medium, low, disputed
-  quality-ratings.glx     # 0-3 evidence quality scale
 ```
 
-### Custom Type Example
+### Examples of Custom Vocabularies
 
-Archives can extend standard vocabularies with custom types:
+#### Maritime Genealogy
+```yaml
+# vocabularies/event-types.glx
+event_types:
+  ship_departure:
+    label: "Ship Departure"
+    description: "Departure on a sea voyage"
 
+  shipwreck:
+    label: "Shipwreck"
+    description: "Vessel lost at sea"
+```
+
+#### Academic Biography
 ```yaml
 # vocabularies/relationship-types.glx
 relationship_types:
-  # Standard types
-  marriage:
-    label: "Marriage"
-    description: "Legal or religious union"
-    gedcom: "MARR"
-  
-  # Custom types for this archive's research
-  blood-brother:
-    label: "Blood Brother"
-    description: "Non-biological brotherhood bond through ceremony"
-    custom: true
+  doctoral_advisor:
+    label: "Doctoral Advisor"
+    description: "PhD thesis advisor relationship"
+
+  academic_rivalry:
+    label: "Academic Rivalry"
+    description: "Documented professional competition"
 ```
+
+#### Enslaved Persons Research
+```yaml
+# vocabularies/event-types.glx
+event_types:
+  manumission:
+    label: "Manumission"
+    description: "Legal grant of freedom"
+    gedcom: "EVEN"
+
+  sale:
+    label: "Sale"
+    description: "Record of person being sold"
+    gedcom: "EVEN"
+```
+
+### No Limits, No Boundaries
+
+**Traditional genealogy formats say**: "You can only use these predefined types"
+
+**GENEALOGIX says**: "Define whatever types your research needs"
+
+This makes GLX suitable for:
+- Traditional family history
+- Local and community history
+- Biographical research
+- Prosopography (collective biography)
+- Historical demography
+- Any research involving people, events, and relationships
 
 ### Validation
 

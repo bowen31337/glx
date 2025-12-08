@@ -50,19 +50,20 @@ Places support multiple names to represent:
 
 Each name can be classified and dated.
 
-## Properties
+## Fields
 
-### Required Properties
+### Required Fields
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | Entity ID (map key) | string | Unique identifier (alphanumeric/hyphens, 1-64 chars) |
 | `name` | string | Current/primary place name |
 
-### Optional Properties
+### Optional Fields
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Field | Type | Description |
+|-------|------|-------------|
+| `properties` | object | Vocabulary-defined properties of the place |
 | `parent` | string | Reference to parent place in hierarchy |
 | `type` | string | Place type from `vocabularies/place-types.glx` |
 | `alternative_names` | array | Historical/alternative names for this place |
@@ -71,6 +72,7 @@ Each name can be classified and dated.
 | `jurisdiction` | string | Formal jurisdiction identifier or code |
 | `place_format` | string | Standard format for place hierarchy (GEDCOM PLAC.FORM style) |
 | `notes` | string | Free-form notes about the place |
+| `tags` | array | Tags for categorization |
 
 ## Place Types
 
@@ -118,14 +120,14 @@ Places can be components of addresses within person records or residence events:
 ```yaml
 residence:
   place: "place-leeds123"
-  date: "1850-1900"
+  date: "FROM 1850 TO 1900"
 ```
 
 ## GEDCOM Mapping
 
 | GLX Property | GEDCOM Element | Notes |
 |--------------|----------------|-------|
-| `id` | (synthetic) | Not in GEDCOM; generated from place data |
+| Entity ID (map key) | (synthetic) | Not in GEDCOM; generated from place data |
 | `name` | PLAC | Text value of PLAC tag |
 | `parent` | (implicit) | Represented in hierarchical PLAC structure |
 | `type` | PLAC.TYPE | Non-standard; used in extended GEDCOM |
@@ -168,6 +170,30 @@ places:
     notes: "Historical registration district for civil registration purposes"
 ```
 
+### Place with Temporal Properties
+
+```yaml
+# places/place-new-york.glx
+places:
+  place-new-york-city:
+    name: "New York City"
+    type: city
+    parent: place-new-york-state
+    latitude: 40.7128
+    longitude: -74.0060
+    properties:
+      population:
+        - value: 60515
+          date: "1800"
+        - value: 202589
+          date: "1830"
+        - value: 3437202
+          date: "1900"
+        - value: 8336817
+          date: "2020"
+      existed_from: "1624"
+```
+
 ## File Organization
 
 **Note:** File organization is flexible. Entities can be in any .glx file with any directory structure. The example below shows one-entity-per-file organization, which is recommended for collaborative projects (better git diffs) but not required.
@@ -195,7 +221,6 @@ places/
 - Place hierarchy must be acyclic (no circular parent references)
 - Coordinates, if present, must be valid WGS84 values
 - Parent place must exist before referencing it
-- At least one name (primary or alternative) must exist
 - Type should follow standardized taxonomy
 
 ## See Also

@@ -3,8 +3,17 @@
 
 *.tmp
 *.bak
-.DS_Store
-Thumbs.db
+
+# Go build artifacts
+bin/
+*.exe
+*.test
+
+# Go coverage reports
+coverage/
+coverage.out
+coverage*.html
+coverage*.out
 
 # Node.js
 node_modules/
@@ -31,6 +40,3 @@ website/.vitepress/cache
 .Trashes
 ehthumbs.db
 Thumbs.db
-bin/
-coverage*.html
-coverage*.out

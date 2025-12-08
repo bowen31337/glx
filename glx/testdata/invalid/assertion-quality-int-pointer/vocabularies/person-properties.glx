@@ -1,6 +1,0 @@
-person_properties:
-  given_name:
-    label: "Given Name"
-    value_type: string
-
-

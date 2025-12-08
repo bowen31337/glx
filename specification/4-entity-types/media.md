@@ -37,7 +37,28 @@ media:
 - Entity ID is the map key (`media-birth-cert-scan`)
 - IDs can be descriptive or random, 1-64 alphanumeric/hyphens
 
-## Required Fields
+## Fields
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Entity ID (map key) | string | Unique identifier (alphanumeric/hyphens, 1-64 chars) |
+| `uri` | string | Location of the media file |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Media type from `vocabularies/media-types.glx` |
+| `mime_type` | string | MIME type of the media |
+| `hash` | string | Content hash for verification |
+| `title` | string | Title of the media |
+| `description` | string | Description of the media |
+| `notes` | string | Free-form notes |
+| `tags` | array | Tags for categorization |
+
+## Required Fields (Detailed)
 
 ### Entity ID (map key)
 
@@ -205,19 +226,15 @@ Example:
 file_size: 2458624
 ```
 
-### Provenance Fields
+### Other Fields
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `modified_at` | datetime | When last modified |
-| `modified_by` | string | Who last modified |
+| Field | Type | Description |
+|-------|------|-------------|
 | `notes` | string | Research notes about the media |
 | `tags` | array | Tags for categorization |
 
 Example:
 ```yaml
-modified_at: "2024-03-20T14:15:00Z"
-modified_by: researcher-john
 tags:
   - original-document
   - high-quality-scan

@@ -6,42 +6,42 @@ layout: doc
 
 # GENEALOGIX Specification
 
-Version 0.0.0-beta.1 (Beta)
+Version 0.0.0-beta.2 (Beta)
 
 ## Table of Contents
 
-1. [Introduction](1-introduction.md)
+1. [Introduction](1-introduction)
    - Purpose and Scope
    - Design Principles
    - Terminology
 
-2. [Core Concepts](2-core-concepts.md)
+2. [Core Concepts](2-core-concepts)
    - Assertion-Aware Data Model
    - Evidence Hierarchy
    - Provenance Tracking
    - Version Control Integration
 
-3. [Archive Organization](3-archive-organization.md)
+3. [Archive Organization](3-archive-organization)
    - Repository Layout
    - Naming Conventions
    - File Organization Patterns
 
 4. [Entity Types](4-entity-types/)
-   - [Person](4-entity-types/person.md) - Individual records
-   - [Relationship](4-entity-types/relationship.md) - Connections between people
-   - [Event/Fact](4-entity-types/event.md) - Occurrences in time and place
-   - [Place](4-entity-types/place.md) - Geographic locations with hierarchy
-   - [Assertion](4-entity-types/assertion.md) - Evidence-based conclusions
-   - [Source](4-entity-types/source.md) - Bibliographic resources
-   - [Citation](4-entity-types/citation.md) - References to specific evidence
-   - [Repository](4-entity-types/repository.md) - Institutions holding sources
-   - [Media](4-entity-types/media.md) - Photographs, documents, etc.
-   - [Vocabularies](4-entity-types/vocabularies.md) - Controlled type definitions
+   - [Person](4-entity-types/person) - Individual records
+   - [Relationship](4-entity-types/relationship) - Connections between people
+   - [Event/Fact](4-entity-types/event) - Occurrences in time and place
+   - [Place](4-entity-types/place) - Geographic locations with hierarchy
+   - [Assertion](4-entity-types/assertion) - Evidence-based conclusions
+   - [Source](4-entity-types/source) - Bibliographic resources
+   - [Citation](4-entity-types/citation) - References to specific evidence
+   - [Repository](4-entity-types/repository) - Institutions holding sources
+   - [Media](4-entity-types/media) - Photographs, documents, etc.
+   - [Vocabularies](4-entity-types/vocabularies) - Controlled type definitions (not an entity type)
 
 5. [Standard Vocabularies](5-standard-vocabularies/)
    - Standard vocabulary templates for archive initialization
 
-6. [Data Types](6-data-types.md)
+6. [Data Types](6-data-types)
    - Primitive Types (string, date, integer, boolean)
    - Temporal Values
    - Reference Types
@@ -61,7 +61,7 @@ requirement levels.
 
 This specification is under active development.
 
-- **Version**: 0.0.0-beta.1
+- **Version**: 0.0.0-beta.2
 - **Status**: Beta
 - **Stability**: Unstable API (breaking changes possible)
 
@@ -71,7 +71,7 @@ This specification is under active development.
 - **Multi-Tenant**: Supports family-level isolation within organizations
 - **Git-Native**: Built from the ground up for version control
 - **Hierarchical Places**: Supports complex place hierarchies with historical variations
-- **Evidence Quality**: Supports GEDCOM QUAY standard (0-3 scale) for source reliability assessment; however, assertion confidence levels are the preferred GENEALOGIX approach and quality scales are customizable per archive
+- **Evidence Confidence**: Assertion confidence levels (high/medium/low/disputed) capture researcher certainty in conclusions
 - **Extensible**: Custom entity types and properties supported via repository-owned vocabularies
 
 ## Quick Example
@@ -81,8 +81,11 @@ This specification is under active development.
 persons:
   person-john-smith-1850:
     properties:
-      given_name: "John"
-      family_name: "Smith"
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
       gender: "male"
       born_on: "1850-01-15"
     notes: "Blacksmith in Leeds, Yorkshire"
@@ -124,9 +127,9 @@ See [Archive Organization](3-archive-organization) for details.
 
 ## Getting Started
 
-1. Read [Introduction](1-introduction.md) for overview
+1. Read [Introduction](1-introduction) for overview
 2. Review [Entity Types](4-entity-types/) to understand data structure
-3. Check [Archive Organization](3-archive-organization.md) for organization patterns
+3. Check [Archive Organization](3-archive-organization) for organization patterns
 4. Review [Standard Vocabularies](5-standard-vocabularies/) for controlled type definitions
 5. See [examples/](../docs/examples/) for working examples
 6. Use [glx CLI](../../glx/) for validation

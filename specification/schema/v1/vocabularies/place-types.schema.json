@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/genealogix/spec/main/specification/schema/v1/vocabularies/place-types",
+  "$id": "https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/vocabularies/place-types",
   "title": "Place Types Vocabulary",
   "type": "object",
   "properties": {
@@ -13,8 +13,7 @@
           "properties": {
             "label": { "type": "string" },
             "description": { "type": "string" },
-            "category": { "type": "string", "enum": ["administrative", "geographic", "religious", "custom"] },
-            "custom": { "type": "boolean" }
+            "category": { "type": "string", "enum": ["administrative", "geographic", "religious", "institution", "other"] }
           },
           "additionalProperties": true
         }

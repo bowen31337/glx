@@ -28,7 +28,7 @@ assertions:
 
 ### Confidence Assessment
 
-**Best Practice:** Assess confidence based on evidence quality, not personal opinion:
+**Best Practice:** Assess confidence based on available evidence, not personal opinion:
 
 ```yaml
 assertions:
@@ -40,7 +40,7 @@ assertions:
     citations: [citation-birth-cert, citation-baptism]
 ```
 
-The optional `quality` field on citations exists for GEDCOM compatibility. For new research, use assertion confidence levels instead. See [Assertion Entity](../../specification/4-entity-types/assertion.md) and [Confidence Levels Vocabulary](../../specification/5-standard-vocabularies/confidence-levels.glx).
+Use assertion confidence levels to express certainty about conclusions. See [Assertion Entity](../../specification/4-entity-types/assertion.md) and [Confidence Levels Vocabulary](../../specification/5-standard-vocabularies/confidence-levels.glx).
 
 ### Transcribe Key Evidence
 
@@ -79,8 +79,7 @@ git commit -m "Add 1851 Census evidence for Smith family
 
 - John Smith: occupation (blacksmith), residence
 - Mary Smith: age, birthplace
-- Source: HO107, Piece 2319, Yorkshire
-- Quality: 2 (secondary source)"
+- Source: HO107, Piece 2319, Yorkshire"
 ```
 
 ### Branch for Research
@@ -90,6 +89,79 @@ Use branches for research investigations:
 ```bash
 git checkout -b research/1851-census
 git checkout -b evidence/vital-records
+```
+
+## Vocabulary Design
+
+### When to Use Standard Vocabularies
+
+**Best Practice:** Start with standard vocabularies and extend only when necessary.
+
+```yaml
+# vocabularies/event-types.glx
+event_types:
+  # Standard types cover most genealogy needs
+  birth:
+    label: "Birth"
+    gedcom: "BIRT"
+
+  marriage:
+    label: "Marriage"
+    gedcom: "MARR"
+
+  # Add custom types sparingly
+  land_grant:
+    label: "Land Grant"
+    description: "Colonial land grant from government"
+```
+
+### When to Create Custom Vocabularies
+
+**Best Practice:** Create custom types when:
+1. Standard types don't capture your research domain
+2. The event/relationship is common in your data
+3. You need to distinguish it for analysis
+
+**Good custom types:**
+- Domain-specific events (`ship_departure` for maritime history)
+- Specialized relationships (`patron-artist` for art history)
+- Cultural practices (`coming_of_age`, `pilgrimage`)
+
+**Avoid:**
+- Over-granularity (use properties/notes instead)
+- Temporary research needs (use tags/notes)
+- Personal preferences when standard types exist
+
+### Vocabulary Governance
+
+**Best Practice:** For collaborative archives, document vocabulary decisions:
+
+```yaml
+# vocabularies/README.md
+# Vocabulary Change Policy
+
+All vocabulary changes require:
+1. Discussion in GitHub issue
+2. Approval from 2+ collaborators
+3. Update to vocabulary documentation
+4. Backward compatibility check
+
+## Custom Types Rationale
+
+- `ship_departure`: Standard GEDCOM EMIG doesn't capture naval context
+- `port_arrival`: Needed for tracking maritime movements
+```
+
+### Cross-Archive Compatibility
+
+**Best Practice:** If sharing data between archives, align vocabularies:
+
+```bash
+# Copy vocabulary files between related archives
+cp archive-1/vocabularies/event-types.glx archive-2/vocabularies/
+
+# Or maintain shared vocabularies in a separate repo
+git submodule add https://github.com/org/shared-vocabularies vocabularies/
 ```
 
 ## Conflicting Evidence
@@ -104,9 +176,9 @@ assertions:
     value: "1850-01-15"
     confidence: medium
     notes: |
-      Birth certificate: Jan 15 (quality 3) - preferred
-      Baptism record: Jan 20 (quality 3) - 5 day delay typical
-      Census age: supports 1850 (quality 2)
+      Birth certificate: Jan 15 - primary source, preferred
+      Baptism record: Jan 20 - 5 day delay typical
+      Census age: supports 1850
     citations:
       - citation-birth-cert
       - citation-baptism
@@ -174,6 +246,5 @@ glx validate
 
 ## See Also
 
-- [Common Pitfalls](common-pitfalls.md) - Avoid common mistakes
 - [Entity Types](../../specification/4-entity-types/README.md) - Entity specifications
 - [CLI Documentation](../../glx/README.md) - Command reference

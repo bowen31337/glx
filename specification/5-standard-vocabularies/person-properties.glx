@@ -1,21 +1,34 @@
 # Standard Person Properties
 # This file defines the standard properties for person entities.
 # These properties represent the concluded or accepted values for a person.
-# Archives can extend this with custom properties by adding entries with `custom: true`.
+# Archives can extend this with custom properties by adding additional entries.
 
 person_properties:
-  given_name:
-    label: "Given Name"
-    description: "Given name(s) of the person"
+  name:
+    label: "Name"
+    description: "Person's name as recorded, with optional structured breakdown"
     value_type: string
     temporal: true
-  
-  family_name:
-    label: "Family Name"
-    description: "Family or surname of the person"
-    value_type: string
-    temporal: true
-  
+    fields:
+      prefix:
+        label: "Prefix"
+        description: "Honorific prefix (Dr., Rev., Hon.)"
+      given:
+        label: "Given Name"
+        description: "Given/first name(s)"
+      nickname:
+        label: "Nickname"
+        description: "Familiar or descriptive name"
+      surname_prefix:
+        label: "Surname Prefix"
+        description: "Article or prefix (von, van, de)"
+      surname:
+        label: "Surname"
+        description: "Family name"
+      suffix:
+        label: "Suffix"
+        description: "Generational suffix (Jr., Sr., III)"
+
   gender:
     label: "Gender"
     description: "Gender identity"
@@ -47,7 +60,13 @@ person_properties:
     description: "Profession or trade"
     value_type: string
     temporal: true
-  
+
+  title:
+    label: "Title"
+    description: "Nobility or honorific title"
+    value_type: string
+    temporal: true
+
   residence:
     label: "Residence"
     description: "Place of residence"
@@ -77,9 +96,21 @@ person_properties:
     description: "National citizenship"
     value_type: string
     temporal: true
-  
+
+  caste:
+    label: "Caste"
+    description: "Caste, tribe, or social group"
+    value_type: string
+    temporal: true
+
+  ssn:
+    label: "Social Security Number"
+    description: "National identification number"
+    value_type: string
+
   notes:
     label: "Personal Notes"
     description: "Additional biographical notes"
     value_type: string
+
 

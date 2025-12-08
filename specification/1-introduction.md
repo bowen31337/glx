@@ -8,7 +8,9 @@ layout: doc
 
 ## Purpose and Scope
 
-GENEALOGIX defines a human-readable, version-controlled archive format for family history data. It addresses the limitations of existing genealogy formats by providing:
+GENEALOGIX defines a **portable, extensible archive format** for genealogical research and related domains. Unlike traditional formats that lock data in proprietary structures, GLX provides a **permanent, human-readable foundation** you can own, modify, and preserve indefinitely. It's designed as a **source of truth** for collaborative research, not just an exchange format.
+
+GENEALOGIX addresses the limitations of existing genealogy formats by providing:
 
 - **Git-native architecture** for reliable collaboration and version control
 - **Evidence-first model** where all claims are backed by documented sources
@@ -16,6 +18,11 @@ GENEALOGIX defines a human-readable, version-controlled archive format for famil
 - **Structured data validation** with JSON Schema compliance
 - **Complete provenance tracking** from repository to conclusion
 - **Flexible organization** - archives can be a single file, many files, or any combination
+- **True data ownership** - Human-readable files you can edit anywhere
+- **Archive autonomy** - Each repository defines its own controlled vocabularies
+- **Domain flexibility** - Genealogy, biography, local history, prosopography, and more
+- **Permanent foundation** - Data format that will outlast any software application
+- **Interoperability by design** - Import from GEDCOM, integrate with Git workflows
 
 The specification covers:
 - 9 core entity types for comprehensive family history documentation
@@ -37,7 +44,7 @@ The specification covers:
 
 ### Evidence-First Architecture
 - **Source-backed assertions** - every claim must reference evidence
-- **Quality assessment** - structured evaluation of evidence reliability
+- **Confidence levels** - researcher assessment of conclusion certainty
 - **Citation specificity** - exact references to source locations
 - **Multiple evidence support** - corroboration from multiple sources
 
@@ -52,6 +59,44 @@ The specification covers:
 - **Merge conflict resolution** for conflicting evidence
 - **Pull request reviews** for quality assurance
 - **Tag-based releases** for milestone preservation
+
+## GLX as a Foundation, Not Just an Exchange Format
+
+### More Than Interoperability
+
+While GENEALOGIX provides excellent **interoperability** (importing from GEDCOM, exporting to various formats), its primary purpose is to be a **permanent research foundation**:
+
+#### Your Research System
+- **Long-term storage**: Human-readable files you can read in 50 years
+- **Version-controlled**: Complete research history in Git
+- **Software-independent**: Not tied to any specific application
+- **Self-documenting**: Evidence chains explain all conclusions
+
+#### Customizable Research Framework
+- **Domain-specific vocabularies**: Define types that match your research
+- **Extensible properties**: Add custom fields without schema changes
+- **Flexible organization**: Single file, multi-file, or hybrid approaches
+- **Research-driven**: The format adapts to your methodology
+
+#### Collaborative Knowledge Base
+- **Git workflows**: Industry-standard collaboration patterns
+- **Distributed research**: Multiple teams, one coherent archive
+- **Quality assurance**: Peer review through pull requests
+- **Conflict resolution**: Systematic handling of competing evidence
+
+### When to Use GLX
+
+**GLX is ideal when you need:**
+- A permanent home for research data (not just temporary export files)
+- Collaboration with other researchers using Git workflows
+- Custom types and vocabularies for specialized research
+- Complete provenance and evidence documentation
+- Research that extends beyond traditional genealogy
+
+**GLX may not be necessary if you:**
+- Only need to transfer data between two applications (GEDCOM suffices)
+- Have simple trees with no collaborative needs
+- Don't require evidence documentation or provenance tracking
 
 ## Terminology
 
@@ -77,13 +122,6 @@ The specification covers:
 - **Source**: Document or record (parish register, census, certificate)
 - **Citation**: Specific reference (page number, entry number, URL)
 - **Assertion**: Claim supported by citations (person born on specific date)
-
-### Quality Assessment
-- **Quality Rating**: 0-3 scale indicating evidence reliability
-  - 3 = Primary, direct evidence (birth certificate)
-  - 2 = Secondary, direct evidence (census record)
-  - 1 = Primary, indirect evidence (family Bible notation)
-  - 0 = Secondary, indirect evidence (published biography)
 
 ## Use Cases
 
@@ -119,7 +157,7 @@ Converting from existing formats:
 
 | Feature | GENEALOGIX | GEDCOM | Gramps XML |
 |---------|------------|--------|------------|
-| **Format** | YAML (human-readable) | Custom binary | XML |
+| **Format** | YAML (human-readable) | Custom text (tag-based) | XML |
 | **Version Control** | Git-native | Difficult | Manual |
 | **Evidence Model** | Built-in citations | Basic sources | Complex |
 | **Collaboration** | Git workflows | File sharing | Database |
@@ -139,15 +177,15 @@ The quickest way to understand GENEALOGIX is through examples:
 
 GENEALOGIX is an open-source project welcoming contributions:
 
-- **Issues**: [Bug reports and feature requests](https://github.com/genealogix/spec/issues)
-- **Discussions**: [Community Q&A and collaboration](https://github.com/genealogix/spec/discussions)
+- **Issues**: [Bug reports and feature requests](https://github.com/genealogix/glx/issues)
+- **Discussions**: [Community Q&A and collaboration](https://github.com/genealogix/glx/discussions)
 - **Contributing**: See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines
 
 ## Version History
 
 This specification follows semantic versioning:
 
-- **Version 0.0.0-beta.1**: Beta release
+- **Version 0.0.0-beta.2**: Beta release
 - **Version 1.0**: Initial stable release (future)
 - **Version 1.1+**: Backwards-compatible enhancements (future)
 - **Version 2.0**: May include breaking changes with migration path (future)

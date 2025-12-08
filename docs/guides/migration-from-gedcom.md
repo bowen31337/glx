@@ -6,9 +6,9 @@ layout: doc
 
 # Migration from GEDCOM Guide
 
-Guide for manually converting GEDCOM files to GENEALOGIX format.
+Guide for converting GEDCOM files to GENEALOGIX format using the automated import tool or manual conversion.
 
-**Note:** This guide describes the manual migration process. Automated import/export tools are not yet available but are planned for future releases.
+**Note:** Automated GEDCOM import is now available! Use `glx import` to convert GEDCOM 5.5.1 and GEDCOM 7.0 files automatically. See [CLI Documentation](../../glx/README.md) for usage details.
 
 ## Key Differences
 
@@ -16,25 +16,51 @@ Guide for manually converting GEDCOM files to GENEALOGIX format.
 |--------|--------|------------|
 | **Format** | Tag-based | YAML |
 | **Evidence** | Basic sources | Complete chains |
-| **Quality** | QUAY (0-3) | Quality (0-3) |
 | **Version Control** | File-based | Git-native |
 
 ## Migration Process
 
-### 1. Initialize Archive
+### Automated Import (Recommended)
+
+Convert GEDCOM files automatically using the GLX CLI:
 
 ```bash
-mkdir my-family-archive
-cd my-family-archive
-glx init
+# Import GEDCOM file
+glx import family.ged -o family-archive.glx
+
+# The import command handles:
+# - Individual (INDI) → Person entities
+# - Family (FAM) → Relationship entities
+# - Events (BIRT, DEAT, MARR, etc.) → Event entities
+# - Sources (SOUR) → Source entities + Citations + Assertions
+# - Places (PLAC) → Hierarchical Place entities
+# - Notes (NOTE/SNOTE) → Entity notes
+
+# Initialize git tracking
 git init
-git add .
-git commit -m "Initial: GENEALOGIX archive structure"
+git add family-archive.glx
+git commit -m "Import from GEDCOM: family.ged"
 ```
 
-### 2. Convert Entities
+**Supported GEDCOM Versions:**
+- ✅ GEDCOM 5.5.1 (full support)
+- ✅ GEDCOM 7.0 (full support)
 
-**Manual conversion process:**
+**What Gets Imported:**
+- 31+ person attributes and events
+- All family relationships (marriage, parent-child)
+- **PEDI (pedigree) types**: Biological, adoptive, foster parent-child relationships
+- Evidence chains (SOUR → Citation → Assertion)
+- Place hierarchies (flat → hierarchical)
+- **ADDR subfields**: Full address preservation and place hierarchy fallback
+- Shared and inline notes
+- Source citations with locators and transcriptions
+
+For implementation details, see [GEDCOM Import Developer Docs](../development/gedcom-import.md).
+
+### Manual Conversion Process
+
+If you prefer manual conversion or need to customize the import:
 
 1. Extract individuals → `persons/`
 2. Extract families → `relationships/`
@@ -52,7 +78,6 @@ GEDCOM sources need to be expanded into complete evidence chains.
 1 BIRT
 2 DATE 15 JAN 1850
 2 SOUR @S1@
-3 QUAY 2
 3 PAGE Page 23
 ```
 
@@ -66,7 +91,6 @@ sources:
 citations:
   citation-birth:
     source: source-birth-cert
-    quality: 2
     page: "Page 23"
 
 assertions:
@@ -84,7 +108,7 @@ assertions:
 | GEDCOM | GENEALOGIX | Notes |
 |--------|------------|-------|
 | `INDI` | Person | Core entity |
-| `NAME` | Person.properties.given_name, family_name | Structured format |
+| `NAME` | Person.properties.name | Unified name with optional fields |
 | `BIRT` | Event (birth) | Separate entity |
 | `DEAT` | Event (death) | Separate entity |
 | `OCCU` | Event (occupation) | Separate entity |
@@ -105,30 +129,7 @@ assertions:
 | `TITL` | Source.title | Title |
 | `REPO` | Source.repository | Repository reference |
 | `PAGE` | Citation.page | Moved to citation |
-| `QUAY` | Citation.quality | 1:1 mapping |
-
-## Quality Translation
-
-GEDCOM QUAY maps 1:1 to GENEALOGIX citation quality field (maintained for compatibility). However, the idiomatic GLX approach is to use assertion confidence levels instead:
-
-```yaml
-# GEDCOM QUAY preserved in citation (optional)
-citations:
-  citation-from-gedcom:
-    source: source-census
-    quality: 2  # From GEDCOM QUAY
-
-# Idiomatic GLX: Use assertion confidence
-assertions:
-  assertion-birth:
-    subject: person-john
-    claim: birth_date
-    value: "1850-01-15"
-    confidence: high  # Preferred approach
-    citations: [citation-from-gedcom]
-```
-
-See [Confidence Levels](../../specification/5-standard-vocabularies/confidence-levels.glx) for the vocabulary.
+| `QUAY` | Citation.notes | Preserved in notes |
 
 ## Common Challenges
 
@@ -142,8 +143,11 @@ See [Confidence Levels](../../specification/5-standard-vocabularies/confidence-l
 **GENEALOGIX:**
 ```yaml
 properties:
-  given_name: "John"
-  family_name: "Smith"
+  name:
+    value: "John Smith"
+    fields:
+      given: "John"
+      surname: "Smith"
 ```
 
 ### Place Hierarchy
@@ -178,14 +182,18 @@ places:
 2 DATE 15 JAN 1850
 2 DATE ABT 1850
 2 DATE BET 1849 AND 1851
+2 DATE FROM 1900 TO 1950
 ```
 
 **GENEALOGIX:**
 ```yaml
 date: "1850-01-15"
-date: "1850?"
-date: "1849/1851"
+date: "ABT 1850"
+date: "BET 1849 AND 1851"
+date: "FROM 1900 TO 1950"
 ```
+
+GLX uses YYYY-MM-DD format for exact dates and preserves GEDCOM keywords (ABT, BEF, AFT, CAL, BET, FROM, TO, AND) for qualified and range dates. See [Data Types](../../specification/6-data-types.md) for complete date format specification.
 
 ## Post-Migration
 
@@ -204,9 +212,9 @@ glx validate
 
 After migration, enhance evidence quality:
 - Add transcriptions
-- Verify quality ratings
 - Complete evidence chains
 - Add research notes
+- Set assertion confidence levels
 
 ### Git Tracking
 
@@ -226,8 +234,29 @@ Next steps:
 - Complete place hierarchy"
 ```
 
+## Testing Your Import
+
+After importing, validate the results:
+
+```bash
+# Validate the imported archive
+glx validate family-archive.glx
+
+# Check what was imported
+# - Count entities
+# - Verify relationships
+# - Review evidence chains
+```
+
+**Common Import Results:**
+- Large family trees: 100-1000+ persons
+- Comprehensive events: 2-3x person count
+- Relationships: 1-2x person count
+- Evidence chains automatically created from GEDCOM SOUR tags
+
 ## See Also
 
+- [GEDCOM Import Developer Documentation](../development/gedcom-import.md) - Implementation details
 - [Entity Types](../../specification/4-entity-types/README.md) - Entity specifications
 - [Best Practices](best-practices.md) - Workflow recommendations
 - [CLI Documentation](../../glx/README.md) - Command reference

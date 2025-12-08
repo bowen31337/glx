@@ -31,6 +31,7 @@ func TestExamples(t *testing.T) {
 	// Check if examples directory exists
 	if _, err := os.Stat(examplesDir); os.IsNotExist(err) {
 		t.Skip("examples directory not found - skipping examples validation")
+
 		return
 	}
 
@@ -42,6 +43,7 @@ func TestExamples(t *testing.T) {
 		if !info.IsDir() && strings.HasSuffix(path, ".glx") {
 			validFiles = append(validFiles, path)
 		}
+
 		return nil
 	})
 	require.NoError(t, err, "failed to walk examples directory")
@@ -61,6 +63,7 @@ func TestExamples(t *testing.T) {
 			content := strings.TrimSpace(string(data))
 			if strings.HasPrefix(content, "../") || strings.HasPrefix(content, "../../../../") {
 				t.Skipf("skipping reference file %s", file)
+
 				return
 			}
 
@@ -68,8 +71,10 @@ func TestExamples(t *testing.T) {
 			require.NoError(t, err, "failed to parse YAML in %s", file)
 
 			// Validate entity structure - only check entity type keys
-			entityKeys := map[string]bool{"persons": true, "relationships": true, "events": true, "places": true,
-				"sources": true, "citations": true, "repositories": true, "assertions": true, "media": true}
+			entityKeys := map[string]bool{
+				"persons": true, "relationships": true, "events": true, "places": true,
+				"sources": true, "citations": true, "repositories": true, "assertions": true, "media": true,
+			}
 
 			for pluralKey, entities := range doc {
 				// Only validate entity keys (vocabularies are ignored)
@@ -77,9 +82,9 @@ func TestExamples(t *testing.T) {
 					continue
 				}
 
-				if entityMap, ok := entities.(map[string]interface{}); ok {
+				if entityMap, ok := entities.(map[string]any); ok {
 					for entityID, entityData := range entityMap {
-						if entity, ok := entityData.(map[string]interface{}); ok {
+						if entity, ok := entityData.(map[string]any); ok {
 							// Check no 'id' field
 							if _, hasID := entity["id"]; hasID {
 								t.Errorf("%s: %s[%s] must not have 'id' field - the map key is the ID", file, pluralKey, entityID)
@@ -103,6 +108,7 @@ func TestExamplesDirectories(t *testing.T) {
 
 	if _, err := os.Stat(examplesDir); os.IsNotExist(err) {
 		t.Skip("examples directory not found")
+
 		return
 	}
 
@@ -115,6 +121,7 @@ func TestExamplesDirectories(t *testing.T) {
 
 			if os.IsNotExist(err) {
 				t.Skipf("example %s not found", example)
+
 				return
 			}
 
@@ -124,7 +131,7 @@ func TestExamplesDirectories(t *testing.T) {
 			// Check for README
 			readmePath := filepath.Join(examplePath, "README.md")
 			_, err = os.Stat(readmePath)
-			assert.NoError(t, err, "example %s should have README.md", example)
+			require.NoError(t, err, "example %s should have README.md", example)
 		})
 	}
 }
@@ -135,6 +142,7 @@ func TestExamplesCompleteFamily(t *testing.T) {
 
 	if _, err := os.Stat(completeFamilyDir); os.IsNotExist(err) {
 		t.Skip("complete-family example not found")
+
 		return
 	}
 
@@ -151,6 +159,7 @@ func TestExamplesCompleteFamily(t *testing.T) {
 
 			if os.IsNotExist(err) {
 				t.Skipf("directory %s not found in complete-family", dir)
+
 				return
 			}
 
@@ -165,6 +174,7 @@ func TestExamplesCompleteFamily(t *testing.T) {
 			for _, file := range files {
 				if !file.IsDir() && strings.HasSuffix(file.Name(), ".glx") {
 					hasGlxFile = true
+
 					break
 				}
 			}
@@ -180,6 +190,7 @@ func TestExamplesSingleFile(t *testing.T) {
 
 	if _, err := os.Stat(singleFilePath); os.IsNotExist(err) {
 		t.Skip("single-file example not found")
+
 		return
 	}
 
@@ -208,6 +219,7 @@ func TestExamplesValidation(t *testing.T) {
 
 	if _, err := os.Stat(examplesDir); os.IsNotExist(err) {
 		t.Skip("examples directory not found")
+
 		return
 	}
 
@@ -219,6 +231,7 @@ func TestExamplesValidation(t *testing.T) {
 
 			if _, err := os.Stat(examplePath); os.IsNotExist(err) {
 				t.Skipf("example %s not found", example)
+
 				return
 			}
 
@@ -226,21 +239,21 @@ func TestExamplesValidation(t *testing.T) {
 			archive, duplicates, err := LoadArchive(examplePath)
 			require.NoError(t, err)
 
-		// Check for duplicate IDs
-		assert.Empty(t, duplicates, "example %s should not have duplicate entity IDs", example)
+			// Check for duplicate IDs
+			assert.Empty(t, duplicates, "example %s should not have duplicate entity IDs", example)
 
-		// Validate the merged archive using new validation system
-		result := archive.Validate()
-		
-		// Collect all errors and warnings
-		var allRefIssues []string
-		for _, err := range result.Errors {
-			allRefIssues = append(allRefIssues, err.Message)
-		}
-		for _, warn := range result.Warnings {
-			allRefIssues = append(allRefIssues, warn.Message)
-		}
-		assert.Empty(t, allRefIssues, "example %s should not have validation issues: %v", example, allRefIssues)
+			// Validate the merged archive using new validation system
+			result := archive.Validate()
+
+			// Collect all errors and warnings
+			var allRefIssues []string
+			for _, err := range result.Errors {
+				allRefIssues = append(allRefIssues, err.Message)
+			}
+			for _, warn := range result.Warnings {
+				allRefIssues = append(allRefIssues, warn.Message)
+			}
+			assert.Empty(t, allRefIssues, "example %s should not have validation issues: %v", example, allRefIssues)
 		})
 	}
 }

@@ -37,14 +37,41 @@ sources:
     type: church_register
     creator: "Church of England"
     repository: repository-leeds-library
-    date: "1840/1860"
+    date: "FROM 1840 TO 1860"
 ```
 
 **Key Points:**
 - Entity ID is the map key (`source-parish-register`)
 - IDs can be descriptive or random, 1-64 alphanumeric/hyphens
 
-## Required Fields
+## Fields
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Entity ID (map key) | string | Unique identifier (alphanumeric/hyphens, 1-64 chars) |
+| `title` | string | Full title of the source |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Source type from vocabulary |
+| `authors` | array | List of authors/creators |
+| `date` | string | Date or date range of the source |
+| `citation` | string | Formatted citation for the source |
+| `description` | string | Description of the source |
+| `repository` | string | Reference to Repository entity |
+| `creator` | string | Creating organization or individual |
+| `publication_info` | object | Publication details |
+| `language` | string | Language of the source |
+| `coverage` | object | Geographic/temporal coverage |
+| `media` | array | References to Media entities |
+| `notes` | string | Free-form notes |
+| `tags` | array | Tags for categorization |
+
+## Required Fields (Detailed)
 
 ### Entity ID (map key)
 
@@ -129,12 +156,12 @@ creator: "General Register Office"
 
 Formats:
 - Single date: `"1851"`
-- Date range: `"1840/1860"`
+- Date range: `"FROM 1840 TO 1860"`
 - Publication date: `"2015-06-20"`
 
 Example:
 ```yaml
-date: "1850/1855"
+date: "FROM 1850 TO 1855"
 ```
 
 ### `repository`
@@ -146,17 +173,6 @@ date: "1850/1855"
 Example:
 ```yaml
 repository: repository-national-archives
-```
-
-### `call_number`
-
-- Type: String
-- Required: No
-- Description: Call number, catalog ID, or reference number at the repository
-
-Example:
-```yaml
-call_number: "HO 107/2319"
 ```
 
 ### `citation`
@@ -259,22 +275,16 @@ media:
   - media-register-scan-page-2
 ```
 
-### Provenance Fields
+### Other Fields
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `notes` | string | Research notes about the source |
-| `created_at` | datetime | When this record was created |
-| `created_by` | string | Who created this record |
-| `modified_at` | datetime | When last modified |
-| `modified_by` | string | Who last modified |
 | `tags` | array | Tags for categorization |
 
 Example:
 ```yaml
 notes: "Excellent condition, clearly legible"
-created_at: "2024-01-15T10:30:00Z"
-created_by: researcher-jane
 tags:
   - primary-source
   - church-records
@@ -294,7 +304,6 @@ sources:
     creator: "General Register Office"
     date: "1850-01-15"
     repository: repository-gro
-    call_number: "GRO 1850/Q1/LEEDS/145"
     description: "Original birth certificate for John Smith, born Leeds"
     language: "English"
     media:
@@ -316,7 +325,6 @@ sources:
     creator: "UK Census Office"
     date: "1851-03-30"
     repository: repository-national-archives
-    call_number: "HO 107/2319"
     citation: "1851 England Census, Yorkshire, Leeds, ED 5"
     description: |
       Census enumeration for Leeds, Yorkshire, England.
@@ -340,9 +348,8 @@ sources:
     title: "St. Paul's Cathedral Parish Register, 1840-1860"
     type: church_register
     creator: "Church of England"
-    date: "1840/1860"
+    date: "FROM 1840 TO 1860"
     repository: repository-leeds-archives
-    call_number: "RDP73/1"
     description: |
       Parish registers for St. Paul's Cathedral, Leeds.
       Includes baptisms, marriages, and burials.
@@ -410,7 +417,7 @@ sources:
     title: "UK Census Collection, 1841-1911"
     type: database
     creator: "Ancestry.com"
-    date: "1841/1911"
+    date: "FROM 1841 TO 1911"
     repository: repository-ancestry
     description: |
       Digitized and indexed UK census records from 1841-1911.
@@ -440,7 +447,6 @@ sources:
     creator: "Leeds Mercury Publishing Company"
     date: "1890-06-15"
     repository: repository-british-library
-    call_number: "NP 123.456"
     description: "Daily newspaper published in Leeds, Yorkshire"
     citation: "Leeds Mercury, 15 June 1890, page 3"
     coverage:
@@ -568,7 +574,7 @@ citation: "Newspaper Title, Date, Page Number, Column."
 - `title` must be present and non-empty
 - If `repository` is specified, it must reference an existing Repository entity
 - If `media` array is present, all IDs must reference existing Media entities
-- `date` should follow standard date formats (YYYY, YYYY-MM-DD, or YYYY/YYYY for ranges)
+- `date` should follow standard date formats (YYYY, YYYY-MM-DD, or `FROM YYYY TO YYYY` for ranges)
 - `type` should be one of the defined source types if vocabularies are used
 
 ## GEDCOM Mapping
@@ -583,7 +589,6 @@ Source entities map to GEDCOM source records:
 | `date` | `SOUR.DATE` | Publication date |
 | `creator` | `SOUR.AGNC` | Responsible agency |
 | `repository` | `SOUR.REPO` | Repository reference |
-| `call_number` | `SOUR.REPO.CALN` | Call number |
 | `publication_info.publisher` | `SOUR.PUBL` | Publication info |
 | `description` | `SOUR.TEXT` or `SOUR.NOTE` | Source text/notes |
 
@@ -594,7 +599,6 @@ GEDCOM Example:
 1 AUTH Church of England
 1 DATE 1840/1860
 1 REPO @R1@
-2 CALN RDP73/1
 1 NOTE Parish registers for baptisms, marriages, and burials
 ```
 
@@ -604,9 +608,8 @@ sources:
   source-st-pauls:
     title: "St. Paul's Parish Register"
     creator: "Church of England"
-    date: "1840/1860"
+    date: "FROM 1840 TO 1860"
     repository: repository-leeds-archives
-    call_number: "RDP73/1"
     description: "Parish registers for baptisms, marriages, and burials"
 ```
 
@@ -628,9 +631,9 @@ Use consistent citation styles within your archive:
 - Follow established citation standards (Evidence Explained, Chicago Manual of Style, etc.)
 - Document your chosen citation style in archive documentation
 
-### Source Quality Assessment
+### Source Characteristics
 
-While citation quality ratings are optional, documenting source characteristics helps:
+Documenting source characteristics in notes helps researchers evaluate evidence:
 - Primary vs. secondary nature
 - Original vs. derivative
 - Completeness and condition

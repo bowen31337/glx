@@ -32,7 +32,7 @@ Represents occurrences in time and place: births, marriages, occupations, reside
 - **Key Properties**: Type, date, place, participants, description
 - **File Format**: `.glx`
 - **ID Format**: `event-{id}` (see below)
-- **GEDCOM Equivalent**: BIRT, DEAT, MARR, OCCU, etc.
+- **GEDCOM Equivalent**: BIRT, DEAT, MARR, BAPM, etc.
 
 ### [Place](place.md)
 Represents geographic locations forming a hierarchical structure. Supports multiple names and historical variations.
@@ -61,7 +61,7 @@ Represents a bibliographic resource or information source. Can be books, documen
 ### [Citation](citation.md)
 Represents a specific reference to evidence within a source. Links sources to specific pages, records, or items.
 
-- **Key Properties**: Source reference, page, data date, quality, locator
+- **Key Properties**: Source reference, page, data date, locator
 - **File Format**: `.glx`
 - **ID Format**: `citation-{id}` (see below)
 - **GEDCOM Equivalent**: SOUR.PAGE, SOUR.QUAY
@@ -139,10 +139,10 @@ Media
 | Entity | Required Fields | Unique ID | Versioned | Hierarchical |
 |--------|-----------------|-----------|-----------|--------------|
 | Person | id | ✓ | ✓ | - |
-| Relationship | id, type, people | ✓ | ✓ | - |
-| Event | id, type | ✓ | ✓ | - |
+| Relationship | id, type, participants | ✓ | ✓ | - |
+| Event | id, type, participants | ✓ | ✓ | - |
 | Place | id, name | ✓ | ✓ | ✓ (parent) |
-| Assertion | id, subject, property | ✓ | ✓ | - |
+| Assertion | id, subject, claim | ✓ | ✓ | - |
 | Source | id, title | ✓ | ✓ | - |
 | Citation | id, source | ✓ | ✓ | - |
 | Repository | id, name | ✓ | ✓ | - |
@@ -177,11 +177,9 @@ The ID suffix can be any format meeting requirements (1-64 alphanumeric and hyph
 
 ### Creation
 - Each entity is created with a unique ID
-- `created_at` and `created_by` timestamps are recorded
 - Initial state is valid and complete
 
 ### Modification
-- Entities can be modified; only `modified_at` and `modified_by` change
 - All modifications are tracked in Git history
 
 ### Deletion
@@ -197,7 +195,7 @@ The `glx validate` command performs comprehensive validation at multiple levels:
 - **Entity IDs**: Must be unique, alphanumeric with hyphens, 1-64 characters
 - **File structure**: Must follow proper YAML/JSON format
 - **Schema compliance**: All entities validated against JSON schemas in `specification/schema/v1/`
-- **Required fields**: Timestamps (`created_at`, `modified_at`) and creator information
+- **Required fields**: Entity-specific required fields per schema
 
 ### Referential Integrity (Errors)
 All references must point to existing entities:

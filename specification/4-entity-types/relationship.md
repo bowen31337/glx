@@ -31,27 +31,25 @@ relationships:
 - Entity ID is the map key (`rel-marriage-john-mary`)
 - IDs can be descriptive or random, 1-64 alphanumeric/hyphens
 
-## Properties
+## Fields
 
-### Required Properties
+### Required Fields
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | Entity ID (map key) | string | Unique identifier (alphanumeric/hyphens, 1-64 chars) |
 | `type` | string | Relationship type from `vocabularies/relationship-types.glx` |
 | `participants` | array | Array of participant objects defining who is in the relationship |
 
-### Optional Properties
+### Optional Fields
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `properties` | object | Vocabulary-defined properties for the relationship |
 | `start_event` | string | Event that started this relationship |
 | `end_event` | string | Event that ended this relationship |
 | `description` | string | Narrative description of the relationship |
 | `notes` | string | Research notes |
-| `modified_at` | datetime | Last modification timestamp |
-| `modified_by` | string | User who last modified this record |
 | `tags` | array | Tags for categorization |
 
 ## Relationship Types
@@ -81,6 +79,15 @@ relationships:
     start_event: event-marriage-1875
     description: "Marriage at St Paul's Cathedral"
 ```
+
+**Note: Marriage Event vs Marriage Relationship**
+
+Marriage appears in both event types and relationship types by design:
+
+- **Event type `marriage`** ([Event Entity](event.md)): The wedding ceremony - records the date, place, officiant, witnesses, and other ceremony details
+- **Relationship type `marriage`** (this entity): The ongoing marital state - connects two spouses, tracks duration, and can reference when/how it ended
+
+Link them using `start_event` to reference the ceremony. Use both when you have ceremony details; use just the relationship if you only know they were married without specifics about the wedding.
 
 ### Parent-Child Relationship
 
@@ -184,9 +191,24 @@ Relationships map to GEDCOM family and individual structures:
 | GLX Type | GEDCOM Structure | Notes |
 |----------|------------------|-------|
 | `marriage` | FAM record | Family with MARR event |
-| `parent-child` | FAM.CHIL + INDI.FAMC | Child link to family |
+| `parent-child` | FAM.CHIL + INDI.FAMC | Child link to family (no PEDI or PEDI unknown) |
+| `biological-parent-child` | FAM.CHIL + INDI.FAMC with PEDI birth | Biological child relationship |
+| `adoptive-parent-child` | FAM.CHIL + INDI.FAMC with PEDI adopted | Legally adopted child |
+| `foster-parent-child` | FAM.CHIL + INDI.FAMC with PEDI foster | Foster care relationship |
 | `adoption` | FAM.CHIL + ADOP | Adoption event |
 | `sibling` | Shared FAM.CHIL | Siblings share parents |
+
+**PEDI (Pedigree Linkage)**:
+
+The PEDI tag in GEDCOM 5.5.1 specifies the type of parent-child relationship. During import, PEDI values are mapped to specific relationship types:
+
+- `PEDI birth` → `biological-parent-child`
+- `PEDI adopted` → `adoptive-parent-child`
+- `PEDI foster` → `foster-parent-child`
+- `PEDI unknown` or missing → `parent-child` (generic)
+- `PEDI sealed` (LDS) → `parent-child` (not specifically modeled)
+
+This allows GLX to preserve the distinction between biological, adoptive, and foster relationships that is critical for accurate genealogical research.
 
 ## See Also
 

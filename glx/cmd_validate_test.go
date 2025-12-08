@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,19 +27,19 @@ func TestRunValidate_SingleValidFile(t *testing.T) {
 	// Need to change to the directory since single file validation loads archive from "."
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	err = os.Chdir("../docs/examples/basic-family")
 	require.NoError(t, err)
 
-	err = runValidate([]string{"persons/person-father.glx"})
-	assert.NoError(t, err, "should successfully validate a valid GLX file")
+	err = validatePaths([]string{"persons/person-father.glx"})
+	require.NoError(t, err, "should successfully validate a valid GLX file")
 }
 
 func TestRunValidate_ValidDirectory(t *testing.T) {
 	// Test validating a directory with valid GLX files
-	err := runValidate([]string{"../docs/examples/basic-family"})
-	assert.NoError(t, err, "should successfully validate a valid directory")
+	err := validatePaths([]string{"../docs/examples/basic-family"})
+	require.NoError(t, err, "should successfully validate a valid directory")
 }
 
 func TestRunValidate_CurrentDirectory(t *testing.T) {
@@ -48,13 +47,13 @@ func TestRunValidate_CurrentDirectory(t *testing.T) {
 	// Change to basic-family example
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	err = os.Chdir("../docs/examples/basic-family")
 	require.NoError(t, err)
 
-	err = runValidate([]string{})
-	assert.NoError(t, err, "should successfully validate current directory when no args provided")
+	err = validatePaths([]string{})
+	require.NoError(t, err, "should successfully validate current directory when no args provided")
 }
 
 func TestRunValidate_MultiplePaths(t *testing.T) {
@@ -62,24 +61,24 @@ func TestRunValidate_MultiplePaths(t *testing.T) {
 	// Change to the archive directory to avoid loading invalid testdata
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	err = os.Chdir("../docs/examples/basic-family")
 	require.NoError(t, err)
 
-	err = runValidate([]string{"persons", "relationships"})
-	assert.NoError(t, err, "should successfully validate multiple valid paths")
+	err = validatePaths([]string{"persons", "relationships"})
+	require.NoError(t, err, "should successfully validate multiple valid paths")
 }
 
 func TestRunValidate_InvalidYAML(t *testing.T) {
 	// Create a temporary file with invalid YAML
 	tmpDir := t.TempDir()
 	invalidFile := filepath.Join(tmpDir, "invalid.glx")
-	err := os.WriteFile(invalidFile, []byte("persons:\n  person-1:\n    invalid: [unclosed"), 0644)
+	err := os.WriteFile(invalidFile, []byte("persons:\n  person-1:\n    invalid: [unclosed"), 0o644)
 	require.NoError(t, err)
 
-	err = runValidate([]string{tmpDir})
-	assert.Error(t, err, "should fail on invalid YAML syntax")
+	err = validatePaths([]string{tmpDir})
+	require.Error(t, err, "should fail on invalid YAML syntax")
 }
 
 func TestRunValidate_StructuralErrors(t *testing.T) {
@@ -90,11 +89,11 @@ func TestRunValidate_StructuralErrors(t *testing.T) {
   "person with spaces":
     properties:
       primary_name: "Test"
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
-	err = runValidate([]string{tmpDir})
-	assert.Error(t, err, "should fail on structural validation errors")
+	err = validatePaths([]string{tmpDir})
+	require.Error(t, err, "should fail on structural validation errors")
 }
 
 func TestRunValidate_DuplicateIDs(t *testing.T) {
@@ -106,7 +105,7 @@ func TestRunValidate_DuplicateIDs(t *testing.T) {
   person-duplicate:
     properties:
       primary_name: "Person One"
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
 	file2 := filepath.Join(tmpDir, "file2.glx")
@@ -114,17 +113,17 @@ func TestRunValidate_DuplicateIDs(t *testing.T) {
   person-duplicate:
     properties:
       primary_name: "Person Two"
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
-	err = runValidate([]string{tmpDir})
-	assert.Error(t, err, "should detect duplicate entity IDs across files")
+	err = validatePaths([]string{tmpDir})
+	require.Error(t, err, "should detect duplicate entity IDs across files")
 }
 
 func TestRunValidate_BrokenReferences(t *testing.T) {
 	// Test validation with broken cross-references
-	err := runValidate([]string{"testdata/invalid/broken-references"})
-	assert.Error(t, err, "should fail when cross-references are broken")
+	err := validatePaths([]string{"testdata/invalid/broken-references"})
+	require.Error(t, err, "should fail when cross-references are broken")
 }
 
 func TestRunValidate_NonExistentPath(t *testing.T) {
@@ -132,15 +131,15 @@ func TestRunValidate_NonExistentPath(t *testing.T) {
 	tmpDir := t.TempDir()
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
 
-	err = runValidate([]string{"does-not-exist"})
+	err = validatePaths([]string{"does-not-exist"})
 	// When the path doesn't exist, WalkDir continues but finds 0 files
 	// The validation succeeds with 0 files validated
-	assert.NoError(t, err, "non-existent path results in 0 files validated")
+	require.NoError(t, err, "non-existent path results in 0 files validated")
 }
 
 func TestRunValidate_MixedValidAndInvalidFiles(t *testing.T) {
@@ -153,7 +152,7 @@ func TestRunValidate_MixedValidAndInvalidFiles(t *testing.T) {
   person-test:
     properties:
       primary_name: "Test Person"
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
 	// Invalid file (bad entity ID with special characters)
@@ -162,20 +161,20 @@ func TestRunValidate_MixedValidAndInvalidFiles(t *testing.T) {
   "person@invalid!":
     properties:
       primary_name: "Invalid"
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
-	err = runValidate([]string{tmpDir})
-	assert.Error(t, err, "should fail when any file in directory has errors")
+	err = validatePaths([]string{tmpDir})
+	require.Error(t, err, "should fail when any file in directory has errors")
 }
 
 func TestRunValidate_EmptyDirectory(t *testing.T) {
 	// Test validating an empty directory
 	tmpDir := t.TempDir()
 
-	err := runValidate([]string{tmpDir})
+	err := validatePaths([]string{tmpDir})
 	// Empty directory should validate successfully (0 files)
-	assert.NoError(t, err, "empty directory should validate successfully")
+	require.NoError(t, err, "empty directory should validate successfully")
 }
 
 func TestRunValidate_OnlyNonGLXFiles(t *testing.T) {
@@ -183,12 +182,12 @@ func TestRunValidate_OnlyNonGLXFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	txtFile := filepath.Join(tmpDir, "readme.txt")
-	err := os.WriteFile(txtFile, []byte("This is not a GLX file"), 0644)
+	err := os.WriteFile(txtFile, []byte("This is not a GLX file"), 0o644)
 	require.NoError(t, err)
 
-	err = runValidate([]string{tmpDir})
+	err = validatePaths([]string{tmpDir})
 	// Should succeed as there are 0 GLX files to validate
-	assert.NoError(t, err, "directory with no GLX files should validate successfully")
+	require.NoError(t, err, "directory with no GLX files should validate successfully")
 }
 
 func TestRunValidate_NestedDirectories(t *testing.T) {
@@ -197,7 +196,7 @@ func TestRunValidate_NestedDirectories(t *testing.T) {
 
 	// Create nested structure
 	personsDir := filepath.Join(tmpDir, "persons")
-	err := os.MkdirAll(personsDir, 0755)
+	err := os.MkdirAll(personsDir, 0o755)
 	require.NoError(t, err)
 
 	personFile := filepath.Join(personsDir, "person.glx")
@@ -205,17 +204,17 @@ func TestRunValidate_NestedDirectories(t *testing.T) {
   person-nested:
     properties:
       primary_name: "Nested Person"
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
-	err = runValidate([]string{tmpDir})
-	assert.NoError(t, err, "should successfully validate nested directory structures")
+	err = validatePaths([]string{tmpDir})
+	require.NoError(t, err, "should successfully validate nested directory structures")
 }
 
 func TestRunValidate_WithVocabularies(t *testing.T) {
 	// Test validation of files that define and use vocabularies
-	err := runValidate([]string{"../docs/examples/complete-family"})
-	assert.NoError(t, err, "should successfully validate archive with vocabularies")
+	err := validatePaths([]string{"../docs/examples/complete-family"})
+	require.NoError(t, err, "should successfully validate archive with vocabularies")
 }
 
 func TestRunValidate_YAMLAndYMLExtensions(t *testing.T) {
@@ -227,7 +226,7 @@ func TestRunValidate_YAMLAndYMLExtensions(t *testing.T) {
   person-yaml:
     properties:
       primary_name: "YAML Person"
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
 	ymlFile := filepath.Join(tmpDir, "test.yml")
@@ -235,9 +234,9 @@ func TestRunValidate_YAMLAndYMLExtensions(t *testing.T) {
   person-yml:
     properties:
       primary_name: "YML Person"
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
-	err = runValidate([]string{tmpDir})
-	assert.NoError(t, err, "should successfully validate .yaml and .yml files")
+	err = validatePaths([]string{tmpDir})
+	require.NoError(t, err, "should successfully validate .yaml and .yml files")
 }

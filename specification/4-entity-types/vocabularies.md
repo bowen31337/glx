@@ -30,7 +30,6 @@ vocabularies/
 ├── place-types.glx
 ├── source-types.glx
 ├── media-types.glx
-├── quality-ratings.glx
 ├── confidence-levels.glx
 ├── participant-roles.glx
 └── repository-types.glx
@@ -66,20 +65,15 @@ event_types:
     description: "Marriage ceremony"
     category: "lifecycle"
     gedcom: "MARR"
-  
-  occupation:
-    label: "Occupation"
-    description: "Employment or profession"
-    category: "attribute"
-    gedcom: "OCCU"
-  
-  # Custom event types
+
+  # Additional event types
   apprenticeship:
     label: "Apprenticeship"
     description: "Beginning of apprenticeship training"
-    category: "occupation"
-    custom: true
+    category: "lifecycle"
 ```
+
+**Note:** Attributes like occupation, residence, religion, and nationality are represented as temporal properties on Person entities, not as events. See [Person Entity](person.md) for details.
 
 ### Fields
 
@@ -87,38 +81,35 @@ event_types:
 |-------|----------|-------------|
 | `label` | Yes | Human-readable label |
 | `description` | No | Detailed description |
-| `category` | No | Category (lifecycle, attribute, religious, custom) |
+| `category` | No | Category (lifecycle, religious, legal, migration, other) |
 | `gedcom` | No | GEDCOM tag mapping |
-| `custom` | No | Mark as custom (non-standard) type |
 
 ### Standard Event Types
 
-**Standard Event Types**: GENEALOGIX provides 19 standardized event type codes including lifecycle events (birth, death, marriage), religious events (baptism, confirmation, bar/bat mitzvah), and attribute facts (occupation, residence, education, title, nationality, religion).
+**Standard Event Types**: GENEALOGIX provides standardized event type codes including lifecycle events (birth, death, marriage, adoption), religious events (baptism, confirmation, bar/bat mitzvah), legal events (annulment, probate, will), and migration events (immigration, emigration, naturalization).
 
 **Complete List**: See [Standard Vocabularies - Event Types](/specification/5-standard-vocabularies/#event-types) for the complete default vocabulary file with all standard types.
 
-### Adding Custom Event Types
+### Adding Additional Event Types
 
-Add custom event types for specialized research:
+Add additional event types for specialized research:
 
 ```yaml
 # vocabularies/event-types.glx
 event_types:
   # ... standard types ...
-  
-  # Custom types
+
+  # Additional types
   apprenticeship:
     label: "Apprenticeship"
     description: "Beginning of apprenticeship training"
     category: "occupation"
-    custom: true
-  
+
   land-grant:
     label: "Land Grant"
     description: "Receipt of land grant or patent"
     category: "property"
     gedcom: "_LAND"
-    custom: true
 ```
 
 ---
@@ -153,11 +144,10 @@ relationship_types:
     description: "Brother or sister relationship"
     gedcom: "SIBL"
   
-  # Custom relationship types
+  # Additional relationship types
   godparent:
     label: "Godparent"
     description: "Spiritual sponsor relationship"
-    custom: true
 ```
 
 ### Fields
@@ -167,33 +157,30 @@ relationship_types:
 | `label` | Yes | Human-readable label |
 | `description` | No | Detailed description |
 | `gedcom` | No | GEDCOM tag mapping |
-| `custom` | No | Mark as custom (non-standard) type |
 
 ### Standard Relationship Types
 
-**Standard Relationship Types**: GENEALOGIX provides 8 standardized relationship type codes including marriage, parent-child, sibling, adoption, step-parent, godparent, guardian, and partner relationships.
+**Standard Relationship Types**: GENEALOGIX provides 11 standardized relationship type codes including marriage, parent-child (plus biological, adoptive, and foster variants), sibling, adoption, step-parent, godparent, guardian, and partner relationships.
 
 **Complete List**: See [Standard Vocabularies - Relationship Types](/specification/5-standard-vocabularies/#relationship-types) for the complete default vocabulary file with all standard types.
 
-### Adding Custom Relationship Types
+### Adding Additional Relationship Types
 
-Add custom relationship types for specialized research:
+Add additional relationship types for specialized research:
 
 ```yaml
 # vocabularies/relationship-types.glx
 relationship_types:
   # ... standard types ...
-  
-  # Custom types
+
+  # Additional types
   blood-brother:
     label: "Blood Brother"
     description: "Non-biological brotherhood bond through ceremony"
-    custom: true
-  
+
   chosen-family:
     label: "Chosen Family"
     description: "Close familial bond without biological or legal tie"
-    custom: true
 ```
 
 ---
@@ -233,12 +220,11 @@ place_types:
     description: "Church parish or ecclesiastical division"
     category: "religious"
   
-  # Custom place types
+  # Additional place types
   plantation:
     label: "Plantation"
     description: "Agricultural estate or plantation"
     category: "geographic"
-    custom: true
 ```
 
 ### Fields
@@ -247,8 +233,7 @@ place_types:
 |-------|----------|-------------|
 | `label` | Yes | Human-readable label |
 | `description` | No | Detailed description |
-| `category` | No | Category (administrative, geographic, religious) |
-| `custom` | No | Mark as custom (non-standard) type |
+| `category` | No | Category (administrative, geographic, religious, institution, other) |
 
 ### Standard Place Types
 
@@ -256,27 +241,25 @@ place_types:
 
 **Complete List**: See [Standard Vocabularies - Place Types](/specification/5-standard-vocabularies/#place-types) for the complete default vocabulary file with all standard types.
 
-### Adding Custom Place Types
+### Adding Additional Place Types
 
-Add custom place types for specialized research:
+Add additional place types for specialized research:
 
 ```yaml
 # vocabularies/place-types.glx
 place_types:
   # ... standard types ...
-  
-  # Custom types
+
+  # Additional types
   plantation:
     label: "Plantation"
     description: "Agricultural estate or plantation"
     category: "geographic"
-    custom: true
-  
+
   mission:
     label: "Mission"
     description: "Religious mission station"
     category: "religious"
-    custom: true
 ```
 
 ---
@@ -315,7 +298,6 @@ source_types:
   oral_history:
     label: "Oral History"
     description: "Interviews, recorded memories"
-    custom: true
 ```
 
 ### Fields
@@ -324,7 +306,6 @@ source_types:
 |-------|----------|-------------|
 | `label` | Yes | Human-readable label |
 | `description` | No | Detailed description |
-| `custom` | No | Mark as custom (non-standard) type |
 
 ### Standard Source Types
 
@@ -332,20 +313,19 @@ source_types:
 
 **Complete List**: See [Standard Vocabularies - Source Types](/specification/5-standard-vocabularies/#source-types) for the complete default vocabulary file with all standard types.
 
-### Adding Custom Source Types
+### Adding Additional Source Types
 
-Add custom source types for specialized research:
+Add additional source types for specialized research:
 
 ```yaml
 # vocabularies/source-types.glx
 source_types:
   # ... standard types ...
-  
-  # Custom types
+
+  # Additional types
   oral_history:
     label: "Oral History"
     description: "Interviews, recorded memories"
-    custom: true
 ```
 
 ---
@@ -389,7 +369,6 @@ media_types:
     label: "Certificate"
     description: "Official certificate or license"
     mime_type: "image/tiff"
-    custom: true
 ```
 
 ### Fields
@@ -399,7 +378,6 @@ media_types:
 | `label` | Yes | Human-readable label |
 | `description` | No | Detailed description |
 | `mime_type` | No | Default MIME type for this media type |
-| `custom` | No | Mark as custom (non-standard) type |
 
 ### Standard Media Types
 
@@ -407,93 +385,26 @@ media_types:
 
 **Complete List**: See [Standard Vocabularies - Media Types](/specification/5-standard-vocabularies/#media-types) for the complete default vocabulary file with all standard types.
 
-### Adding Custom Media Types
+### Adding Additional Media Types
 
-Add custom media types for specialized collections:
+Add additional media types for specialized collections:
 
 ```yaml
 # vocabularies/media-types.glx
 media_types:
   # ... standard types ...
-  
-  # Custom types
+
+  # Additional types
   certificate:
     label: "Certificate"
     description: "Official certificate or license"
     mime_type: "image/tiff"
-    custom: true
-  
+
   artifact:
     label: "Artifact"
     description: "3D scan or photo of physical artifact"
     mime_type: "model/gltf"
-    custom: true
 ```
-
----
-
-## Quality Ratings Vocabulary
-
-**File**: `vocabularies/quality-ratings.glx`
-
-**Used By**: [Citation Entity](citation.md#evidence-quality), [Assertion Entity](assertion.md)
-
-**Purpose**: Defines the meaning of citation quality ratings (0-3 scale, GEDCOM QUAY compatible)
-
-**Standard Templates**: See [Standard Vocabularies - Quality Ratings](/specification/5-standard-vocabularies/#quality-ratings) for the complete default vocabulary with all standard ratings.
-
-### Structure
-
-```yaml
-# vocabularies/quality-ratings.glx
-quality_ratings:
-  3:
-    label: "Primary source"
-    description: "Original document created at time of event"
-    examples:
-      - "Birth certificate"
-      - "Original parish register"
-      - "Contemporary diary entry"
-  
-  2:
-    label: "Secondary source"
-    description: "Record created after event"
-    examples:
-      - "Census record"
-      - "Death certificate for birth information"
-      - "Published vital records index"
-  
-  1:
-    label: "Questionable"
-    description: "Conflicting or unreliable evidence"
-    examples:
-      - "Undocumented oral history"
-      - "Conflicting sources"
-  
-  0:
-    label: "Estimated"
-    description: "No direct evidence, estimated from other data"
-    examples:
-      - "Unverified family tradition"
-      - "Calculated from age at death"
-```
-
-### Fields
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `label` | Yes | Short label for this quality level |
-| `description` | No | Detailed description |
-| `examples` | No | Array of example scenarios |
-
-### Important Notes
-
-- **Archive-defined**: Each archive determines what these ratings mean
-- **GEDCOM compatibility**: 0-3 scale maps 1:1 to GEDCOM 5.5.1 QUAY values
-- **Optional**: Archives can omit quality ratings entirely
-- **Alternative**: Use assertion `confidence` levels instead
-
-See [Core Concepts - Evidence Hierarchy](../2-core-concepts.md#evidence-hierarchy) for details on quality assessment.
 
 ---
 
@@ -503,7 +414,7 @@ See [Core Concepts - Evidence Hierarchy](../2-core-concepts.md#evidence-hierarch
 
 **Used By**: [Assertion Entity](assertion.md#confidence)
 
-**Purpose**: Defines confidence levels for assertions (alternative to citation quality ratings)
+**Purpose**: Defines confidence levels for assertions
 
 **Standard Templates**: See [Standard Vocabularies - Confidence Levels](/specification/5-standard-vocabularies/#confidence-levels) for the complete default vocabulary with all standard confidence levels.
 
@@ -528,11 +439,10 @@ confidence_levels:
     label: "Disputed"
     description: "Multiple sources conflict, resolution unclear"
   
-  # Custom confidence levels
+  # Additional confidence levels
   tentative:
     label: "Tentative"
     description: "Working hypothesis pending additional research"
-    custom: true
 ```
 
 ### Fields
@@ -541,12 +451,10 @@ confidence_levels:
 |-------|----------|-------------|
 | `label` | Yes | Human-readable label |
 | `description` | No | Detailed description |
-| `custom` | No | Mark as custom (non-standard) level |
 
 ### Important Notes
 
-- **Alternative to quality ratings**: Use confidence levels on assertions instead of quality ratings on citations
-- **Researcher's judgment**: Reflects overall confidence in conclusion, not just source quality
+- **Researcher's judgment**: Reflects overall confidence in conclusion
 - **Archive-defined**: Each archive can customize the meaning of confidence levels
 
 See [Assertion Entity - Confidence](assertion.md#confidence) for usage details.
@@ -588,11 +496,10 @@ repository_types:
     label: "Museum"
     description: "Museum with genealogical collections"
   
-  # Custom repository types
+  # Additional repository types
   historical_society:
     label: "Historical Society"
     description: "Local historical society"
-    custom: true
 ```
 
 ### Fields
@@ -601,7 +508,6 @@ repository_types:
 |-------|----------|-------------|
 | `label` | Yes | Human-readable label |
 | `description` | No | Detailed description |
-| `custom` | No | Mark as custom (non-standard) type |
 
 ### Standard Repository Types
 
@@ -662,14 +568,13 @@ participant_roles:
     applies_to:
       - relationship
   
-  # Custom roles
+  # Additional roles
   godparent:
     label: "Godparent"
     description: "Spiritual sponsor at baptism"
     applies_to:
       - event
       - relationship
-    custom: true
 ```
 
 ### Fields
@@ -679,7 +584,6 @@ participant_roles:
 | `label` | Yes | Human-readable label |
 | `description` | No | Detailed description |
 | `applies_to` | No | Array of entity types (event, relationship) |
-| `custom` | No | Mark as custom (non-standard) role |
 
 ### Standard Participant Roles
 
@@ -740,8 +644,7 @@ GENEALOGIX provides standard person properties:
 
 | Property | Type | Temporal | Description |
 |----------|------|----------|-------------|
-| `given_name` | string | Yes | Given name(s) |
-| `family_name` | string | Yes | Family or surname |
+| `name` | string (with fields) | Yes | Person's name as recorded, with optional structured fields (given, surname, prefix, suffix, etc.) |
 | `gender` | string | Yes | Gender identity |
 | `born_on` | date | No | Date of birth |
 | `born_at` | places | No | Place of birth |
@@ -764,10 +667,10 @@ GENEALOGIX provides standard person properties:
 
 Event properties are generally less common than person properties, since most event data is structural (type, date, place, participants). Standard properties include:
 
-- `occurred_on` - When the event occurred
-- `occurred_at` - Where the event occurred
 - `description` - Event description
 - `notes` - Additional notes
+
+**Note:** Event timing and location are handled by the `date` and `place` fields directly on the event, not as properties.
 
 ### Relationship Properties Vocabulary
 
@@ -812,14 +715,12 @@ person_properties:
     description: "Person's date of birth"
     value_type: date
     temporal: false
-    custom: false
-  
+
   residence:
     label: "Residence"
     description: "Place where person lived"
     reference_type: places
     temporal: true
-    custom: false
 ```
 
 | Field | Required | Description |
@@ -829,9 +730,147 @@ person_properties:
 | `value_type` | No* | Data type: `string`, `date`, `integer`, or `boolean` |
 | `reference_type` | No* | Entity type for references: `persons`, `places`, `events`, `relationships`, `sources`, `citations`, `repositories`, `media` |
 | `temporal` | No | Whether property can change over time (default: false) |
-| `custom` | No | Mark as custom property (non-standard) |
+| `fields` | No | Sub-schema for structured property components (see below) |
 
-*Exactly one of `value_type` or `reference_type` should be specified (neither defaults to `string`)
+*Exactly one of `value_type` or `reference_type` should be specified
+
+### Structured Properties with Fields
+
+Some properties benefit from having structured sub-components. For example, a person's name can be stored as a simple string but may also include parsed components like given name, surname, prefix, etc. The `fields` attribute allows you to define this structured breakdown in the vocabulary.
+
+#### Defining Fields
+
+```yaml
+person_properties:
+  name:
+    label: "Name"
+    description: "Person's name as recorded, with optional structured breakdown"
+    value_type: string
+    temporal: true
+    fields:
+      prefix:
+        label: "Prefix"
+        description: "Honorific prefix (Dr., Rev., Hon.)"
+      given:
+        label: "Given Name"
+        description: "Given/first name(s)"
+      nickname:
+        label: "Nickname"
+        description: "Familiar or descriptive name"
+      surname_prefix:
+        label: "Surname Prefix"
+        description: "Article or prefix (von, van, de)"
+      surname:
+        label: "Surname"
+        description: "Family name"
+      suffix:
+        label: "Suffix"
+        description: "Generational suffix (Jr., Sr., III)"
+```
+
+#### Field Definition Structure
+
+Each field in the `fields` map is defined with:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `label` | Yes | Human-readable label for the field |
+| `description` | No | Detailed description of the field |
+
+#### Using Structured Properties in Data
+
+When a property has `fields` defined, the property value can be either:
+
+1. **Simple value** - Just a string (backward compatible):
+   ```yaml
+   properties:
+     name: "John Smith"
+   ```
+
+2. **Structured value** - Object with `value` and optional `fields`:
+   ```yaml
+   properties:
+     name:
+       value: "John Smith"
+       fields:
+         given: "John"
+         surname: "Smith"
+   ```
+
+3. **Temporal list** - For properties with `temporal: true`:
+   ```yaml
+   properties:
+     name:
+       - value: "Mary Johnson"
+         date: "1850"
+         fields:
+           given: "Mary"
+           surname: "Johnson"
+       - value: "Mary Smith"
+         date: "FROM 1875"
+         fields:
+           given: "Mary"
+           surname: "Smith"
+   ```
+
+#### When to Use Fields
+
+Use `fields` when:
+
+- A property has well-known components (name → given, surname, etc.)
+- You want to preserve both the original recorded value and parsed components
+- Different sources may record different components
+- You need to support searching or sorting by component
+
+The `value` field should always contain the complete value as recorded, while `fields` provides the optional parsed breakdown. This design:
+
+- Preserves the original source data
+- Allows flexible parsing (not all sources have all components)
+- Supports temporal changes (name changes over time)
+- Enables rich querying and display
+
+#### Custom Structured Properties
+
+You can define `fields` for any custom property:
+
+```yaml
+person_properties:
+  # Custom structured property for address
+  mailing_address:
+    label: "Mailing Address"
+    description: "Postal address with structured components"
+    value_type: string
+    temporal: true
+    fields:
+      street:
+        label: "Street Address"
+        description: "House number and street name"
+      city:
+        label: "City"
+        description: "City or town"
+      state:
+        label: "State/Province"
+        description: "State, province, or region"
+      postal_code:
+        label: "Postal Code"
+        description: "ZIP or postal code"
+      country:
+        label: "Country"
+        description: "Country name"
+```
+
+Usage:
+```yaml
+properties:
+  mailing_address:
+    value: "123 Main St, Springfield, IL 62701, USA"
+    fields:
+      street: "123 Main St"
+      city: "Springfield"
+      state: "IL"
+      postal_code: "62701"
+      country: "USA"
+```
 
 ### Temporal Properties
 
@@ -853,29 +892,27 @@ properties:
 
 See [Data Types - Temporal Values](../6-data-types.md#temporal-values) for complete documentation.
 
-### Adding Custom Properties
+### Adding Additional Properties
 
-Add custom properties for archive-specific needs:
+Add additional properties for archive-specific needs:
 
 ```yaml
 # vocabularies/person-properties.glx
 person_properties:
   # Standard properties...
-  
-  # Custom properties
+
+  # Additional properties
   militia_service:
     label: "Militia Service"
     description: "Service in local militia"
     value_type: string
     temporal: true
-    custom: true
-  
+
   land_holdings:
     label: "Land Holdings"
     description: "Land owned by person"
     reference_type: places
     temporal: true
-    custom: true
 ```
 
 ### Context-Aware Validation
@@ -918,7 +955,6 @@ The following issues cause validation to fail:
    - Repository types (`repository_types`)
    - Media types (`media_types`)
    - Participant roles (`participant_roles`)
-   - Quality ratings (`quality_ratings`)
    - Confidence levels (`confidence_levels`)
 
 2. **Broken entity references**: All entity references must point to existing entities
@@ -989,7 +1025,7 @@ $ glx validate
 
 ---
 
-## Creating Custom Types
+## Creating Additional Types
 
 ### Step 1: Add to Vocabulary File
 
@@ -997,14 +1033,13 @@ $ glx validate
 # vocabularies/event-types.glx
 event_types:
   # ... standard types ...
-  
-  # Custom types
+
+  # Additional types
   land-grant:
     label: "Land Grant"
     description: "Receipt of land grant or patent"
     category: "property"
     gedcom: "_LAND"  # Non-standard GEDCOM tag
-    custom: true
 ```
 
 ### Step 2: Use in Entity
@@ -1024,7 +1059,7 @@ events:
 ```bash
 $ glx validate events/event-land-grant.glx
 ✓ events/event-land-grant.glx
-  - event type 'land-grant' found in vocabulary (custom)
+  - event type 'land-grant' found in vocabulary
 ```
 
 ---
@@ -1038,12 +1073,11 @@ Before creating custom types, check if standard types meet your needs. Standard 
 - Work with most genealogy software
 - Are understood by other researchers
 
-### Document Custom Types
+### Document Additional Types
 
-When adding custom types:
+When adding additional types:
 - Provide clear `label` and `description`
-- Mark with `custom: true`
-- Document why the custom type is needed
+- Document why the additional type is needed
 - Include GEDCOM mapping if possible (use `_TAG` format for custom GEDCOM tags)
 
 ### Keep Vocabularies Consistent
@@ -1055,9 +1089,9 @@ When adding custom types:
 
 ### Share Vocabularies
 
-- Custom vocabularies can be shared between archives
-- Archives working on similar research can standardize custom types
-- Consider submitting useful custom types as proposals for standard types
+- Additional vocabularies can be shared between archives
+- Archives working on similar research can standardize additional types
+- Consider submitting useful types as proposals for standard types
 
 ---
 
@@ -1089,17 +1123,17 @@ Create type hierarchies:
 
 ```yaml
 event_types:
-  occupation:
-    label: "Occupation"
-    category: "attribute"
-    
-  occupation.agricultural:
-    label: "Agricultural Occupation"
-    parent: "occupation"
-    
-  occupation.agricultural.farmer:
-    label: "Farmer"
-    parent: "occupation.agricultural"
+  military:
+    label: "Military Service"
+    category: "lifecycle"
+
+  military.enlistment:
+    label: "Military Enlistment"
+    parent: "military"
+
+  military.discharge:
+    label: "Military Discharge"
+    parent: "military"
 ```
 
 ### Localization
@@ -1127,17 +1161,20 @@ Each vocabulary type has a corresponding JSON Schema for validation:
 | Event Types | [event-types.schema.json](../schema/v1/vocabularies/event-types.schema.json) |
 | Relationship Types | [relationship-types.schema.json](../schema/v1/vocabularies/relationship-types.schema.json) |
 | Place Types | [place-types.schema.json](../schema/v1/vocabularies/place-types.schema.json) |
-| Source Types | (included in source.schema.json) |
+| Source Types | [source-types.schema.json](../schema/v1/vocabularies/source-types.schema.json) |
 | Media Types | [media-types.schema.json](../schema/v1/vocabularies/media-types.schema.json) |
-| Quality Ratings | [quality-ratings.schema.json](../schema/v1/vocabularies/quality-ratings.schema.json) |
 | Participant Roles | [participant-roles.schema.json](../schema/v1/vocabularies/participant-roles.schema.json) |
 | Repository Types | [repository-types.schema.json](../schema/v1/vocabularies/repository-types.schema.json) |
 | Confidence Levels | [confidence-levels.schema.json](../schema/v1/vocabularies/confidence-levels.schema.json) |
+| Person Properties | [person-properties.schema.json](../schema/v1/vocabularies/person-properties.schema.json) |
+| Event Properties | [event-properties.schema.json](../schema/v1/vocabularies/event-properties.schema.json) |
+| Relationship Properties | [relationship-properties.schema.json](../schema/v1/vocabularies/relationship-properties.schema.json) |
+| Place Properties | [place-properties.schema.json](../schema/v1/vocabularies/place-properties.schema.json) |
 
 All vocabulary schemas are located in `specification/schema/v1/vocabularies/` and define:
 - Required top-level key (e.g., `event_types`, `relationship_types`)
 - Required fields for each entry (typically `label`)
-- Optional fields (e.g., `description`, `gedcom`, `custom`)
+- Optional fields (e.g., `description`, `gedcom`)
 - Pattern properties for vocabulary keys (alphanumeric with hyphens, 1-64 characters)
 
 Vocabulary files are validated by the `glx validate` command using these schemas.
@@ -1152,7 +1189,7 @@ Vocabulary files are validated by the `glx validate` command using these schemas
 - [Place Entity](place.md) - Place types vocabulary
 - [Source Entity](source.md) - Source types vocabulary
 - [Media Entity](media.md) - Media types vocabulary
-- [Citation Entity](citation.md) - Quality ratings usage
+- [Citation Entity](citation.md) - Citation documentation
 
 ---
 

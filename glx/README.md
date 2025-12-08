@@ -1,6 +1,6 @@
 # GLX - GENEALOGIX CLI Tool
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/genealogix/spec/glx)](https://goreportcard.com/report/github.com/genealogix/spec/glx)
+[![Go Report Card](https://goreportcard.com/badge/github.com/genealogix/glx/glx)](https://goreportcard.com/report/github.com/genealogix/glx/glx)
 [![Coverage](https://img.shields.io/badge/coverage-70.5%25-yellow.svg)](coverage.out)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](#running-tests)
 
@@ -9,19 +9,89 @@ The official command-line tool for working with GENEALOGIX (GLX) family archives
 ## Features
 
 - ✅ **Initialize Archives** - Create new single-file or multi-file genealogy archives
+- 📥 **GEDCOM Import** - Import GEDCOM 5.5.1 and 7.0 files to GLX format
 - 🔍 **Validate Files** - Comprehensive validation with cross-reference checking
+- 🔄 **Split/Join** - Convert between single-file and multi-file formats
 - 📋 **Schema Validation** - Verify JSON schemas have required metadata
 - 🧪 **Test Suite** - 70.5% code coverage with comprehensive test fixtures
 - 📚 **Examples Validation** - Automatically validates documentation examples
 
 ## Installation
 
+### From GitHub Releases (Recommended)
+
+Download the latest pre-built binary for your platform from the [Releases page](https://github.com/genealogix/glx/releases):
+
+**macOS (Apple Silicon):**
+```bash
+# Download and extract (replace VERSION with the version number)
+curl -L https://github.com/genealogix/glx/releases/download/VERSION/glx_Darwin_arm64.tar.gz | tar xz
+
+# Move to PATH
+sudo mv glx /usr/local/bin/
+
+# Verify installation
+glx --version
+```
+
+**macOS (Intel):**
+```bash
+# Download and extract (replace VERSION with the version number)
+curl -L https://github.com/genealogix/glx/releases/download/VERSION/glx_Darwin_x86_64.tar.gz | tar xz
+
+# Move to PATH
+sudo mv glx /usr/local/bin/
+
+# Verify installation
+glx --version
+```
+
+**Linux (ARM64):**
+```bash
+# Download and extract (replace VERSION with the version number)
+curl -L https://github.com/genealogix/glx/releases/download/VERSION/glx_Linux_arm64.tar.gz | tar xz
+
+# Move to PATH
+sudo mv glx /usr/local/bin/
+
+# Verify installation
+glx --version
+```
+
+**Linux (x86_64):**
+```bash
+# Download and extract (replace VERSION with the version number)
+curl -L https://github.com/genealogix/glx/releases/download/VERSION/glx_Linux_x86_64.tar.gz | tar xz
+
+# Move to PATH
+sudo mv glx /usr/local/bin/
+
+# Verify installation
+glx --version
+```
+
+**Windows (ARM64):**
+- Download `glx_Windows_arm64.zip` from the [Releases page](https://github.com/genealogix/glx/releases)
+- Extract the ZIP file
+- Add the directory to your PATH or move `glx.exe` to a directory in your PATH
+
+**Windows (x86_64):**
+- Download `glx_Windows_x86_64.zip` from the [Releases page](https://github.com/genealogix/glx/releases)
+- Extract the ZIP file
+- Add the directory to your PATH or move `glx.exe` to a directory in your PATH
+
+### Using Go Install
+
+```bash
+go install github.com/genealogix/glx/glx@latest
+```
+
 ### From Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/genealogix/spec.git
-cd spec/glx
+git clone https://github.com/genealogix/glx.git
+cd glx/glx
 
 # Build the tool
 go build -o glx .
@@ -30,24 +100,24 @@ go build -o glx .
 go install
 ```
 
-### Using Go Install
-
-```bash
-go install github.com/genealogix/spec/glx@latest
-```
-
 ## Quick Start
 
 ```bash
 # Create a new family archive in the `my-family-archive` directory
 glx init my-family-archive
 
-# Create a single-file archive
-glx init my-family-archive --single-file
+# Import a GEDCOM file
+glx import family.ged -o family.glx
+
+# Split single-file archive to multi-file format
+glx split family.glx family-archive
 
 # Validate all files in the new directory
-cd my-family-archive
+cd family-archive
 glx validate
+
+# Join multi-file archive back to single file
+glx join family-archive combined.glx
 
 # Validate specific files or directories
 glx validate persons/
@@ -98,8 +168,7 @@ my-family-archive/
 │   ├── repository-types.glx
 │   ├── participant-roles.glx
 │   ├── media-types.glx
-│   ├── confidence-levels.glx
-│   └── quality-ratings.glx
+│   └── confidence-levels.glx
 ├── .gitignore
 └── README.md
 ```
@@ -164,6 +233,141 @@ glx validate ../docs/examples/complete-family/
 Validated 3 file(s)
 ```
 
+### `glx import`
+
+Import a GEDCOM file and convert it to GLX format.
+
+**Usage:**
+```bash
+glx import <gedcom-file> -o <output> [flags]
+```
+
+**Options:**
+- `-o, --output <path>` - Output file or directory (required)
+- `-f, --format <format>` - Output format: `single` or `multi` (default: `single`)
+- `--no-validate` - Skip validation before saving
+- `-v, --verbose` - Verbose output
+
+**Supported Formats:**
+- ✓ GEDCOM 5.5.1
+- ✓ GEDCOM 7.0
+
+**Features:**
+- Converts all individuals to persons
+- Converts all events (births, deaths, marriages, etc.)
+- Converts all relationships (parent-child, spouse, etc.)
+- Builds place hierarchies from GEDCOM locations
+- Converts sources, citations, repositories, and media
+- Creates evidence-based assertions
+- Includes standard vocabularies
+
+**Examples:**
+
+```bash
+# Import to single file
+glx import family.ged -o family.glx
+
+# Import to multi-file directory
+glx import family.ged -o family-archive --format multi
+
+# Import without validation (faster, less safe)
+glx import family.ged -o family.glx --no-validate
+
+# Verbose output to see import progress
+glx import family.ged -o family.glx --verbose
+```
+
+**Output:**
+```
+✓ Successfully imported to family.glx
+
+Import statistics:
+  Persons:       31
+  Events:        77
+  Relationships: 49
+  Places:        5
+  Sources:       0
+  Citations:     0
+  Repositories:  0
+  Media:         0
+  Assertions:    150
+```
+
+### `glx split`
+
+Split a single-file GLX archive into a multi-file directory structure.
+
+**Usage:**
+```bash
+glx split <input-file> <output-directory> [flags]
+```
+
+**Options:**
+- `--no-validate` - Skip validation before splitting
+- `-v, --verbose` - Verbose output
+
+**Creates:**
+```
+output-directory/
+├── persons/
+│   ├── person-{id}.glx
+│   └── ...
+├── events/
+│   ├── event-{id}.glx
+│   └── ...
+├── relationships/
+│   ├── relationship-{id}.glx
+│   └── ...
+├── places/
+│   ├── place-{id}.glx
+│   └── ...
+├── sources/
+├── citations/
+├── repositories/
+├── media/
+├── assertions/
+└── vocabularies/
+    ├── event-types.glx
+    ├── relationship-types.glx
+    └── ...
+```
+
+**Examples:**
+
+```bash
+# Split an archive
+glx split family.glx family-archive
+
+# Split without validation
+glx split family.glx family-archive --no-validate
+```
+
+### `glx join`
+
+Join a multi-file GLX archive into a single YAML file.
+
+**Usage:**
+```bash
+glx join <input-directory> <output-file> [flags]
+```
+
+**Options:**
+- `--no-validate` - Skip validation before joining
+- `-v, --verbose` - Verbose output
+
+**Examples:**
+
+```bash
+# Join an archive
+glx join family-archive family.glx
+
+# Join without validation (faster)
+glx join family-archive family.glx --no-validate
+
+# Verbose output
+glx join family-archive family.glx --verbose
+```
+
 ### `glx check-schemas`
 
 Validate JSON schema files for required metadata.
@@ -194,8 +398,11 @@ GENEALOGIX uses YAML files with `.glx` extension. Entities are stored as maps wh
 persons:
   person-john-smith:
     properties:
-      given_name: "John"
-      family_name: "Smith"
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
 
 relationships:
   rel-marriage:
@@ -220,8 +427,11 @@ Each file contains one entity type:
 persons:
   person-john-smith:
     properties:
-      given_name: "John"
-      family_name: "Smith"
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
 ```
 
 ```yaml
@@ -401,6 +611,6 @@ Apache License 2.0 - See [LICENSE](../LICENSE) for details.
 
 - 📖 [Specification](../specification/)
 - 💡 [Examples](../docs/examples/)
-- 🐛 [Issue Tracker](https://github.com/genealogix/spec/issues)
-- 💬 [Discussions](https://github.com/genealogix/spec/discussions)
+- 🐛 [Issue Tracker](https://github.com/genealogix/glx/issues)
+- 💬 [Discussions](https://github.com/genealogix/glx/discussions)
 

@@ -1,6 +1,6 @@
 ---
 title: Citation Entity
-description: Specific references to evidence with quality assessment and source linkage
+description: Specific references to evidence with source linkage
 layout: doc
 ---
 
@@ -10,7 +10,7 @@ layout: doc
 
 ## Overview
 
-A Citation entity represents a specific reference to evidence that supports genealogical conclusions. Citations link to Source entities and provide detailed information about where evidence was found, including page numbers, data dates, and quality assessments.
+A Citation entity represents a specific reference to evidence that supports genealogical conclusions. Citations link to Source entities and provide detailed information about where evidence was found, including page numbers and data dates.
 
 ## Core Concepts
 
@@ -21,60 +21,27 @@ A Citation entity represents a specific reference to evidence that supports gene
 
 One source can have many citations referencing different pages or sections.
 
-### Evidence Quality
+## Fields
 
-GENEALOGIX uses a 0-3 quality scale that maintains 1:1 compatibility with GEDCOM QUAY for interoperability.
+### Required Fields
 
-**Quality Scale (GEDCOM QUAY Compatible):**
-- **3**: Direct and primary evidence used, or by dominance of evidence
-  - Examples: Original birth certificate, contemporary baptism record, firsthand diary entry
-- **2**: Secondary evidence, data officially recorded sometime after event
-  - Examples: Census record, compiled index, published vital records
-- **1**: Questionable reliability of evidence
-  - Examples: Undocumented oral history, conflicting sources, estimated data
-- **0**: Unreliable evidence or estimated data
-  - Examples: Unverified family tradition, unsourced online trees
+| Field | Type | Description |
+|-------|------|-------------|
+| Entity ID (map key) | string | Unique identifier (alphanumeric/hyphens, 1-64 chars) |
+| `source` | string | Reference to Source entity |
 
-**See [Vocabularies - Quality Ratings](vocabularies.md#quality-ratings-vocabulary) for:**
-- Customizing quality rating definitions for your archive
-- Alternative approaches using confidence levels
-- Vocabulary file structure and validation
+### Optional Fields
 
-**GEDCOM Interoperability:**
-This scale maps directly to GEDCOM 5.5.1 QUAY values (0→0, 1→1, 2→2, 3→3), ensuring lossless conversion between formats.
-
-**Advanced Evidence Evaluation:**
-For more sophisticated analysis beyond the 0-3 scale, use:
-- `assertion.confidence` field (high/medium/low/disputed) for conclusion certainty
-- `citation.research_notes` for detailed source analysis (primary vs. secondary, direct vs. indirect)
-- Multiple citations per assertion to show corroboration
-
-## Properties
-
-### Required Properties
-
-|| Property | Type | Description |
-||----------|------|-------------|
-|| `id` | string | Unique identifier (format: `citation-{id}`, map key) |
-|| `source` | string | Reference to Source entity |
-
-### Optional Properties
-
-|| Property | Type | Description |
-||----------|------|-------------|
-|| `page` | string | Page number or locator within source |
-|| `data_date` | string | Date the data was recorded (for documentary sources) |
-|| `text_from_source` | string | Transcription or excerpt from the source |
-|| `quality` | integer | Evidence quality (0-3, QUAY value) |
-|| `locator` | object | Structured locator information |
-|| `locator.film_number` | string | FamilySearch film number |
-|| `locator.item_number` | string | Item number or accession number |
-|| `locator.image_number` | string | Image or page identifier |
-|| `locator.url` | string | URL to online source |
-|| `repository` | string | Reference to Repository entity |
-|| `media` | array | References to Media entities (scans, photos, documents) related to this citation |
-|| `notes` | string | Free-form notes about the citation |
-|| `tags` | array | User-defined tags for organization |
+| Field | Type | Description |
+|-------|------|-------------|
+| `page` | string | Page number or locator within source |
+| `data_date` | string | Date the data was recorded (for documentary sources) |
+| `text_from_source` | string | Transcription or excerpt from the source |
+| `locator` | string | Location within source (e.g., 'Page 45, Entry 123', 'Film 1234567, Image 87') |
+| `repository` | string | Reference to Repository entity |
+| `media` | array | References to Media entities |
+| `notes` | string | Free-form notes about the citation |
+| `tags` | array | User-defined tags for organization |
 
 ## Usage Patterns
 
@@ -86,7 +53,6 @@ citations:
   citation-marriage-record:
     source: source-parish-register
     page: "125"
-    quality: 3
     text_from_source: "John Smith married to Mary Jones, 15 May 1850"
 ```
 
@@ -101,10 +67,7 @@ citations:
     source: source-ancestry-census
     data_date: "1851"
     page: "Schedule 7, piece 1123"
-    quality: 2
-    locator:
-      url: "https://www.ancestry.com/..."
-      image_number: "87342534"
+    locator: "https://www.ancestry.com/..., Image 87342534"
     text_from_source: |
       Name: John Smith
       Age: 35
@@ -121,10 +84,7 @@ citations:
     source: source-probate-wills
     repository: repository-probate
     page: "23"
-    quality: 3
-    locator:
-      item_number: "1876/X/150"
-      film_number: "100234"
+    locator: "Item 1876/X/150, Film 100234"
     data_date: "1876"
     text_from_source: |
       I, John Smith, being of sound mind, do hereby
@@ -153,32 +113,13 @@ Citations are primarily used within Assertions to provide evidence:
 assertions:
   assertion-birth-john:
     subject: person-john-smith
-    claim: birth_date
+    claim: born_on
     value: "1850-01-15"
     citations:
       - citation-parish-birth
       - citation-census-birth
     confidence: high
-    research_notes: "Primary source from parish register"
-```
-
-## Locator Object
-
-The locator object stores structured information about how to find the evidence:
-
-```yaml
-locator:
-  # For online resources
-  url: "https://www.familysearch.org/..."
-  image_number: "4253453"
-  
-  # For archive materials
-  film_number: "1234567"
-  item_number: "P/152/1"
-  
-  # For databases
-  record_id: "REC12345678"
-  database_collection: "UK Census 1851"
+    notes: "Primary source from parish register"
 ```
 
 ## File Organization
@@ -205,44 +146,25 @@ Or more commonly, citations are referenced by ID from assertions.
 
 ## GEDCOM Mapping
 
-|| GLX Property | GEDCOM Element | Notes |
-||--------------|----------------|-------|
-|| `id` | (synthetic) | Not in GEDCOM |
-|| `source` | SOUR | Source reference |
-|| `page` | SOUR.PAGE | Page within source |
-|| `data_date` | SOUR.DATA.DATE | Date data was recorded |
-|| `text_from_source` | SOUR.TEXT | Transcribed text |
-|| `quality` | SOUR.QUAY | Evidence quality (0-3) |
-|| `locator.url` | SOUR.OBJE.FILE | File/URL path |
-|| `locator.film_number` | SOUR.REPO.CALN.VALUE | Media number |
+| GLX Field | GEDCOM Element | Notes |
+|-----------|----------------|-------|
+| Entity ID (map key) | (synthetic) | Not in GEDCOM |
+| `source` | SOUR | Source reference |
+| `page` | SOUR.PAGE | Page within source |
+| `data_date` | SOUR.DATA.DATE | Date data was recorded |
+| `text_from_source` | SOUR.TEXT | Transcribed text |
+| `locator` | SOUR.OBJE.FILE, SOUR.REPO.CALN | Combined from multiple GEDCOM elements |
 
 ## Validation Rules
 
 - Source ID must reference an existing Source entity
-- Quality, if present, must be 0-3
 - Page information should be concise and meaningful
-- Locator URLs must be properly formed
 - Text transcriptions should accurately represent source material
 - Repository, if specified, must exist
 
 ## Evidence Hierarchy
 
-Citations are the lowest level in the evidence hierarchy:
-
-```
-Archive/Collection (Source)
-  └─ Specific Record/Document (Citation)
-      └─ Specific Field/Statement (Assertion)
-```
-
-## Quality Assessment
-
-When entering citations, consider:
-
-- **Original vs. Derivative**: Is this from the original record or a copy?
-- **Reliability of Source**: Who created/maintains the source?
-- **Completeness**: Does the source provide all relevant information?
-- **Corroboration**: Is the information supported by other sources?
+Citations are part of the GENEALOGIX evidence hierarchy. See [Core Concepts - Evidence Hierarchy](../2-core-concepts#evidence-hierarchy) for the complete evidence chain from Repository → Source → Citation → Assertion.
 
 ## See Also
 

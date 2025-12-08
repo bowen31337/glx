@@ -1,6 +1,6 @@
 # Standard Place Types
 # This file defines the standard place types for GENEALOGIX archives.
-# Archives can extend this with custom types by adding entries with `custom: true`.
+# Archives can extend this with custom types by adding additional entries.
 
 place_types:
   country:
@@ -12,25 +12,30 @@ place_types:
     label: "State/Province"
     description: "State, province, or region"
     category: "administrative"
-  
+
   county:
     label: "County"
     description: "County or similar administrative division"
     category: "administrative"
-  
+
   city:
     label: "City"
     description: "City or town"
     category: "geographic"
-  
+
   town:
     label: "Town"
     description: "Town or village"
     category: "geographic"
-  
+
   parish:
     label: "Parish"
     description: "Church parish or ecclesiastical division"
+    category: "religious"
+
+  church:
+    label: "Church"
+    description: "Church building or religious structure"
     category: "religious"
   
   district:
@@ -57,4 +62,14 @@ place_types:
     label: "Building"
     description: "Specific building or structure"
     category: "geographic"
+
+  hospital:
+    label: "Hospital"
+    description: "Hospital or medical facility"
+    category: "institution"
+
+  cemetery:
+    label: "Cemetery"
+    description: "Cemetery or burial ground"
+    category: "institution"
 

@@ -25,7 +25,7 @@ Standard vocabularies provide:
 
 ### Event Types
 
-Defines lifecycle events (birth, death, marriage), religious events (baptism, confirmation), and attribute facts (occupation, residence, education).
+Defines lifecycle events (birth, death, marriage, adoption), religious events (baptism, confirmation, bar/bat mitzvah), legal events (annulment, probate, will), and migration events (immigration, emigration, naturalization).
 
 <YamlFile 
   :content="vocabularies['event-types']"
@@ -88,22 +88,9 @@ Defines categories of media objects including photographs, documents, audio reco
 
 ---
 
-### Quality Ratings
-
-Defines the 0-3 quality rating scale for citation evidence quality, compatible with GEDCOM 5.5.1 QUAY values.
-
-<YamlFile 
-  :content="vocabularies['quality-ratings']"
-  title="vocabularies/quality-ratings.glx"
-/>
-
-**See Also:** [Citation Entity Documentation](../4-entity-types/citation) | [Vocabularies Specification](../4-entity-types/vocabularies#quality-ratings-vocabulary)
-
----
-
 ### Confidence Levels
 
-Defines confidence levels for assertions, providing an alternative to citation quality ratings.
+Defines confidence levels for assertions, representing researcher certainty in conclusions.
 
 <YamlFile 
   :content="vocabularies['confidence-levels']"
@@ -151,7 +138,7 @@ Defines standard and custom properties for person entities (birth date, occupati
 **File:** `vocabularies/person-properties.glx`
 
 **Standard Properties Include:**
-- `given_name`, `family_name` - Name components (temporal)
+- `name` - Unified name property with optional structured fields (given, surname, prefix, suffix, etc.) (temporal)
 - `gender` - Gender identity (temporal)
 - `born_on` - Date of birth
 - `born_at` - Place of birth (reference)
@@ -172,9 +159,10 @@ Defines standard and custom properties for event entities.
 **File:** `vocabularies/event-properties.glx`
 
 **Standard Properties Include:**
-- `occurred_on` - When the event occurred
-- `occurred_at` - Where the event occurred (reference)
 - `description` - Event description
+- `notes` - Additional notes
+
+**Note:** Event timing and location are handled by the `date` and `place` fields directly on events, not as properties.
 
 **See Also:** [Event Entity Documentation](../4-entity-types/event#properties) | [Vocabularies Specification](../4-entity-types/vocabularies#event-properties-vocabulary)
 
@@ -226,13 +214,12 @@ Extend standard vocabularies by adding custom entries:
 # vocabularies/event-types.glx
 event_types:
   # ... standard types ...
-  
+
   # Custom types
   apprenticeship:
     label: "Apprenticeship"
     description: "Beginning of apprenticeship training"
     category: "occupation"
-    custom: true
 ```
 
 ### Using Custom Types
@@ -246,7 +233,7 @@ events:
     type: apprenticeship  # Custom type from vocabulary
     date: "1845-03-10"
     place: place-leeds
-    value: "Apprenticed to blacksmith"
+    description: "Apprenticed to blacksmith"
 ```
 
 ### Validation
@@ -264,7 +251,6 @@ $ glx validate
 
 - **Use Standard Types First** - Standard types ensure GEDCOM compatibility and interoperability
 - **Document Custom Types** - Provide clear labels and descriptions for custom types
-- **Mark Custom Types** - Always include `custom: true` for non-standard types
 - **Map to GEDCOM** - Include GEDCOM mappings when possible (use `_TAG` format for custom tags)
 - **Keep Consistent** - Use consistent naming conventions (lowercase with hyphens)
 

@@ -27,12 +27,12 @@ func TestRunInit_SingleFile(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := runInit(tmpDir, true, 0)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Check that archive.glx was created
 	archivePath := filepath.Join(tmpDir, "archive.glx")
 	_, err = os.Stat(archivePath)
-	assert.NoError(t, err, "archive.glx should be created")
+	require.NoError(t, err, "archive.glx should be created")
 
 	// Check content
 	content, err := os.ReadFile(archivePath)
@@ -45,7 +45,7 @@ func TestRunInit_MultiFile(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := runInit(tmpDir, false, 0)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Check that directories were created
 	expectedDirs := []string{
@@ -56,7 +56,7 @@ func TestRunInit_MultiFile(t *testing.T) {
 	for _, dir := range expectedDirs {
 		dirPath := filepath.Join(tmpDir, dir)
 		info, err := os.Stat(dirPath)
-		assert.NoError(t, err, "directory %s should be created", dir)
+		require.NoError(t, err, "directory %s should be created", dir)
 		assert.True(t, info.IsDir(), "%s should be a directory", dir)
 	}
 
@@ -69,24 +69,23 @@ func TestRunInit_MultiFile(t *testing.T) {
 		"vocabularies/participant-roles.glx",
 		"vocabularies/media-types.glx",
 		"vocabularies/confidence-levels.glx",
-		"vocabularies/quality-ratings.glx",
 	}
 
 	for _, file := range vocabFiles {
 		filePath := filepath.Join(tmpDir, file)
 		_, err := os.Stat(filePath)
-		assert.NoError(t, err, "vocabulary file %s should be created", file)
+		require.NoError(t, err, "vocabulary file %s should be created", file)
 	}
 
 	// Check that .gitignore was created
 	gitignorePath := filepath.Join(tmpDir, ".gitignore")
 	_, err = os.Stat(gitignorePath)
-	assert.NoError(t, err, ".gitignore should be created")
+	require.NoError(t, err, ".gitignore should be created")
 
 	// Check that README.md was created
 	readmePath := filepath.Join(tmpDir, "README.md")
 	_, err = os.Stat(readmePath)
-	assert.NoError(t, err, "README.md should be created")
+	require.NoError(t, err, "README.md should be created")
 }
 
 func TestRunInit_NonEmptyDirectory(t *testing.T) {
@@ -94,12 +93,12 @@ func TestRunInit_NonEmptyDirectory(t *testing.T) {
 
 	// Create a dummy file to make the directory non-empty
 	dummyFile := filepath.Join(tmpDir, "dummy.txt")
-	err := os.WriteFile(dummyFile, []byte("hello"), 0644)
+	err := os.WriteFile(dummyFile, []byte("hello"), 0o644)
 	require.NoError(t, err)
 
 	// Now, try to initialize in the non-empty directory
 	err = runInit(tmpDir, false, 0)
-	assert.Error(t, err, "should fail when run in a non-empty directory")
+	require.Error(t, err, "should fail when run in a non-empty directory")
 	if err != nil {
 		assert.Contains(t, err.Error(), "non-empty directory")
 	}
@@ -110,7 +109,7 @@ func TestRunInit_WithTestData(t *testing.T) {
 	numPeople := 5
 
 	err := runInit(tmpDir, false, numPeople)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Check that the person files were created
 	personFiles, err := os.ReadDir(filepath.Join(tmpDir, "persons"))
@@ -130,14 +129,14 @@ func TestCreateStandardVocabularies(t *testing.T) {
 
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	// Create vocabularies directory first
-	err = os.MkdirAll("vocabularies", 0755)
+	err = os.MkdirAll("vocabularies", 0o755)
 	require.NoError(t, err)
 
 	err = createStandardVocabularies()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Check that vocabulary files were created
 	vocabFiles := []string{
@@ -148,13 +147,12 @@ func TestCreateStandardVocabularies(t *testing.T) {
 		"vocabularies/participant-roles.glx",
 		"vocabularies/media-types.glx",
 		"vocabularies/confidence-levels.glx",
-		"vocabularies/quality-ratings.glx",
 	}
 
 	for _, file := range vocabFiles {
 		filePath := filepath.Join(tmpDir, file)
 		content, err := os.ReadFile(filePath)
-		assert.NoError(t, err, "vocabulary file %s should be created", file)
+		require.NoError(t, err, "vocabulary file %s should be created", file)
 		assert.NotEmpty(t, content, "vocabulary file %s should not be empty", file)
 	}
 }

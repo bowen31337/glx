@@ -1,6 +1,9 @@
 # Standard Event Types
-# This file defines the standard event and fact types for GENEALOGIX archives.
-# Archives can extend this with custom types by adding entries with `custom: true`.
+# This file defines the standard event types for GENEALOGIX archives.
+# Archives can extend this with custom types by adding additional entries.
+#
+# Note: Attributes like occupation, residence, religion, etc. are represented
+# as temporal properties on Person entities, not as events.
 
 event_types:
   # Lifecycle Events
@@ -33,19 +36,43 @@ event_types:
     description: "Engagement to be married"
     category: "lifecycle"
     gedcom: "ENGA"
-  
+
+  marriage_settlement:
+    label: "Marriage Settlement"
+    description: "Marriage settlement or prenuptial agreement"
+    category: "lifecycle"
+    gedcom: "MARS"
+
+  marriage_banns:
+    label: "Marriage Banns"
+    description: "Marriage banns or announcement"
+    category: "lifecycle"
+    gedcom: "MARB"
+
+  marriage_contract:
+    label: "Marriage Contract"
+    description: "Marriage contract"
+    category: "lifecycle"
+    gedcom: "MARC"
+
+  marriage_license:
+    label: "Marriage License"
+    description: "Marriage license"
+    category: "lifecycle"
+    gedcom: "MARL"
+
   adoption:
     label: "Adoption"
     description: "Legal adoption"
     category: "lifecycle"
     gedcom: "ADOP"
-  
+
   burial:
     label: "Burial"
     description: "Burial of remains"
     category: "lifecycle"
     gedcom: "BURI"
-  
+
   cremation:
     label: "Cremation"
     description: "Cremation of remains"
@@ -76,47 +103,103 @@ event_types:
     description: "Jewish coming of age ceremony (female)"
     category: "religious"
     gedcom: "BATM"
-  
+
+  bas_mitzvah:
+    label: "Bas Mitzvah"
+    description: "Jewish coming of age ceremony (female, alternative spelling)"
+    category: "religious"
+    gedcom: "BASM"
+
   christening:
     label: "Christening"
     description: "Infant christening"
     category: "religious"
     gedcom: "CHR"
-  
-  # Attribute Facts
-  residence:
-    label: "Residence"
-    description: "Place of residence"
-    category: "attribute"
-    gedcom: "RESI"
-  
-  occupation:
-    label: "Occupation"
-    description: "Employment or profession"
-    category: "attribute"
-    gedcom: "OCCU"
-  
-  title:
-    label: "Title"
-    description: "Nobility or honorific title"
-    category: "attribute"
-    gedcom: "TITL"
-  
-  nationality:
-    label: "Nationality"
-    description: "National citizenship"
-    category: "attribute"
-    gedcom: "NATI"
-  
-  religion:
-    label: "Religion"
-    description: "Religious affiliation"
-    category: "attribute"
-    gedcom: "RELI"
-  
-  education:
-    label: "Education"
-    description: "Educational achievement"
-    category: "attribute"
-    gedcom: "EDUC"
+
+  adult_christening:
+    label: "Adult Christening"
+    description: "Adult christening or adult baptism"
+    category: "religious"
+    gedcom: "CHRA"
+
+  blessing:
+    label: "Blessing"
+    description: "Religious blessing ceremony"
+    category: "religious"
+    gedcom: "BLES"
+
+  first_communion:
+    label: "First Communion"
+    description: "First Holy Communion"
+    category: "religious"
+    gedcom: "FCOM"
+
+  ordination:
+    label: "Ordination"
+    description: "Religious ordination"
+    category: "religious"
+    gedcom: "ORDN"
+
+  # Legal and Administrative Events
+  annulment:
+    label: "Annulment"
+    description: "Legal annulment of marriage"
+    category: "legal"
+    gedcom: "ANUL"
+
+  divorce_filed:
+    label: "Divorce Filed"
+    description: "Divorce filing"
+    category: "legal"
+    gedcom: "DIVF"
+
+  probate:
+    label: "Probate"
+    description: "Probate of estate"
+    category: "legal"
+    gedcom: "PROB"
+
+  will:
+    label: "Will"
+    description: "Creation of will"
+    category: "legal"
+    gedcom: "WILL"
+
+  # Lifecycle Events (continued)
+  graduation:
+    label: "Graduation"
+    description: "Graduation from school or university"
+    category: "lifecycle"
+    gedcom: "GRAD"
+
+  retirement:
+    label: "Retirement"
+    description: "Retirement from occupation"
+    category: "lifecycle"
+    gedcom: "RETI"
+
+  # Migration Events
+  naturalization:
+    label: "Naturalization"
+    description: "Naturalization or citizenship"
+    category: "migration"
+    gedcom: "NATU"
+  immigration:
+    label: "Immigration"
+    description: "Immigration to a new country"
+    category: "migration"
+    gedcom: "IMMI"
+
+  emigration:
+    label: "Emigration"
+    description: "Emigration from a country"
+    category: "migration"
+    gedcom: "EMIG"
+
+  # Generic Events
+  event:
+    label: "Event"
+    description: "Generic event or fact"
+    category: "other"
+    gedcom: "EVEN"
 

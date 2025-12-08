@@ -21,13 +21,32 @@ All GENEALOGIX files use entity type keys at the top level:
 persons:
   person-john-smith-1850:
     properties:
-      given_name: "John"
-      family_name: "Smith"
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
 ```
 
 **Key Points:**
 - Entity ID is the map key (`person-john-smith-1850`)
 - IDs can be descriptive or random, 1-64 alphanumeric/hyphens
+
+## Fields
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Entity ID (map key) | string | Unique identifier (alphanumeric/hyphens, 1-64 chars) |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `properties` | object | Vocabulary-defined properties (name, gender, dates, etc.) |
+| `notes` | string | Free-form notes about the person |
+| `tags` | array | Tags for categorization |
 
 ## Required Fields
 
@@ -51,8 +70,13 @@ persons:
 Structure:
 ```yaml
 properties:
-  given_name: String        # From person_properties vocabulary
-  family_name: String       # From person_properties vocabulary
+  name:                      # Unified name property with optional fields
+    value: String           # Full name as recorded
+    fields:                 # Optional structured breakdown
+      given: String
+      surname: String
+      prefix: String
+      suffix: String
   gender: String            # From person_properties vocabulary
   born_on: Date            # From person_properties vocabulary
   born_at: "place-id"      # From person_properties vocabulary (reference)
@@ -65,8 +89,11 @@ properties:
 Example:
 ```yaml
 properties:
-  given_name: "John"
-  family_name: "Smith"
+  name:
+    value: "John Smith"
+    fields:
+      given: "John"
+      surname: "Smith"
   gender: "male"
   born_on: "1850-01-15"
   born_at: "place-leeds"
@@ -75,9 +102,9 @@ properties:
   occupation: "blacksmith"
   residence:
     - value: "place-leeds"
-      date: "1850-1900"
+      date: "FROM 1850 TO 1900"
     - value: "place-london"
-      date: "1900-1920"
+      date: "FROM 1900 TO 1920"
 ```
 
 **Key Points:**
@@ -94,8 +121,11 @@ properties:
 persons:
   person-margaret-smith-1825:
     properties:
-      given_name: "Margaret Eleanor"
-      family_name: "Smith"
+      name:
+        value: "Margaret Eleanor Smith"
+        fields:
+          given: "Margaret Eleanor"
+          surname: "Smith"
       gender: "female"
       born_on: "1825-04-10"
       died_on: "1890-11-22"
@@ -118,4 +148,4 @@ complete JSON Schema definition.
 - [Assertion Entity](assertion.md)
 - [Relationship Entity](relationship.md)
 - [Data Types](../6-data-types.md)
-- [Provenance Tracking](../2-core-concepts.md#provenance-and-confidence)
+- [Provenance Tracking](../2-core-concepts#provenance-tracking)

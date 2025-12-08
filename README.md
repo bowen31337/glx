@@ -6,13 +6,13 @@ layout: doc
 
 # GENEALOGIX Specification
 
-[![Version](https://img.shields.io/badge/version-0.0.0--beta.1-blue.svg)](https://github.com/genealogix/spec/releases)
+[![Version](https://img.shields.io/badge/version-0.0.0--beta.2-blue.svg)](https://github.com/genealogix/glx/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
-[![CI](https://github.com/genealogix/spec/workflows/Validate%20Specification/badge.svg)](https://github.com/genealogix/spec/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/genealogix/spec)](https://goreportcard.com/report/github.com/genealogix/spec)
-[![Contributors](https://img.shields.io/github/contributors/genealogix/spec.svg)](https://github.com/genealogix/spec/graphs/contributors)
+[![CI](https://github.com/genealogix/glx/workflows/Validate%20Specification/badge.svg)](https://github.com/genealogix/glx/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/genealogix/glx)](https://goreportcard.com/report/github.com/genealogix/glx)
+[![Contributors](https://img.shields.io/github/contributors/genealogix/glx.svg)](https://github.com/genealogix/glx/graphs/contributors)
 
-The official specification for the **GENEALOGIX (GLX)** family archive format - a modern, evidence-first, Git-native genealogy data standard.
+The official specification for **GENEALOGIX (GLX)** - a portable, extensible archive format for genealogical research and beyond. Built on Git, designed for collaboration, and customizable through archive-owned vocabularies. Your data, your way, forever.
 
 ## Quick Links
 
@@ -25,7 +25,7 @@ The official specification for the **GENEALOGIX (GLX)** family archive format - 
 
 ## Current Version
 
-**Version:** 0.0.0-beta.1
+**Version:** 0.0.0-beta.2
 **Status:** Beta
 **Last Updated:** 2025-11-18
 
@@ -43,6 +43,9 @@ Traditional genealogy formats like GEDCOM have served researchers well, but they
 | **Human Readability** | Don't even try | Clear YAML structure |
 | **Validation** | Syntax only | Schema-based validation |
 | **Extensibility** | Limited | JSON Schema based |
+| **Data Portability** | Vendor lock-in | Open format you own |
+| **Interoperability** | GEDCOM export only | Import/export + Git workflows |
+| **Custom Types** | Fixed schema | Archive-defined vocabularies |
 
 ### Visual Comparison
 
@@ -62,8 +65,11 @@ Traditional genealogy formats like GEDCOM have served researchers well, but they
 persons:
   person-john-smith:
     properties:
-      given_name: "John"
-      family_name: "Smith"
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
       born_on: "1850-01-15"
 
 assertions:
@@ -76,6 +82,28 @@ assertions:
 ```
 
 > **Learn More:** See [Core Concepts](specification/2-core-concepts.md) for the complete assertion model and evidence chain explanation.
+
+### Beyond Exchange: A True Research Foundation
+
+GENEALOGIX is more than an import/export format. It's a **permanent foundation** for your research:
+
+#### Data You Own and Control
+- **Human-readable YAML** - Edit in any text editor, no special software required
+- **Open format** - No proprietary database, no vendor lock-in
+- **Portable forever** - Your data outlasts any software application
+- **Git-native** - Industry-standard version control built in
+
+#### Flexible to Your Research Domain
+- **Custom vocabularies** - Define your own event types, relationship types, properties
+- **Beyond genealogy** - Biography projects, local history, prosopography, and more
+- **Extensible schema** - Add custom fields without breaking compatibility
+- **No central registry** - Each archive is autonomous and self-contained
+
+#### Built for Collaboration
+- **Git workflows** - Branch, merge, and collaborate like software developers
+- **Evidence-first** - Every claim backed by documented sources
+- **Conflict resolution** - Handle competing evidence systematically
+- **Pull request reviews** - Quality assurance through peer review
 
 ## What is GENEALOGIX?
 
@@ -91,13 +119,13 @@ GENEALOGIX is an open standard for version-controlled family archives that provi
 
 ## Installation
 
-The recommended way to install the `glx` CLI is to download the latest pre-compiled binary for your operating system from the [GitHub Releases](https://github.com/genealogix/spec/releases) page.
+The recommended way to install the `glx` CLI is to download the latest pre-compiled binary for your operating system from the [GitHub Releases](https://github.com/genealogix/glx/releases) page.
 
 Alternatively, developers can install from source:
 
 ```bash
 # Install the glx CLI tool
-go install github.com/genealogix/spec/glx@latest
+go install github.com/genealogix/glx/glx@latest
 ```
 
 ## Quick Start
@@ -126,8 +154,11 @@ All GENEALOGIX files use the same structure:
 persons:
   person-a1b2c3d4:
     properties:
-      given_name: "John"
-      family_name: "Smith"
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
       born_on: "1850-01-15"
 
 sources:
@@ -155,10 +186,10 @@ This specification follows [Semantic Versioning](https://semver.org/).
 GENEALOGIX is an open-source project that thrives on community participation:
 
 ### 🐛 Issues & Bug Reports
-- [GitHub Issues](https://github.com/genealogix/spec/issues) - Report bugs and request features
+- [GitHub Issues](https://github.com/genealogix/glx/issues) - Report bugs and request features
 
 ### 💬 Discussion & Q&A
-- [GitHub Discussions](https://github.com/genealogix/spec/discussions) - Community conversations
+- [GitHub Discussions](https://github.com/genealogix/glx/discussions) - Community conversations
 - [Discord Community](https://discord.gg/genealogix) - Real-time chat and support
 - [Mailing List](https://groups.google.com/g/genealogix) - Email discussions
 
@@ -178,8 +209,7 @@ GENEALOGIX is an open-source project that thrives on community participation:
 **For Users:**
 1. Start with the [Quickstart Guide](docs/quickstart.md)
 2. Explore [Complete Examples](docs/examples/complete-family/)
-3. Check [Common Pitfalls](docs/guides/common-pitfalls.md)
-4. Ask questions in [GitHub Discussions](https://github.com/genealogix/spec/discussions)
+3. Ask questions in [GitHub Discussions](https://github.com/genealogix/glx/discussions)
 
 **For Developers:**
 1. Read the [Architecture Guide](docs/development/architecture.md)
@@ -189,13 +219,13 @@ GENEALOGIX is an open-source project that thrives on community participation:
 
 **For Contributors:**
 1. Review [Contributing Guidelines](CONTRIBUTING.md)
-2. Review [GitHub Issues](https://github.com/genealogix/spec/issues) and [Discussions](https://github.com/genealogix/spec/discussions) for proposed changes
+2. Review [GitHub Issues](https://github.com/genealogix/glx/issues) and [Discussions](https://github.com/genealogix/glx/discussions) for proposed changes
 3. Check [Schema Development](docs/development/schema-development.md)
 4. Follow [Best Practices](docs/guides/best-practices.md)
 
 ### 📊 Project Status
 
-**Current Release:** v0.0.0-beta.1 (Beta)
+**Current Release:** v0.0.0-beta.2 (Beta)
 - ✅ 9 core entity types defined
 - ✅ JSON Schema validation
 - ✅ CLI tool with vocabulary-based validation
@@ -217,7 +247,7 @@ GENEALOGIX builds on decades of genealogy research and the contributions of:
 
 **Made with ❤️ for genealogists, by genealogists**
 
-[⭐ Star us on GitHub](https://github.com/genealogix/spec) • [🐛 Report Issues](https://github.com/genealogix/spec/issues) • [💬 Join Discussions](https://github.com/genealogix/spec/discussions)
+[⭐ Star us on GitHub](https://github.com/genealogix/glx) • [🐛 Report Issues](https://github.com/genealogix/glx/issues) • [💬 Join Discussions](https://github.com/genealogix/glx/discussions)
 
 ## License
 
@@ -238,7 +268,7 @@ limitations under the License.
 ## Repository Structure
 
 ```
-genealogix/spec/
+genealogix/glx/
 ├── README.md
 ├── LICENSE
 ├── CONTRIBUTING.md
@@ -264,7 +294,6 @@ genealogix/spec/
 │   ├── quickstart.md
 │   ├── guides/
 │   │   ├── best-practices.md
-│   │   ├── common-pitfalls.md
 │   │   ├── glossary.md
 │   │   └── migration-from-gedcom.md
 │   ├── development/

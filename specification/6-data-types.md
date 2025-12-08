@@ -15,8 +15,11 @@ A sequence of Unicode characters. Strings are the default type when no specific 
 
 **Example:**
 ```yaml
-given_name: "John"
-family_name: "Smith"
+name:
+  value: "John Smith"
+  fields:
+    given: "John"
+    surname: "Smith"
 occupation: "blacksmith"
 ```
 
@@ -33,7 +36,8 @@ A true/false value.
 
 **Example:**
 ```yaml
-custom: true
+living: true
+verified: false
 ```
 
 ### Date
@@ -195,6 +199,5 @@ In addition to data type definitions, properties can reference controlled vocabu
 - **source_types** - Standard source types
 - **repository_types** - Standard repository types
 - **media_types** - Standard media types
-- **quality_ratings** - Quality ratings for citations
 
 

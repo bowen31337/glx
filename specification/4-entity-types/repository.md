@@ -34,19 +34,19 @@ GENEALOGIX supports various repository types:
 - How to add custom repository types
 - Vocabulary file structure and examples
 
-## Properties
+## Fields
 
-### Required Properties
+### Required Fields
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | Entity ID (map key) | string | Unique identifier (alphanumeric/hyphens, 1-64 chars) |
 | `name` | string | Name of the repository |
 
-### Optional Properties
+### Optional Fields
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | `type` | string | Repository type (see types above) |
 | `address` | string | Physical address |
 | `city` | string | City/town |
@@ -57,9 +57,11 @@ GENEALOGIX supports various repository types:
 | `email` | string | Email address |
 | `website` | string | URL to repository website |
 | `access_hours` | string | Hours of operation/access |
+| `properties` | object | Vocabulary-defined properties |
+| `notes` | string | Free-form notes |
+| `tags` | array | Tags for categorization |
 | `access_restrictions` | string | Any restrictions on access |
 | `holding_types` | array | Types of materials held (microfilm, digital, books, etc.) |
-| `notes` | string | Free-form notes about repository |
 
 ## Usage Patterns
 
@@ -151,7 +153,6 @@ sources:
   source-tna-wills:
     title: "Wills and Probate Records"
     repository: repository-tna
-    collection: "PROB 11"
     description: "Wills proved in the Prerogative Court of Canterbury"
 ```
 
@@ -185,7 +186,7 @@ repositories/
 
 | GLX Property | GEDCOM Element | Notes |
 |--------------|----------------|-------|
-| `id` | (synthetic) | Not in GEDCOM |
+| Entity ID (map key) | (synthetic) | Not in GEDCOM |
 | `name` | REPO.NAME | Repository name |
 | `address` | REPO.ADDR | Repository address |
 | `phone` | REPO.PHON | Phone number (non-standard) |
