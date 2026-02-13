@@ -6,7 +6,7 @@ layout: doc
 
 # Person Entity
 
-[← Back to Entity Types](README.md)
+[← Back to Entity Types](README)
 
 ## Overview
 
@@ -46,20 +46,18 @@ persons:
 |-------|------|-------------|
 | `properties` | object | Vocabulary-defined properties (name, gender, dates, etc.) |
 | `notes` | string | Free-form notes about the person |
-| `tags` | array | Tags for categorization |
 
-## Required Fields
+> **Note:** While no properties are technically required, the `name` property is recommended for most person records as it enables meaningful identification and display.
 
 ### Entity ID (map key)
 
 - Format: Any alphanumeric string with hyphens, 1-64 characters
 - Must be unique within the archive
-- Recommended formats:
-  - Descriptive: `person-john-smith-1850`, `person-mary-jones`
-  - Random hex: `person-a1b2c3d4` (for collaboration)
-  - Sequential: `person-001`, `person-002`
-
-## Optional Fields
+- Example formats:
+  - Descriptive: `john-smith-1850`, `mary-jones`
+  - Random hex: `a1b2c3d4`
+  - Prefixed: `person-a1b2c3d4`
+  - Sequential: `001`, `002`
 
 ### `properties`
 
@@ -107,14 +105,89 @@ properties:
       date: "FROM 1900 TO 1920"
 ```
 
+#### Temporal Property Examples
+
+Properties marked as `temporal: true` can change over time. Here are common examples:
+
+**Occupation Changes:**
+```yaml
+properties:
+  occupation:
+    - value: "farm laborer"
+      date: "1865"
+    - value: "blacksmith apprentice"
+      date: "FROM 1867 TO 1870"
+    - value: "blacksmith"
+      date: "FROM 1870 TO 1890"
+    - value: "farmer"
+      date: "FROM 1890 TO 1920"
+```
+
+**Name Changes (e.g., marriage):**
+```yaml
+properties:
+  name:
+    - value: "Mary Jones"
+      date: "FROM 1855 TO 1880"
+      fields:
+        given: "Mary"
+        surname: "Jones"
+    - value: "Mary Smith"
+      date: "FROM 1880"
+      fields:
+        given: "Mary"
+        surname: "Smith"
+```
+
+**Multiple Residences:**
+```yaml
+properties:
+  residence:
+    - value: "place-leeds"
+      date: "FROM 1850 TO 1870"
+    - value: "place-manchester"
+      date: "FROM 1870 TO 1885"
+    - value: "place-london"
+      date: "FROM 1885 TO 1920"
+```
+
+**Nationality/Citizenship Changes:**
+```yaml
+properties:
+  nationality:
+    - value: "British Subject"
+      date: "FROM 1850 TO 1895"
+    - value: "American Citizen"
+      date: "FROM 1895"
+```
+
+> **See Also:** [Temporal Properties Example](../../docs/examples/temporal-properties/) for a complete working archive demonstrating temporal values with assertions and evidence chains.
+
 **Key Points:**
 - All properties are optional
 - Property names and types are validated against the `person_properties` vocabulary
-- Properties can be temporal (change over time) - see [Data Types](../6-data-types.md#temporal-values)
+- Properties can be temporal (change over time) - see [Core Concepts - Data Types](../2-core-concepts#temporal-properties)
 - Custom properties can be added by extending the vocabulary
-- Living status is implied by the presence/absence of `died_on`
+- Whether a person is living or deceased is implied by the presence/absence of `died_on`
 
-## Complete Example
+## Usage Patterns
+
+### Basic Person
+
+```yaml
+# persons/person-john.glx
+persons:
+  person-john-smith:
+    properties:
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
+      gender: "male"
+```
+
+### Person with Full Details
 
 ```yaml
 # persons/person-margaret-smith.glx
@@ -132,11 +205,46 @@ persons:
     notes: |
       Family tradition says she was named after her grandmother.
       Need to verify with census records.
-    tags:
-      - maternal-line
-      - smith-family
-      - ohio-branch
 ```
+
+## File Organization
+
+**Note:** File organization is flexible. Entities can be in any .glx file with any directory structure. The example below shows one-entity-per-file organization, which is recommended for collaborative projects (better git diffs) but not required.
+
+Person files are typically stored in a `persons/` directory:
+
+```
+persons/
+├── person-john-smith.glx
+├── person-mary-jones.glx
+├── person-margaret-smith.glx
+└── person-thomas-brown.glx
+```
+
+## GEDCOM Mapping
+
+| GLX Field | GEDCOM Tag | Notes |
+|-----------|------------|-------|
+| Entity ID (map key) | `@INDI@` | Individual record ID |
+| `properties.name` | `INDI.NAME` | Person's name |
+| `properties.name.fields.given` | `INDI.NAME.GIVN` | Given name |
+| `properties.name.fields.surname` | `INDI.NAME.SURN` | Surname |
+| `properties.gender` | `INDI.SEX` | M/F mapped to male/female |
+| `properties.born_on` | `INDI.BIRT.DATE` | Birth date |
+| `properties.born_at` | `INDI.BIRT.PLAC` | Birth place (reference) |
+| `properties.died_on` | `INDI.DEAT.DATE` | Death date |
+| `properties.died_at` | `INDI.DEAT.PLAC` | Death place (reference) |
+| `properties.occupation` | `INDI.OCCU` | Occupation |
+| `properties.residence` | `INDI.RESI` | Residence |
+| `notes` | `INDI.NOTE` | Notes |
+
+**Note:** GEDCOM stores birth/death as events with dates and places. GLX imports these as person properties for convenience, while the full event details are preserved in Event entities.
+
+## Validation Rules
+
+- Properties must be from the [person properties vocabulary](vocabularies#person-properties-vocabulary)
+- All place references must point to existing Place entities
+- Date formats must follow genealogical date conventions
 
 ## Schema Reference
 
@@ -145,7 +253,8 @@ complete JSON Schema definition.
 
 ## See Also
 
-- [Assertion Entity](assertion.md)
-- [Relationship Entity](relationship.md)
-- [Data Types](../6-data-types.md)
-- [Provenance Tracking](../2-core-concepts#provenance-tracking)
+- [Event Entity](event) - Life events for this person
+- [Relationship Entity](relationship) - Connections to other people
+- [Assertion Entity](assertion) - Evidence for person properties
+- [Core Concepts - Data Types](../2-core-concepts#data-types) - Date and property formats
+- [Vocabularies](vocabularies#person-properties-vocabulary) - Person properties vocabulary

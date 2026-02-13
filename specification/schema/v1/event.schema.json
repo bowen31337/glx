@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://schema.genealogix.io/v1/event",
+  "$id": "https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/event.schema.json",
   "title": "Event",
   "description": "A genealogical event. ID comes from the map key in the parent structure.",
   "type": "object",
@@ -22,17 +22,8 @@
       "description": "Reference to Place where event occurred"
     },
     "date": {
-      "oneOf": [
-        { "type": "string" },
-        {
-          "type": "object",
-          "properties": {
-            "value": { "type": "string" },
-            "range_start": { "type": "string" },
-            "range_end": { "type": "string" }
-          }
-        }
-      ]
+      "type": "string",
+      "description": "Date or date range (e.g., '1850-01-15', 'FROM 1870 TO 1890')"
     },
     "participants": {
       "type": "array",
@@ -56,24 +47,12 @@
             "description": "Notes about participant's involvement"
           }
         },
-        "additionalProperties": true
+        "additionalProperties": false
       }
-    },
-    "description": {
-      "type": "string",
-      "description": "Narrative description of the event"
     },
     "notes": {
       "type": "string",
       "description": "Free-form notes about the event"
-    },
-    "tags": {
-      "type": "array",
-      "description": "User-defined tags for organization",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
     }
   },
   "additionalProperties": false

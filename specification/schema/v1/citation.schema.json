@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://schema.genealogix.io/v1/citation",
+  "$id": "https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/citation.schema.json",
   "title": "Citation",
   "description": "A specific reference to evidence within a source. ID comes from the map key in the parent structure.",
   "type": "object",
@@ -11,22 +11,6 @@
       "pattern": "^[a-zA-Z0-9-]{1,64}$",
       "description": "Reference to Source entity"
     },
-    "page": {
-      "type": "string",
-      "description": "Page number, record number, or location within source"
-    },
-    "data_date": {
-      "type": "string",
-      "description": "Date the data was recorded (for documentary sources)"
-    },
-    "text_from_source": {
-      "type": "string",
-      "description": "Transcription or excerpt from the source"
-    },
-    "locator": {
-      "type": "string",
-      "description": "Location within source (e.g., 'Page 45, Entry 123', 'Film 1234567, Image 87')"
-    },
     "repository": {
       "type": "string",
       "pattern": "^[a-zA-Z0-9-]{1,64}$",
@@ -36,22 +20,19 @@
       "type": "array",
       "description": "References to Media entities (scans, photos, documents) related to this citation",
       "items": {
-      "type": "string",
+        "type": "string",
         "pattern": "^[a-zA-Z0-9-]{1,64}$"
-    },
+      },
       "uniqueItems": true
+    },
+    "properties": {
+      "type": "object",
+      "description": "Vocabulary-defined properties (locator, text_from_source)",
+      "additionalProperties": true
     },
     "notes": {
       "type": "string",
       "description": "Free-form notes about the citation"
-    },
-    "tags": {
-      "type": "array",
-      "description": "User-defined tags for organization",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
     }
   },
   "additionalProperties": false

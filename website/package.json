@@ -1,9 +1,9 @@
 {
   "name": "genealogix-docs",
-  "version": "0.0.0-beta.2",
+  "version": "0.0.0-beta.3",
   "description": "GENEALOGIX Specification Documentation Site",
   "scripts": {
-    "dev": "vitepress dev",
+    "dev": "vitepress dev -v --host 0.0.0.0",
     "build": "vitepress build",
     "preview": "vitepress preview",
     "lint": "eslint '.vitepress/**/*.{js,vue}'",

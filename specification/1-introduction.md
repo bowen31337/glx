@@ -6,190 +6,125 @@ layout: doc
 
 # Introduction
 
-## Purpose and Scope
+## What is GENEALOGIX?
 
-GENEALOGIX defines a **portable, extensible archive format** for genealogical research and related domains. Unlike traditional formats that lock data in proprietary structures, GLX provides a **permanent, human-readable foundation** you can own, modify, and preserve indefinitely. It's designed as a **source of truth** for collaborative research, not just an exchange format.
+GENEALOGIX is a **permanent, human-readable archive format** for genealogical research and related domains. Unlike traditional formats, GLX is designed as a **flexible foundation you own and control**, not just an exchange format.
 
-GENEALOGIX addresses the limitations of existing genealogy formats by providing:
+Built on YAML and Git, GENEALOGIX gives you a research system that will outlast any software application. Define your own event types and vocabularies. Document evidence with source citations. Track every change through version control. Whether you're researching traditional family history, colonial records, maritime history, or biographical prosopography, GLX adapts to your research domain.
 
-- **Git-native architecture** for reliable collaboration and version control
-- **Evidence-first model** where all claims are backed by documented sources
-- **Human-readable YAML files** instead of binary or proprietary formats
-- **Structured data validation** with JSON Schema compliance
-- **Complete provenance tracking** from repository to conclusion
-- **Flexible organization** - archives can be a single file, many files, or any combination
-- **True data ownership** - Human-readable files you can edit anywhere
-- **Archive autonomy** - Each repository defines its own controlled vocabularies
-- **Domain flexibility** - Genealogy, biography, local history, prosopography, and more
-- **Permanent foundation** - Data format that will outlast any software application
-- **Interoperability by design** - Import from GEDCOM, integrate with Git workflows
+### What does it look like?
 
-The specification covers:
-- 9 core entity types for comprehensive family history documentation
-- Universal file format with entity type keys
-- Evidence hierarchy from physical repositories to specific claims
-- Git workflow integration for collaborative research
-- Extensible schema system for future enhancements
-- Validation tools and conformance testing
+A GLX archive is a folder of plain text files. Here's a person record:
 
-**File Format**: All GENEALOGIX files use the same structure with top-level entity type keys (persons, sources, etc.) containing maps of entities. Parsers collate all entities of each type across all .glx files in the repository.
+```yaml
+persons:
+  person-john-smith:
+    properties:
+      name:
+        value: "John Smith"
+        fields:
+          given: "John"
+          surname: "Smith"
+      gender: "male"
+```
 
-## Design Principles
+That's it — no special software needed to read or write it. If you can open a text file, you can work with GLX.
 
-### Clarity and Simplicity
-- **YAML-based files** that are readable and editable in any text editor
-- **Consistent naming conventions** with structured ID formats
-- **Hierarchical organization** following standard archival practices
-- **Minimal required fields** with rich optional metadata
+### Why YAML?
 
-### Evidence-First Architecture
-- **Source-backed assertions** - every claim must reference evidence
-- **Confidence levels** - researcher assessment of conclusion certainty
-- **Citation specificity** - exact references to source locations
-- **Multiple evidence support** - corroboration from multiple sources
+YAML is a standard text format used across the software industry. GLX chose it for a simple reason: **you can read it**. Indentation shows structure, colons separate labels from values, and there are no cryptic tags or angle brackets to learn. If you've ever edited a configuration file or written a bulleted list, you already understand the basics.
 
-### Provenance and Traceability
-- **Complete audit trails** from repository to genealogical conclusion
-- **Author attribution** for all changes and contributions
-- **Timestamp tracking** for research chronology
-- **Change documentation** through Git commit history
+Compare the same birth record in GEDCOM and GLX:
 
-### Git-Native Collaboration
-- **Branch-based research** - isolate investigations in feature branches
-- **Merge conflict resolution** for conflicting evidence
-- **Pull request reviews** for quality assurance
-- **Tag-based releases** for milestone preservation
+::: code-group
 
-## GLX as a Foundation, Not Just an Exchange Format
+```yaml [GLX]
+events:
+  event-john-birth:
+    type: birth
+    date: "1850-03-15"
+    place: place-leeds
+    participants:
+      - person: person-john-smith
+        role: subject
+```
 
-### More Than Interoperability
+``` [GEDCOM]
+0 @I1@ INDI
+1 NAME John /Smith/
+1 BIRT
+2 DATE 15 MAR 1850
+2 PLAC Leeds, Yorkshire, England
+```
 
-While GENEALOGIX provides excellent **interoperability** (importing from GEDCOM, exporting to various formats), its primary purpose is to be a **permanent research foundation**:
+:::
 
-#### Your Research System
-- **Long-term storage**: Human-readable files you can read in 50 years
-- **Version-controlled**: Complete research history in Git
-- **Software-independent**: Not tied to any specific application
-- **Self-documenting**: Evidence chains explain all conclusions
+Both represent the same information, but the GLX version is self-explanatory — you don't need a manual to understand what each line means.
 
-#### Customizable Research Framework
-- **Domain-specific vocabularies**: Define types that match your research
-- **Extensible properties**: Add custom fields without schema changes
-- **Flexible organization**: Single file, multi-file, or hybrid approaches
-- **Research-driven**: The format adapts to your methodology
+### Why Git?
 
-#### Collaborative Knowledge Base
-- **Git workflows**: Industry-standard collaboration patterns
-- **Distributed research**: Multiple teams, one coherent archive
-- **Quality assurance**: Peer review through pull requests
-- **Conflict resolution**: Systematic handling of competing evidence
+Git is the version control system used by millions of developers to track changes, collaborate, and maintain history. GLX is designed to work naturally with Git because genealogical research shares the same needs:
 
-### When to Use GLX
+- **History**: Every edit you make is recorded. You can see exactly what changed, when, and why — no more wondering which copy of your file is the latest.
+- **Collaboration**: Multiple researchers can work on the same archive simultaneously and merge their changes together, rather than emailing files back and forth.
+- **Backup**: Your archive lives in a Git repository that can be mirrored anywhere — GitHub, a USB drive, your own server. If one copy is lost, the others have the full history.
 
-**GLX is ideal when you need:**
-- A permanent home for research data (not just temporary export files)
-- Collaboration with other researchers using Git workflows
-- Custom types and vocabularies for specialized research
-- Complete provenance and evidence documentation
-- Research that extends beyond traditional genealogy
+You don't need to be a developer to use Git. Tools like [GitHub Desktop](https://desktop.github.com/) provide a visual interface, and the `glx` CLI handles the genealogy-specific parts for you.
 
-**GLX may not be necessary if you:**
-- Only need to transfer data between two applications (GEDCOM suffices)
-- Have simple trees with no collaborative needs
-- Don't require evidence documentation or provenance tracking
+## Why GENEALOGIX?
 
-## Terminology
+Traditional genealogy formats are limiting:
+- **GEDCOM** is a decades-old format of cryptic tags that's hard to read and hard to extend
+- **Proprietary formats** lock your data inside specific applications — if the software disappears, accessing your research becomes difficult
+- **Fixed schemas** force every project into the same mold, with no room for specialized research domains
 
-### Core Concepts
-- **Archive**: A complete GENEALOGIX repository containing all family history data
-- **Entity**: A typed record representing a person, event, place, or other genealogical concept
-- **Assertion**: A discrete, evidence-backed claim about a person, event, or relationship
-- **Evidence Chain**: The complete path from physical repository through source and citation to conclusion
+GENEALOGIX was designed around a different set of principles:
 
-### Entity Types
-- **Person**: Individual human being with biographical information
-- **Relationship**: Connection between people (parent-child, marriage, etc.)
-- **Event**: Life events and facts (birth, marriage, occupation, residence, death)
-- **Place**: Geographic locations with hierarchical organization
-- **Source**: Original materials (books, records, certificates, websites)
-- **Citation**: Specific reference within a source with quality assessment
-- **Repository**: Physical or digital archive holding sources
-- **Assertion**: Evidence-based conclusion or claim
-- **Media**: Supporting photos, documents, and multimedia files
+1. **You own your data.** Your archive is plain text files on your computer. No account required, no cloud dependency, no vendor lock-in. If GENEALOGIX itself disappeared tomorrow, your files would still be perfectly readable.
 
-### Evidence Hierarchy
-- **Repository**: Physical location (archive, library, church, government office)
-- **Source**: Document or record (parish register, census, certificate)
-- **Citation**: Specific reference (page number, entry number, URL)
-- **Assertion**: Claim supported by citations (person born on specific date)
+2. **Your research domain sets the rules.** Each archive defines its own controlled vocabularies — the event types, relationship types, and other categories that matter to *your* project. Studying maritime history? Define `ship_departure` and `port_arrival` events. Building an academic prosopography? Add `doctoral_advisor` relationships. The standard vocabularies give you a starting point, but you're never limited by them.
 
-## Use Cases
+3. **Evidence should be traceable.** GLX has a built-in evidence model: Sources describe where information comes from, Citations point to specific details within a source, and Assertions record your conclusions with confidence levels. This chain from source to conclusion is how professional researchers work — GLX makes it a first-class part of the format.
 
-### Individual Research
-Family historians maintaining personal archives with:
-- Complete family trees with source documentation
-- Research notes and evidence evaluation
-- Photo and document organization
-- Version-controlled research progress
+4. **Every change should be tracked.** Because GLX archives are plain text in a folder structure, they work naturally with Git. Every edit is recorded, every version is preserved, and multiple researchers can collaborate without overwriting each other's work.
 
-### Collaborative Projects
-Research teams working together on:
-- Extended family documentation across multiple branches
-- Surname studies and one-name studies
-- Local history projects
-- Genealogical society publications
+## Who is it for?
 
-### Institutional Archives
-Libraries and archives preserving:
-- Community genealogy collections
-- Historical society records
-- Government genealogy databases
-- Academic research projects
-
-### Migration and Integration
-Converting from existing formats:
-- GEDCOM format compatibility guidance (manual conversion)
-- Legacy database migration patterns
-- Paper record digitization guidance
-- Integration with existing genealogy software workflows
+- **Researchers** who need permanent, versionable archives independent of any software
+- **Collaborative teams** using Git workflows for distributed research
+- **Specialized projects** requiring custom types (colonial history, religious studies, maritime research, biography)
+- **Anyone** wanting rigorous evidence documentation with source citations and confidence levels
 
 ## Comparison with Existing Formats
 
-| Feature | GENEALOGIX | GEDCOM | Gramps XML |
-|---------|------------|--------|------------|
-| **Format** | YAML (human-readable) | Custom text (tag-based) | XML |
-| **Version Control** | Git-native | Difficult | Manual |
-| **Evidence Model** | Built-in citations | Basic sources | Complex |
-| **Collaboration** | Git workflows | File sharing | Database |
-| **Validation** | JSON Schema | Syntax only | Partial |
-| **Extensibility** | Schema-based | Limited | Plugin-based |
+| Feature             | GENEALOGIX             | GEDCOM                  | Gramps XML   |
+|---------------------|------------------------|-------------------------|--------------|
+| **Format**          | YAML (human-readable)  | Custom text (tag-based) | XML          |
+| **Version Control** | Git-native             | Difficult               | Manual       |
+| **Evidence Model**  | Built-in assertions    | Basic sources           | Complex      |
+| **Collaboration**   | Git workflows          | File sharing            | Database     |
+| **Validation**      | JSON Schema            | Syntax only             | Partial      |
+| **Extensibility**   | Archive-owned types    | Limited                 | Plugin-based |
 
 ## Getting Started
 
-The quickest way to understand GENEALOGIX is through examples:
+The quickest way to understand GENEALOGIX:
 
-1. **Quick Start**: Follow the [5-minute tutorial](../../docs/quickstart.md)
-2. **Complete Examples**: Explore the [complete family example](../docs/examples/complete-family/)
-3. **Specification Details**: Read the detailed entity specifications in sections 4-8
-4. **Implementation**: Use the [CLI tool](../../glx/) for validation and management
+1. **Glossary**: Review key terms in the [Glossary](6-glossary)
+2. **Core Concepts**: Read [Core Concepts](2-core-concepts) to understand the architecture
+3. **Quick Start**: Follow the [5-minute tutorial](/quickstart)
+4. **Examples**: Explore the [complete family example](/examples/complete-family/)
+5. **Entity Specifications**: See detailed entity documentation in [Entity Types](4-entity-types/)
+6. **CLI Tool**: Use the [glx command](/cli) for validation and management
 
 ## Community and Support
 
-GENEALOGIX is an open-source project welcoming contributions:
+GENEALOGIX is open source and welcomes contributions:
 
 - **Issues**: [Bug reports and feature requests](https://github.com/genealogix/glx/issues)
 - **Discussions**: [Community Q&A and collaboration](https://github.com/genealogix/glx/discussions)
-- **Contributing**: See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines
+- **Contributing**: See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines
 
 ## Version History
 
-This specification follows semantic versioning:
-
-- **Version 0.0.0-beta.2**: Beta release
-- **Version 1.0**: Initial stable release (future)
-- **Version 1.1+**: Backwards-compatible enhancements (future)
-- **Version 2.0**: May include breaking changes with migration path (future)
-
-See [CHANGELOG.md](../../CHANGELOG.md) for detailed version history.
-
-
+This specification follows semantic versioning. See [CHANGELOG.md](../CHANGELOG.md) for detailed version history.

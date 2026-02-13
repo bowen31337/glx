@@ -21,8 +21,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/genealogix/glx/glx/lib"
 	"gopkg.in/yaml.v3"
+
+	glxlib "github.com/genealogix/glx/go-glx"
 )
 
 // TestLoadArchive tests the LoadArchive function that loads and merges multi-file archives
@@ -32,7 +33,7 @@ func TestLoadArchive(t *testing.T) {
 		setupFunc     func() (rootPath string, cleanup func())
 		wantErr       bool
 		errorContains string
-		checkFunc     func(glx *lib.GLXFile, duplicates []string) error
+		checkFunc     func(glx *glxlib.GLXFile, duplicates []string) error
 	}{
 		{
 			name: "load valid multi-file archive",
@@ -40,8 +41,8 @@ func TestLoadArchive(t *testing.T) {
 				tmpDir := t.TempDir()
 
 				// Create GLX files
-				person1 := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				person1 := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {
 							Properties: map[string]any{
 								"primary_name": "Alice",
@@ -49,8 +50,8 @@ func TestLoadArchive(t *testing.T) {
 						},
 					},
 				}
-				person2 := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				person2 := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-2": {
 							Properties: map[string]any{
 								"primary_name": "Bob",
@@ -61,23 +62,24 @@ func TestLoadArchive(t *testing.T) {
 
 				// Write files
 				data1, _ := yaml.Marshal(person1)
-				os.WriteFile(filepath.Join(tmpDir, "person1.glx"), data1, 0644)
+				os.WriteFile(filepath.Join(tmpDir, "person1.glx"), data1, 0o644)
 
 				data2, _ := yaml.Marshal(person2)
-				os.WriteFile(filepath.Join(tmpDir, "person2.glx"), data2, 0644)
+				os.WriteFile(filepath.Join(tmpDir, "person2.glx"), data2, 0o644)
 
 				return tmpDir, func() {
 					os.RemoveAll(tmpDir)
 				}
 			},
 			wantErr: false,
-			checkFunc: func(glx *lib.GLXFile, duplicates []string) error {
+			checkFunc: func(glx *glxlib.GLXFile, duplicates []string) error {
 				if len(glx.Persons) != 2 {
 					return &testError{"expected 2 persons, got %d", []any{len(glx.Persons)}}
 				}
 				if len(duplicates) != 0 {
 					return &testError{"expected no duplicates, got %d", []any{len(duplicates)}}
 				}
+
 				return nil
 			},
 		},
@@ -87,8 +89,8 @@ func TestLoadArchive(t *testing.T) {
 				tmpDir := t.TempDir()
 
 				// Create two files with same person ID
-				person1 := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				person1 := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {
 							Properties: map[string]any{
 								"primary_name": "Alice",
@@ -96,8 +98,8 @@ func TestLoadArchive(t *testing.T) {
 						},
 					},
 				}
-				person2 := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				person2 := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": { // Same ID as person1
 							Properties: map[string]any{
 								"primary_name": "Bob",
@@ -107,17 +109,17 @@ func TestLoadArchive(t *testing.T) {
 				}
 
 				data1, _ := yaml.Marshal(person1)
-				os.WriteFile(filepath.Join(tmpDir, "person1.glx"), data1, 0644)
+				os.WriteFile(filepath.Join(tmpDir, "person1.glx"), data1, 0o644)
 
 				data2, _ := yaml.Marshal(person2)
-				os.WriteFile(filepath.Join(tmpDir, "person2.glx"), data2, 0644)
+				os.WriteFile(filepath.Join(tmpDir, "person2.glx"), data2, 0o644)
 
 				return tmpDir, func() {
 					os.RemoveAll(tmpDir)
 				}
 			},
 			wantErr: false,
-			checkFunc: func(glx *lib.GLXFile, duplicates []string) error {
+			checkFunc: func(glx *glxlib.GLXFile, duplicates []string) error {
 				if len(glx.Persons) != 1 {
 					return &testError{"expected 1 person (after merge), got %d", []any{len(glx.Persons)}}
 				}
@@ -127,6 +129,7 @@ func TestLoadArchive(t *testing.T) {
 				if duplicates[0] != "duplicate persons ID: person-1" {
 					return &testError{"expected duplicate to be 'duplicate persons ID: person-1', got %s", []any{duplicates[0]}}
 				}
+
 				return nil
 			},
 		},
@@ -136,7 +139,7 @@ func TestLoadArchive(t *testing.T) {
 				tmpDir := t.TempDir()
 
 				// Create invalid YAML file
-				os.WriteFile(filepath.Join(tmpDir, "invalid.yaml"), []byte("invalid: yaml: content:"), 0644)
+				os.WriteFile(filepath.Join(tmpDir, "invalid.yaml"), []byte("invalid: yaml: content:"), 0o644)
 
 				return tmpDir, func() {
 					os.RemoveAll(tmpDir)
@@ -157,7 +160,7 @@ persons:
   person-1:
     invalid_field: test
 `)
-				os.WriteFile(filepath.Join(tmpDir, "invalid.glx"), invalidData, 0644)
+				os.WriteFile(filepath.Join(tmpDir, "invalid.glx"), invalidData, 0o644)
 
 				return tmpDir, func() {
 					os.RemoveAll(tmpDir)
@@ -180,63 +183,72 @@ persons:
 				tmpDir := t.TempDir()
 
 				// Create GLX file with all entity types
-				glx := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				glx := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {Properties: make(map[string]any)},
 						"person-2": {Properties: make(map[string]any)},
 					},
-					Events: map[string]*lib.Event{
-						"event-1": {Type: "birth", Participants: []lib.EventParticipant{{PersonID: "person-1", Role: "principal"}}},
+					Events: map[string]*glxlib.Event{
+						"event-1": {Type: "birth", Participants: []glxlib.Participant{{Person: "person-1", Role: "principal"}}},
 					},
-					Relationships: map[string]*lib.Relationship{
+					Relationships: map[string]*glxlib.Relationship{
 						"rel-1": {
-							Type: "parent-child",
-							Participants: []lib.RelationshipParticipant{
+							Type: "parent_child",
+							Participants: []glxlib.Participant{
 								{Person: "person-1", Role: "child"},
 								{Person: "person-2", Role: "parent"},
 							},
 						},
 					},
-					Places: map[string]*lib.Place{
+					Places: map[string]*glxlib.Place{
 						"place-1": {Name: "Boston"},
 					},
-					Sources: map[string]*lib.Source{
+					Sources: map[string]*glxlib.Source{
 						"source-1": {Title: "Test Source"},
 					},
-					Citations: map[string]*lib.Citation{
+					Citations: map[string]*glxlib.Citation{
 						"citation-1": {SourceID: "source-1"},
 					},
-					Repositories: map[string]*lib.Repository{
+					Repositories: map[string]*glxlib.Repository{
 						"repo-1": {Name: "Test Repo"},
 					},
-					Assertions: map[string]*lib.Assertion{
+					Assertions: map[string]*glxlib.Assertion{
 						"assert-1": {
-							Subject: "person-1",
-							Sources: []string{"source-1"},
-							Claim:   "Test claim",
+							Subject:  glxlib.EntityRef{Person: "person-1"},
+							Sources:  []string{"source-1"},
+							Property: "born_on",
 						},
 					},
-					Media: map[string]*lib.Media{
+					Media: map[string]*glxlib.Media{
 						"media-1": {URI: "http://example.com"},
 					},
-					// Vocabularies
-					EventTypes: map[string]*lib.EventType{
+					// Vocabularies (include referenced values for validation)
+					EventTypes: map[string]*glxlib.EventType{
+						"birth":  {Label: "Birth"},
 						"custom": {Label: "Custom"},
 					},
-					PlaceTypes: map[string]*lib.PlaceType{
+					ParticipantRoles: map[string]*glxlib.ParticipantRole{
+						"principal": {Label: "Principal"},
+						"child":     {Label: "Child"},
+						"parent":    {Label: "Parent"},
+					},
+					RelationshipTypes: map[string]*glxlib.RelationshipType{
+						"parent_child": {Label: "Parent-Child"},
+					},
+					PlaceTypes: map[string]*glxlib.PlaceType{
 						"custom": {Label: "Custom"},
 					},
 				}
 
 				data, _ := yaml.Marshal(glx)
-				os.WriteFile(filepath.Join(tmpDir, "complete.glx"), data, 0644)
+				os.WriteFile(filepath.Join(tmpDir, "complete.glx"), data, 0o644)
 
 				return tmpDir, func() {
 					os.RemoveAll(tmpDir)
 				}
 			},
 			wantErr: false,
-			checkFunc: func(glx *lib.GLXFile, duplicates []string) error {
+			checkFunc: func(glx *glxlib.GLXFile, duplicates []string) error {
 				if len(glx.Persons) != 2 {
 					return &testError{"expected 2 persons", nil}
 				}
@@ -264,12 +276,19 @@ persons:
 				if len(glx.Media) != 1 {
 					return &testError{"expected 1 media", nil}
 				}
-				if len(glx.EventTypes) != 1 {
-					return &testError{"expected 1 event type", nil}
+				if len(glx.EventTypes) != 2 {
+					return &testError{"expected 2 event types", nil}
+				}
+				if len(glx.ParticipantRoles) != 3 {
+					return &testError{"expected 3 participant roles", nil}
+				}
+				if len(glx.RelationshipTypes) != 1 {
+					return &testError{"expected 1 relationship type", nil}
 				}
 				if len(glx.PlaceTypes) != 1 {
 					return &testError{"expected 1 place type", nil}
 				}
+
 				return nil
 			},
 		},
@@ -279,26 +298,26 @@ persons:
 				tmpDir := t.TempDir()
 
 				// Create various file types
-				glxFile := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				glxFile := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {Properties: make(map[string]any)},
 					},
 				}
 				data, _ := yaml.Marshal(glxFile)
-				os.WriteFile(filepath.Join(tmpDir, "valid.glx"), data, 0644)
-				os.WriteFile(filepath.Join(tmpDir, "valid.yaml"), data, 0644)
-				os.WriteFile(filepath.Join(tmpDir, "valid.yml"), data, 0644)
+				os.WriteFile(filepath.Join(tmpDir, "valid.glx"), data, 0o644)
+				os.WriteFile(filepath.Join(tmpDir, "valid.yaml"), data, 0o644)
+				os.WriteFile(filepath.Join(tmpDir, "valid.yml"), data, 0o644)
 
 				// These should be ignored
-				os.WriteFile(filepath.Join(tmpDir, "readme.txt"), []byte("text"), 0644)
-				os.WriteFile(filepath.Join(tmpDir, "data.json"), []byte("{}"), 0644)
+				os.WriteFile(filepath.Join(tmpDir, "readme.txt"), []byte("text"), 0o644)
+				os.WriteFile(filepath.Join(tmpDir, "data.json"), []byte("{}"), 0o644)
 
 				return tmpDir, func() {
 					os.RemoveAll(tmpDir)
 				}
 			},
 			wantErr: false,
-			checkFunc: func(glx *lib.GLXFile, duplicates []string) error {
+			checkFunc: func(glx *glxlib.GLXFile, duplicates []string) error {
 				// Should load 3 files (glx, yaml, yml) each with same person, resulting in duplicates
 				if len(glx.Persons) != 1 {
 					return &testError{"expected 1 person", nil}
@@ -306,6 +325,7 @@ persons:
 				if len(duplicates) != 2 { // 2 duplicates since 3 files have same person ID
 					return &testError{"expected 2 duplicates, got %d", []any{len(duplicates)}}
 				}
+
 				return nil
 			},
 		},
@@ -316,34 +336,35 @@ persons:
 
 				// Create nested structure
 				subDir := filepath.Join(tmpDir, "subdir")
-				os.MkdirAll(subDir, 0755)
+				os.MkdirAll(subDir, 0o755)
 
-				glxFile1 := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				glxFile1 := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {Properties: make(map[string]any)},
 					},
 				}
-				glxFile2 := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				glxFile2 := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-2": {Properties: make(map[string]any)},
 					},
 				}
 
 				data1, _ := yaml.Marshal(glxFile1)
-				os.WriteFile(filepath.Join(tmpDir, "root.glx"), data1, 0644)
+				os.WriteFile(filepath.Join(tmpDir, "root.glx"), data1, 0o644)
 
 				data2, _ := yaml.Marshal(glxFile2)
-				os.WriteFile(filepath.Join(subDir, "nested.glx"), data2, 0644)
+				os.WriteFile(filepath.Join(subDir, "nested.glx"), data2, 0o644)
 
 				return tmpDir, func() {
 					os.RemoveAll(tmpDir)
 				}
 			},
 			wantErr: false,
-			checkFunc: func(glx *lib.GLXFile, duplicates []string) error {
+			checkFunc: func(glx *glxlib.GLXFile, duplicates []string) error {
 				if len(glx.Persons) != 2 {
 					return &testError{"expected 2 persons from nested dirs, got %d", []any{len(glx.Persons)}}
 				}
+
 				return nil
 			},
 		},
@@ -358,6 +379,7 @@ persons:
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadArchive() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 
@@ -380,7 +402,7 @@ persons:
 func TestReadWriteSingleFileArchive(t *testing.T) {
 	tests := []struct {
 		name          string
-		setupFunc     func() (path string, glx *lib.GLXFile, cleanup func())
+		setupFunc     func() (path string, glx *glxlib.GLXFile, cleanup func())
 		validate      bool
 		wantReadErr   bool
 		wantWriteErr  bool
@@ -388,12 +410,12 @@ func TestReadWriteSingleFileArchive(t *testing.T) {
 	}{
 		{
 			name: "successful read and write",
-			setupFunc: func() (string, *lib.GLXFile, func()) {
+			setupFunc: func() (string, *glxlib.GLXFile, func()) {
 				tmpDir := t.TempDir()
 				path := filepath.Join(tmpDir, "test.glx")
 
-				glx := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				glx := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {
 							Properties: map[string]any{
 								"primary_name": "Test Person",
@@ -412,7 +434,7 @@ func TestReadWriteSingleFileArchive(t *testing.T) {
 		},
 		{
 			name: "read non-existent file",
-			setupFunc: func() (string, *lib.GLXFile, func()) {
+			setupFunc: func() (string, *glxlib.GLXFile, func()) {
 				return "/nonexistent/file.glx", nil, func() {}
 			},
 			validate:      false,
@@ -421,12 +443,13 @@ func TestReadWriteSingleFileArchive(t *testing.T) {
 		},
 		{
 			name: "write to invalid path",
-			setupFunc: func() (string, *lib.GLXFile, func()) {
-				glx := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+			setupFunc: func() (string, *glxlib.GLXFile, func()) {
+				glx := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {Properties: make(map[string]any)},
 					},
 				}
+
 				return "/nonexistent/dir/file.glx", glx, func() {}
 			},
 			validate:      false,
@@ -435,22 +458,22 @@ func TestReadWriteSingleFileArchive(t *testing.T) {
 		},
 		{
 			name: "roundtrip without validation",
-			setupFunc: func() (string, *lib.GLXFile, func()) {
+			setupFunc: func() (string, *glxlib.GLXFile, func()) {
 				tmpDir := t.TempDir()
 				path := filepath.Join(tmpDir, "test.glx")
 
-				glx := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				glx := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {
 							Properties: map[string]any{
 								"primary_name": "Valid Person",
 							},
 						},
 					},
-					Events: map[string]*lib.Event{
+					Events: map[string]*glxlib.Event{
 						"event-1": {
 							Type: "birth",
-							Date: lib.DateString("1950-01-01"),
+							Date: glxlib.DateString("1950-01-01"),
 						},
 					},
 				}
@@ -513,28 +536,28 @@ func TestReadWriteSingleFileArchive(t *testing.T) {
 func TestReadWriteMultiFileArchive(t *testing.T) {
 	tests := []struct {
 		name         string
-		setupFunc    func() (dirPath string, glx *lib.GLXFile, cleanup func())
+		setupFunc    func() (dirPath string, glx *glxlib.GLXFile, cleanup func())
 		validate     bool
 		wantReadErr  bool
 		wantWriteErr bool
 	}{
 		{
 			name: "successful multi-file read and write",
-			setupFunc: func() (string, *lib.GLXFile, func()) {
+			setupFunc: func() (string, *glxlib.GLXFile, func()) {
 				tmpDir := t.TempDir()
 				archiveDir := filepath.Join(tmpDir, "archive")
-				os.MkdirAll(archiveDir, 0755)
+				os.MkdirAll(archiveDir, 0o755)
 
-				glx := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				glx := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {Properties: map[string]any{"primary_name": "Alice"}},
 						"person-2": {Properties: map[string]any{"primary_name": "Bob"}},
 					},
-					Events: map[string]*lib.Event{
-						"event-1": {Type: "birth", Date: lib.DateString("1950-01-01")},
-						"event-2": {Type: "death", Date: lib.DateString("2020-01-01")},
+					Events: map[string]*glxlib.Event{
+						"event-1": {Type: "birth", Date: glxlib.DateString("1950-01-01")},
+						"event-2": {Type: "death", Date: glxlib.DateString("2020-01-01")},
 					},
-					Places: map[string]*lib.Place{
+					Places: map[string]*glxlib.Place{
 						"place-1": {Name: "New York", Type: "city"},
 					},
 				}
@@ -549,7 +572,7 @@ func TestReadWriteMultiFileArchive(t *testing.T) {
 		},
 		{
 			name: "read from non-existent directory",
-			setupFunc: func() (string, *lib.GLXFile, func()) {
+			setupFunc: func() (string, *glxlib.GLXFile, func()) {
 				return "/nonexistent/directory", nil, func() {}
 			},
 			validate:    false,
@@ -557,12 +580,13 @@ func TestReadWriteMultiFileArchive(t *testing.T) {
 		},
 		{
 			name: "write to invalid directory",
-			setupFunc: func() (string, *lib.GLXFile, func()) {
-				glx := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+			setupFunc: func() (string, *glxlib.GLXFile, func()) {
+				glx := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"person-1": {Properties: make(map[string]any)},
 					},
 				}
+
 				return "/root/invalid/dir", glx, func() {}
 			},
 			validate:     false,
@@ -570,29 +594,35 @@ func TestReadWriteMultiFileArchive(t *testing.T) {
 		},
 		{
 			name: "roundtrip with complex archive",
-			setupFunc: func() (string, *lib.GLXFile, func()) {
+			setupFunc: func() (string, *glxlib.GLXFile, func()) {
 				tmpDir := t.TempDir()
 				archiveDir := filepath.Join(tmpDir, "complex")
-				os.MkdirAll(archiveDir, 0755)
+				os.MkdirAll(archiveDir, 0o755)
 
-				glx := &lib.GLXFile{
-					Persons: map[string]*lib.Person{
+				glx := &glxlib.GLXFile{
+					Persons: map[string]*glxlib.Person{
 						"p1": {Properties: map[string]any{"name": "Person 1"}},
 						"p2": {Properties: map[string]any{"name": "Person 2"}},
 						"p3": {Properties: map[string]any{"name": "Person 3"}},
 					},
-					Events: map[string]*lib.Event{
+					Events: map[string]*glxlib.Event{
 						"e1": {Type: "birth"},
 						"e2": {Type: "death"},
 					},
-					Relationships: map[string]*lib.Relationship{
-						"r1": {Type: "parent-child", Persons: []string{"p1", "p2"}},
+					Relationships: map[string]*glxlib.Relationship{
+						"r1": {
+							Type: "parent_child",
+							Participants: []glxlib.Participant{
+								{Person: "p1"},
+								{Person: "p2"},
+							},
+						},
 					},
-					Places: map[string]*lib.Place{
+					Places: map[string]*glxlib.Place{
 						"pl1": {Name: "Boston"},
 						"pl2": {Name: "Chicago"},
 					},
-					EventTypes: map[string]*lib.EventType{
+					EventTypes: map[string]*glxlib.EventType{
 						"custom": {Label: "Custom Event"},
 					},
 				}
@@ -622,9 +652,9 @@ func TestReadWriteMultiFileArchive(t *testing.T) {
 
 			// Test read (only if write was successful or testing read-only)
 			if glx == nil || !tt.wantWriteErr {
-				loaded, err := readMultiFileArchive(dirPath, tt.validate)
+				loaded, _, err := LoadArchiveWithOptions(dirPath, tt.validate)
 				if (err != nil) != tt.wantReadErr {
-					t.Errorf("readMultiFileArchive() error = %v, wantReadErr %v", err, tt.wantReadErr)
+					t.Errorf("LoadArchiveWithOptions() error = %v, wantReadErr %v", err, tt.wantReadErr)
 				}
 
 				// Verify roundtrip if both succeeded
@@ -651,11 +681,11 @@ func TestReadWriteMultiFileArchive(t *testing.T) {
 // TestCreateSerializer tests the createSerializer function
 func TestCreateSerializer(t *testing.T) {
 	tests := []struct {
-		name     string
-		validate bool
-		pretty   bool
-		indent   string
-		checkOpts func(s *lib.DefaultSerializer) bool
+		name      string
+		validate  bool
+		pretty    bool
+		indent    string
+		checkOpts func(s *glxlib.DefaultSerializer) bool
 	}{
 		{
 			name:     "default options",
@@ -695,6 +725,133 @@ func TestCreateSerializer(t *testing.T) {
 	}
 }
 
+// TestLoadArchiveAndJoinProduceSameResult verifies both deserialization paths
+// produce equivalent results from the same multi-file archive on disk.
+func TestLoadArchiveAndJoinProduceSameResult(t *testing.T) {
+	// Create a known archive with multiple entity types
+	glx := &glxlib.GLXFile{
+		Persons: map[string]*glxlib.Person{
+			"person-1": {Properties: map[string]any{"name": map[string]any{"value": "Alice"}}},
+			"person-2": {Properties: map[string]any{"name": map[string]any{"value": "Bob"}}},
+		},
+		Events: map[string]*glxlib.Event{
+			"event-1": {Type: "birth", Participants: []glxlib.Participant{{Person: "person-1", Role: "principal"}}},
+		},
+		Relationships: map[string]*glxlib.Relationship{
+			"rel-1": {Type: "parent_child", Participants: []glxlib.Participant{{Person: "person-1"}, {Person: "person-2"}}},
+		},
+		Places:       map[string]*glxlib.Place{"place-1": {Name: "London"}},
+		Sources:      make(map[string]*glxlib.Source),
+		Citations:    make(map[string]*glxlib.Citation),
+		Repositories: make(map[string]*glxlib.Repository),
+		Media:        make(map[string]*glxlib.Media),
+		Assertions:   make(map[string]*glxlib.Assertion),
+	}
+
+	// Write to multi-file archive
+	dirPath := t.TempDir()
+	if err := writeMultiFileArchive(dirPath, glx, false); err != nil {
+		t.Fatalf("writeMultiFileArchive failed: %v", err)
+	}
+
+	// Load with schema validation (used by validate command)
+	loaded1, duplicates, err := LoadArchiveWithOptions(dirPath, true)
+	if err != nil {
+		t.Fatalf("LoadArchiveWithOptions(validate=true) failed: %v", err)
+	}
+	if len(duplicates) > 0 {
+		t.Errorf("Unexpected duplicates: %v", duplicates)
+	}
+
+	// Load without schema validation (used by join command)
+	loaded2, _, err := LoadArchiveWithOptions(dirPath, false)
+	if err != nil {
+		t.Fatalf("LoadArchiveWithOptions(validate=false) failed: %v", err)
+	}
+
+	// Both should produce the same entity counts
+	if len(loaded1.Persons) != len(loaded2.Persons) {
+		t.Errorf("Person count mismatch: validated=%d, unvalidated=%d", len(loaded1.Persons), len(loaded2.Persons))
+	}
+	if len(loaded1.Events) != len(loaded2.Events) {
+		t.Errorf("Event count mismatch: validated=%d, unvalidated=%d", len(loaded1.Events), len(loaded2.Events))
+	}
+	if len(loaded1.Relationships) != len(loaded2.Relationships) {
+		t.Errorf("Relationship count mismatch: validated=%d, unvalidated=%d", len(loaded1.Relationships), len(loaded2.Relationships))
+	}
+	if len(loaded1.Places) != len(loaded2.Places) {
+		t.Errorf("Place count mismatch: validated=%d, unvalidated=%d", len(loaded1.Places), len(loaded2.Places))
+	}
+
+	// Verify specific entities exist
+	if _, ok := loaded1.Persons["person-1"]; !ok {
+		t.Error("Missing person-1")
+	}
+}
+
+// TestJoinPreservesEntities verifies that split→join round-trip preserves all entities.
+func TestJoinPreservesEntities(t *testing.T) {
+	glx := &glxlib.GLXFile{
+		Persons: map[string]*glxlib.Person{
+			"person-1": {Properties: map[string]any{"name": map[string]any{"value": "Alice"}}},
+			"person-2": {Properties: map[string]any{"name": map[string]any{"value": "Bob"}}},
+		},
+		Events: map[string]*glxlib.Event{
+			"event-1": {Type: "birth", Participants: []glxlib.Participant{{Person: "person-1", Role: "principal"}}},
+			"event-2": {Type: "death", Participants: []glxlib.Participant{{Person: "person-2", Role: "principal"}}},
+		},
+		Relationships: map[string]*glxlib.Relationship{
+			"rel-1": {Type: "parent_child", Participants: []glxlib.Participant{{Person: "person-1"}, {Person: "person-2"}}},
+		},
+		Places:       map[string]*glxlib.Place{"place-1": {Name: "London"}},
+		Sources:      make(map[string]*glxlib.Source),
+		Citations:    make(map[string]*glxlib.Citation),
+		Repositories: make(map[string]*glxlib.Repository),
+		Media:        make(map[string]*glxlib.Media),
+		Assertions:   make(map[string]*glxlib.Assertion),
+	}
+
+	// Write to multi-file
+	splitDir := t.TempDir()
+	if err := writeMultiFileArchive(splitDir, glx, false); err != nil {
+		t.Fatalf("writeMultiFileArchive failed: %v", err)
+	}
+
+	// Join back to single file
+	joinedPath := filepath.Join(t.TempDir(), "joined.glx")
+	if err := joinArchive(splitDir, joinedPath, false, false, 0); err != nil {
+		t.Fatalf("joinArchive failed: %v", err)
+	}
+
+	// Read the joined file
+	joined, err := readSingleFileArchive(joinedPath, false)
+	if err != nil {
+		t.Fatalf("readSingleFileArchive failed: %v", err)
+	}
+
+	// Verify all entity counts
+	if len(joined.Persons) != 2 {
+		t.Errorf("Expected 2 persons, got %d", len(joined.Persons))
+	}
+	if len(joined.Events) != 2 {
+		t.Errorf("Expected 2 events, got %d", len(joined.Events))
+	}
+	if len(joined.Relationships) != 1 {
+		t.Errorf("Expected 1 relationship, got %d", len(joined.Relationships))
+	}
+	if len(joined.Places) != 1 {
+		t.Errorf("Expected 1 place, got %d", len(joined.Places))
+	}
+
+	// Verify specific entities
+	if _, ok := joined.Persons["person-1"]; !ok {
+		t.Error("Joined archive missing person-1")
+	}
+	if _, ok := joined.Events["event-2"]; !ok {
+		t.Error("Joined archive missing event-2")
+	}
+}
+
 // testError is a helper type for test error formatting
 type testError struct {
 	msg  string
@@ -705,5 +862,6 @@ func (e *testError) Error() string {
 	if len(e.args) > 0 {
 		return fmt.Sprintf(e.msg, e.args...)
 	}
+
 	return e.msg
 }

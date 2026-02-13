@@ -107,10 +107,7 @@ go install
 glx init my-family-archive
 
 # Import a GEDCOM file
-glx import family.ged -o family.glx
-
-# Split single-file archive to multi-file format
-glx split family.glx family-archive
+glx import family.ged -o family-archive
 
 # Validate all files in the new directory
 cd family-archive
@@ -203,19 +200,23 @@ glx validate [paths...]
 - ✓ Duplicate ID detection
 - ✓ Vocabulary validation (if vocabularies/ exists)
 
+**Behavior:**
+- **Directory or multi-path validation** performs full cross-reference checking across all files
+- **Single-file validation** checks structure only (no cross-reference checks)
+
 **Examples:**
 
 ```bash
-# Validate current directory
+# Validate current directory (with cross-reference checks)
 glx validate
 
-# Validate specific directory
+# Validate specific directory (with cross-reference checks)
 glx validate persons/
 
-# Validate multiple paths
+# Validate multiple paths (with cross-reference checks)
 glx validate persons/ events/ places/
 
-# Validate single file
+# Validate single file (structure only, no cross-reference checks)
 glx validate archive.glx
 
 # Validate example archives
@@ -265,10 +266,10 @@ glx import <gedcom-file> -o <output> [flags]
 
 ```bash
 # Import to single file
-glx import family.ged -o family.glx
+glx import family.ged -o family.glx --format single
 
 # Import to multi-file directory
-glx import family.ged -o family-archive --format multi
+glx import family.ged -o family-archive
 
 # Import without validation (faster, less safe)
 glx import family.ged -o family.glx --no-validate
@@ -366,25 +367,6 @@ glx join family-archive family.glx --no-validate
 
 # Verbose output
 glx join family-archive family.glx --verbose
-```
-
-### `glx check-schemas`
-
-Validate JSON schema files for required metadata.
-
-**Usage:**
-```bash
-glx check-schemas
-```
-
-**Checks:**
-- ✓ `$schema` field presence
-- ✓ `$id` field presence
-
-**Example:**
-```bash
-cd specification/
-glx check-schemas
 ```
 
 ## File Format

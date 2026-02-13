@@ -6,7 +6,7 @@ layout: doc
 
 # GENEALOGIX Specification
 
-[![Version](https://img.shields.io/badge/version-0.0.0--beta.2-blue.svg)](https://github.com/genealogix/glx/releases)
+[![Version](https://img.shields.io/badge/version-0.0.0--beta.3-blue.svg)](https://github.com/genealogix/glx/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![CI](https://github.com/genealogix/glx/workflows/Validate%20Specification/badge.svg)](https://github.com/genealogix/glx/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/genealogix/glx)](https://goreportcard.com/report/github.com/genealogix/glx)
@@ -25,7 +25,7 @@ The official specification for **GENEALOGIX (GLX)** - a portable, extensible arc
 
 ## Current Version
 
-**Version:** 0.0.0-beta.2
+**Version:** 0.0.0-beta.3
 **Status:** Beta
 **Last Updated:** 2025-11-18
 
@@ -197,12 +197,11 @@ GENEALOGIX is an open-source project that thrives on community participation:
 - [Quickstart Guide](docs/quickstart.md) - 5-minute getting started
 - [Best Practices](docs/guides/best-practices.md) - Recommended workflows
 - [Migration Guide](docs/guides/migration-from-gedcom.md) - Manual conversion guidance from GEDCOM
-- [Glossary](docs/guides/glossary.md) - Key terms and concepts
+- [Glossary](specification/6-glossary.md) - Key terms and concepts
 
 ### 🤝 Contributing
 - [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project
 - [Code of Conduct](CODE_OF_CONDUCT.md) - Community standards
-- [Development Setup](docs/development/setup.md) - Set up development environment
 
 ### 🎯 Getting Help
 
@@ -212,20 +211,14 @@ GENEALOGIX is an open-source project that thrives on community participation:
 3. Ask questions in [GitHub Discussions](https://github.com/genealogix/glx/discussions)
 
 **For Developers:**
-1. Read the [Architecture Guide](docs/development/architecture.md)
-2. Set up [Development Environment](docs/development/setup.md)
-3. Review [Testing Framework](docs/development/testing-guide.md)
-4. Join the [Discord Community](https://discord.gg/genealogix)
-
-**For Contributors:**
-1. Review [Contributing Guidelines](CONTRIBUTING.md)
-2. Review [GitHub Issues](https://github.com/genealogix/glx/issues) and [Discussions](https://github.com/genealogix/glx/discussions) for proposed changes
-3. Check [Schema Development](docs/development/schema-development.md)
+1. Read [CLAUDE.md](CLAUDE.md) for project context
+2. Review the [Contributing Guide](CONTRIBUTING.md)
+3. Check [GitHub Issues](https://github.com/genealogix/glx/issues) and [Discussions](https://github.com/genealogix/glx/discussions)
 4. Follow [Best Practices](docs/guides/best-practices.md)
 
 ### 📊 Project Status
 
-**Current Release:** v0.0.0-beta.2 (Beta)
+**Current Release:** v0.0.0-beta.3 (Beta)
 - ✅ 9 core entity types defined
 - ✅ JSON Schema validation
 - ✅ CLI tool with vocabulary-based validation

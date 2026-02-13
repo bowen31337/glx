@@ -1,0 +1,7 @@
+assertions:
+  assertion-missing-property:
+    subject:
+      person: person-123
+    value: "John"
+    citations:
+      - citation-123

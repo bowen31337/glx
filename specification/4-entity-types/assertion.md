@@ -6,7 +6,7 @@ layout: doc
 
 # Assertion Entity
 
-[← Back to Entity Types](README.md)
+[← Back to Entity Types](README)
 
 ## Overview
 
@@ -26,8 +26,9 @@ All GENEALOGIX files use entity type keys at the top level:
 # Any .glx file (commonly in assertions/ directory)
 assertions:
   assertion-john-birth-date:
-    subject: person-john-smith
-    claim: born_on
+    subject:
+      person: person-john-smith
+    property: born_on
     value: "1850-01-15"
     citations:
       - citation-birth-certificate
@@ -45,18 +46,29 @@ assertions:
 | Field | Type | Description |
 |-------|------|-------------|
 | Entity ID (map key) | string | Unique identifier (alphanumeric/hyphens, 1-64 chars) |
-| `subject` | string | The entity this assertion is about |
-| `claim` OR `participant` | string/object | Either a claim string or participant object (mutually exclusive) |
-| `citations` OR `sources` | array | At least one required for evidence |
+| `subject` | object | Typed reference to the entity this assertion is about |
+| `property` OR `participant` | string/object | Either a property string or participant object (mutually exclusive) |
+| `citations`, `sources`, or `media` | array | **At least one required** (enforced by JSON Schema and CLI validation) |
 
 ### Optional Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `value` | string | The concluded value of the claim (not used with participant) |
+| `value` | string | The concluded value of the property (**required** when `property` is present; not used with `participant`) |
+| `date` | string | Date or date range when this property value applies (for temporal properties) |
 | `confidence` | string | Confidence level (defined in archive vocabulary) |
 | `notes` | string | General notes about the assertion |
-| `tags` | array | Tags for categorization |
+
+### Subject Object
+
+The `subject` field uses a typed reference to avoid entity ID collisions. Exactly one key must be present:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `person` | string | Reference to a Person entity |
+| `event` | string | Reference to an Event entity |
+| `relationship` | string | Reference to a Relationship entity |
+| `place` | string | Reference to a Place entity |
 
 ### Participant Object Fields
 
@@ -72,29 +84,48 @@ assertions:
 
 - Format: Any alphanumeric string with hyphens, 1-64 characters
 - Must be unique within the archive
-- Recommended formats:
-  - Descriptive: `assertion-john-birth-date`, `assertion-mary-occupation`
-  - Random hex: `assertion-a1b2c3d4` (for collaboration)
-  - Sequential: `assertion-001`, `assertion-002`
+- Example formats:
+  - Descriptive: `john-birth-date`, `mary-occupation`
+  - Random hex: `a1b2c3d4`
+  - Prefixed: `assertion-a1b2c3d4`
+  - Sequential: `001`, `002`
 
 ### `subject`
 
-- Type: String
+- Type: Object with exactly one typed reference field
 - Required: Yes
-- Description: The entity this assertion is about (person, event, relationship, etc.)
+- Description: The entity this assertion is about (person, event, relationship, or place)
 
-Example:
+The typed reference structure prevents entity ID collisions in large archives where different entity types might have the same ID.
+
+Examples:
 ```yaml
-subject: person-john-smith
+# Asserting about a person
+subject:
+  person: john-smith
+
+# Asserting about an event
+subject:
+  event: marriage-1880
+
+# Asserting about a relationship
+subject:
+  relationship: parent-child-001
+
+# Asserting about a place
+subject:
+  place: leeds-yorkshire
 ```
 
-### `claim` (or `participant`)
+### `property` (or `participant`)
 
-- Type: String (for `claim`) or Object (for `participant`)
-- Required: One of `claim` or `participant` must be present (mutually exclusive)
-- Description: Either a property/fact being claimed, or a participant object for event/relationship participation
+- Type: String (for `property`) or Object (for `participant`)
+- Required: One of `property` or `participant` must be present (mutually exclusive)
+- Description: Either a property name being asserted, or a participant object for event/relationship participation
 
-Common claim types:
+> **Note:** The `property` field corresponds to property names defined in [property vocabularies](vocabularies#property-vocabularies). For example, `property: born_on` references the `born_on` property from the person properties vocabulary. Unknown properties generate validation warnings.
+
+Common property types:
 - `born_on` - Birth date
 - `died_on` - Death date
 - `born_at` - Birth place
@@ -104,7 +135,7 @@ Common claim types:
 
 Example:
 ```yaml
-claim: occupation
+property: occupation
 ```
 
 ### Evidence Requirement
@@ -112,6 +143,7 @@ claim: occupation
 At least ONE of the following is required:
 - `citations` - Array of citation IDs
 - `sources` - Array of source IDs (direct source references)
+- `media` - Array of media IDs (direct visual or documentary evidence)
 
 **When to use each:**
 
@@ -122,11 +154,18 @@ At least ONE of the following is required:
   - Photographs or brief documents without meaningful subdivisions
   - Preliminary research where you'll add specific citations later
 
+- **`media`** (direct visual evidence): When media itself is the evidence, without a formal source or citation:
+  - Gravestone photos directly evidencing dates and names
+  - Family photographs evidencing relationships or locations
+  - Handwritten documents or letters where the media _is_ the primary evidence
+
 Example:
 ```yaml
 citations:
   - citation-birth-cert
   - citation-baptism-record
+media:
+  - media-gravestone-photo
 ```
 
 ## Optional Fields
@@ -134,8 +173,8 @@ citations:
 ### `participant`
 
 - Type: Object
-- Required: No (mutually exclusive with `claim` and `value`)
-- Description: Used for assertions about a person's participation in an event or relationship (instead of claiming a property value)
+- Required: No (mutually exclusive with `property` and `value`)
+- Description: Used for assertions about a person's participation in an event or relationship (instead of asserting a property value)
 
 Structure:
 ```yaml
@@ -146,14 +185,15 @@ participant:
 ```
 
 **Key Points:**
-- When `participant` is present, `claim` and `value` must NOT be present
+- When `participant` is present, `property` and `value` must NOT be present
 - Useful for representing conflicting evidence about who participated in an event or relationship
 
 Example:
 ```yaml
 assertions:
   assertion-witness-john:
-    subject: event-marriage-1880
+    subject:
+      event: event-marriage-1880
     participant:
       person: person-john-smith
       role: witness
@@ -166,14 +206,45 @@ assertions:
 ### `value`
 
 - Type: String
-- Required: No for participant assertions; recommended for claim assertions
-- Description: The concluded value of the claim (not used with `participant`)
+- Required: Yes when `property` is present; not used with `participant`
+- Description: The concluded value of the property
 
 Example:
 ```yaml
-claim: occupation
+property: occupation
 value: blacksmith
 ```
+
+### `date`
+
+- Type: String
+- Required: No
+- Description: Date or date range when this property value applies. Used with temporal properties (occupation, residence, etc.) to specify **when** the asserted value was true, matching the temporal value format on entities. This field is strictly for temporal targeting — it is NOT an "evidence date" or "observation date".
+
+When a temporal property on an entity has multiple dated values:
+```yaml
+# Person's temporal property
+occupation:
+  - value: "blacksmith"
+    date: "FROM 1870 TO 1890"
+  - value: "farmer"
+    date: "FROM 1890 TO 1920"
+```
+
+Each assertion can target a specific temporal entry using `date`:
+```yaml
+assertions:
+  assertion-occupation-blacksmith:
+    subject:
+      person: person-john-smith
+    property: occupation
+    value: "blacksmith"
+    date: "FROM 1870 TO 1890"
+    citations: [citation-1881-census]
+    confidence: high
+```
+
+Date formats follow the standard [date format](../2-core-concepts#date-format-standard). If omitted, the assertion applies to the property value without temporal context.
 
 ### `confidence`
 
@@ -189,7 +260,7 @@ Confidence levels and their criteria are defined in each archive's `vocabularies
 
 Archives can customize these descriptions or add additional levels to match their research methodology.
 
-**See [Vocabularies - Confidence Levels](vocabularies.md#confidence-levels-vocabulary) for:**
+**See [Vocabularies - Confidence Levels](vocabularies#confidence-levels-vocabulary) for:**
 - Customizing confidence level definitions for your archive
 - Adding custom confidence levels
 - Vocabulary file structure and validation
@@ -205,20 +276,6 @@ confidence: high
 - Required: No
 - Description: General notes about the assertion
 
-### `tags`
-
-- Type: Array of Strings
-- Required: No
-- Description: Tags for categorization
-
-Example:
-```yaml
-tags:
-  - needs-review
-  - conflicting-evidence
-  - high-priority
-```
-
 ## Participant Assertions
 
 Participant assertions represent evidence about who participated in an event or relationship, including conflicting evidence about participation and roles.
@@ -226,28 +283,30 @@ Participant assertions represent evidence about who participated in an event or 
 ### Participant Assertion Example
 
 ```yaml
-# assertions/assertion-marriage-participants.glx
 assertions:
   assertion-john-married:
-    subject: event-marriage-1880
+    subject:
+      event: event-marriage-1880
     participant:
       person: person-john-smith
       role: groom
     citations:
       - citation-marriage-cert
     confidence: high
-  
+
   assertion-jane-married:
-    subject: event-marriage-1880
+    subject:
+      event: event-marriage-1880
     participant:
       person: person-jane-doe
       role: bride
     citations:
       - citation-marriage-cert
     confidence: high
-  
+
   assertion-witness-thomas:
-    subject: event-marriage-1880
+    subject:
+      event: event-marriage-1880
     participant:
       person: person-thomas-brown
       role: witness
@@ -260,11 +319,11 @@ assertions:
 ### Conflicting Participant Evidence
 
 ```yaml
-# assertions/assertion-conflicting-parents.glx
 assertions:
   # One source claims person-john is the father
   assertion-john-father-cert:
-    subject: event-birth-1850
+    subject:
+      event: event-birth-1850
     participant:
       person: person-john-smith
       role: parent
@@ -272,10 +331,11 @@ assertions:
     citations:
       - citation-birth-cert
     confidence: high
-  
+
   # Another source claims person-thomas is the father
   assertion-thomas-father-letter:
-    subject: event-birth-1850
+    subject:
+      event: event-birth-1850
     participant:
       person: person-thomas-brown
       role: parent
@@ -287,7 +347,7 @@ assertions:
       Conflicting evidence about paternity:
       - Birth certificate (primary source): John Smith
       - Family letter (secondary source): Thomas Brown
-      
+
       Certificate is more reliable, but letter provides alternative possibility.
       Needs further research.
 ```
@@ -297,11 +357,11 @@ assertions:
 ### Basic Biographical Assertion
 
 ```yaml
-# assertions/assertion-john-birth.glx
 assertions:
   assertion-john-birth-date:
-    subject: person-john-smith
-    claim: born_on
+    subject:
+      person: person-john-smith
+    property: born_on
     value: "1850-01-15"
     citations:
       - citation-birth-certificate
@@ -311,11 +371,11 @@ assertions:
 ### Assertion with Multiple Evidence Sources
 
 ```yaml
-# assertions/assertion-john-occupation.glx
 assertions:
   assertion-john-occupation:
-    subject: person-john-smith
-    claim: occupation
+    subject:
+      person: person-john-smith
+    property: occupation
     value: blacksmith
     citations:
       - citation-1851-census
@@ -327,11 +387,11 @@ assertions:
 ### Assertion with Conflicting Evidence
 
 ```yaml
-# assertions/assertion-mary-birth.glx
 assertions:
   assertion-mary-birth-disputed:
-    subject: person-mary-jones
-    claim: born_on
+    subject:
+      person: person-mary-jones
+    property: born_on
     value: "1852-03-10"
     citations:
       - citation-birth-cert       # Says March 10
@@ -340,55 +400,94 @@ assertions:
     notes: |
       Birth certificate (primary source) says March 10, 1852.
       Family Bible (secondary source) says March 12, 1852.
-      
+
       Certificate is more reliable as primary direct evidence.
       Bible entry may have been written from memory later.
-      
+
       Conclusion: March 10, 1852 (with some uncertainty)
 ```
 
-### Complex Residence Assertion
+### Temporal Property Assertion
+
+For temporal properties like residence and occupation, the `date` field specifies when the value applies:
 
 ```yaml
-# assertions/assertion-residence.glx
 assertions:
   assertion-john-residence-1851:
-    subject: person-john-smith
-    claim: residence
-    value: "Wellington Street, Leeds, Yorkshire"
+    subject:
+      person: person-john-smith
+    property: residence
+    value: "place-leeds"
+    date: "FROM 1850 TO 1870"
     citations:
       - citation-1851-census
       - citation-directory-1851
     confidence: high
-    notes: "Residence at time of 1851 census"
-    tags:
-      - census-derived
-      - verified
+
+  assertion-john-occupation-blacksmith:
+    subject:
+      person: person-john-smith
+    property: occupation
+    value: "blacksmith"
+    date: "FROM 1870 TO 1890"
+    citations:
+      - citation-1881-census
+      - citation-trade-directory
+    confidence: high
+```
+
+### Assertion with Direct Media Evidence
+
+```yaml
+assertions:
+  assertion-john-death-date:
+    subject:
+      person: person-john-smith
+    property: died_on
+    value: "1920-06-20"
+    media:
+      - media-gravestone-photo
+    confidence: medium
+    notes: "Date read directly from gravestone inscription"
+```
+
+Media can also be combined with citations and sources:
+
+```yaml
+assertions:
+  assertion-john-death-confirmed:
+    subject:
+      person: person-john-smith
+    property: died_on
+    value: "1920-06-20"
+    citations:
+      - citation-death-cert
+    media:
+      - media-gravestone-photo
+    confidence: high
+    notes: "Death certificate corroborated by gravestone inscription"
 ```
 
 ### Low Confidence Assertion
 
 ```yaml
-# assertions/assertion-estimated-birth.glx
 assertions:
   assertion-thomas-birth-estimated:
-    subject: person-thomas-brown
-    claim: born_on
-    value: "circa 1825"
+    subject:
+      person: person-thomas-brown
+    property: born_on
+    value: "ABT 1825"
     citations:
       - citation-death-cert-age
     confidence: low
     notes: |
       No birth record found. Age at death (1900) reported as 75,
-      suggesting birth around 1825. However, age reporting in 
+      suggesting birth around 1825. However, age reporting in
       death certificates is often approximate.
-      
+
       Need to search:
       - Parish registers 1820-1830
       - Census records for age progression
-    tags:
-      - estimated
-      - needs-research
 ```
 
 ## Evidence Quality and Confidence
@@ -408,11 +507,14 @@ The standard vocabulary defines these default confidence levels (archives may cu
 
 ## Validation Rules
 
-- `subject` must reference an existing entity ID
-- At least one of `citations` or `sources` must be present
+- `subject` must be an object with exactly one typed reference field (person, event, relationship, or place)
+- The referenced entity must exist in the archive
+- **At least one of `citations`, `sources`, or `media` must be present** (this is validated as an error if missing)
 - All citation references must point to existing Citation entities
 - All source references must point to existing Source entities
-- `confidence` should be one of: `high`, `medium`, `low`, `disputed`
+- All media references must point to existing Media entities
+- `property` values should match properties defined in the appropriate [property vocabulary](vocabularies#property-vocabularies) (unknown properties generate warnings)
+- Confidence must be from the [confidence levels vocabulary](vocabularies#confidence-levels-vocabulary)
 
 ## File Organization
 
@@ -454,14 +556,19 @@ assertions/
 
 ```
 Assertion
-    ├── subject → references Person, Event, Relationship, or other entity
+    ├── subject → references Person, Event, Relationship, or Place (typed reference)
     ├── citations → array of Citation IDs (evidence)
-    └── sources → array of Source IDs (direct reference)
+    ├── sources → array of Source IDs (direct reference)
+    └── media → array of Media IDs (direct visual/documentary evidence)
 
 Citation
     └── supports → Assertion (via assertion's citations array)
 
-Person/Event/Relationship
+Media
+    └── supports → Assertion (via assertion's media array)
+    └── documents → Source or Citation (via media's source field or citation's media array)
+
+Person/Event/Relationship/Place
     └── documented by → Assertion (subject reference)
 ```
 
@@ -469,14 +576,14 @@ Person/Event/Relationship
 
 GENEALOGIX assertions are implicit in GEDCOM:
 
-| GENEALOGIX | GEDCOM Equivalent |
-|------------|-------------------|
-| Assertion | Implicit in INDI/FAM + SOUR structure |
-| `subject` | INDI or FAM record |
-| `claim` | Property tag (BIRT, DEAT, OCCU, etc.) |
-| `value` | Property value |
-| `citations` | SOUR tags on property |
-| `confidence` | Derived from QUAY values |
+| GLX Field | GEDCOM Tag | Notes |
+|-----------|------------|-------|
+| Assertion | Implicit in INDI/FAM + SOUR structure | |
+| `subject` | INDI or FAM record | GLX uses typed reference |
+| `property` | Property tag (BIRT, DEAT, OCCU, etc.) | |
+| `value` | Property value | |
+| `citations` | SOUR tags on property | |
+| `confidence` | Derived from QUAY values | |
 
 GEDCOM Example:
 ```
@@ -501,8 +608,9 @@ persons:
 
 assertions:
   assertion-john-birth:
-    subject: person-john-smith
-    claim: born_on
+    subject:
+      person: person-john-smith
+    property: born_on
     value: "1850-01-15"
     citations:
       - citation-birth-cert
@@ -515,9 +623,9 @@ See [assertion.schema.json](../schema/v1/assertion.schema.json) for the complete
 
 ## See Also
 
-- [Core Concepts - Assertion-Aware Data Model](../2-core-concepts.md#assertion-aware-data-model) - Overview of assertion philosophy
-- [Core Concepts - Evidence Hierarchy](../2-core-concepts.md#evidence-hierarchy) - Understanding evidence quality
-- [Citation Entity](citation.md) - Evidence references that support assertions
-- [Source Entity](source.md) - Original sources cited by assertions
-- [Person Entity](person.md) - Common subject of assertions
-- [Data Types](../6-data-types.md)
+- [Core Concepts - Assertion-Aware Data Model](../2-core-concepts#assertion-aware-data-model) - Overview of assertion philosophy
+- [Core Concepts - Evidence Chain](../2-core-concepts#evidence-chain) - Understanding evidence quality
+- [Citation Entity](citation) - Evidence references that support assertions
+- [Source Entity](source) - Original sources cited by assertions
+- [Person Entity](person) - Common subject of assertions
+- [Core Concepts - Data Types](../2-core-concepts#data-types)

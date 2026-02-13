@@ -1,62 +1,74 @@
 # GLX TODO
 
-## Infrastructure
+> **Note**: Organized by impact. 🔴 = bugs or data loss that should be fixed before release, 🟡 = meaningful improvements, 🟢 = nice-to-have or open questions.
 
-- Deploy JSON schemas to `https://schema.genealogix.io/v1/*` URLs referenced in specification/schema/README.md
+---
 
-## Documentation
+## 🔴 Bugs & Data Integrity
 
-- Remove glx archive folder references from all examples and documentation
-- Add comprehensive example showing assertion-to-entity property workflow (setting properties directly vs creating assertions with evidence)
-- Add more temporal property examples throughout entity documentation (residence, occupation, name changes over time)
+Issues that silently lose or corrupt data during import.
 
-## Type System & Schema
+- **Residence property overwrite on PLAC-without-DATE**: In `convertResidence` and `convertCensus`, when PLAC exists but DATE does not, the residence property is set as a bare place ID which overwrites any existing temporal residence list. Should append instead of overwrite. Affects [gedcom_individual.go](glx/lib/gedcom_individual.go) `convertResidence` (line ~454) and `applyCensusData`.
+- **FAM CENS/event processing depends on HUSB/WIFE tag order**: In `convertFamily`, CENS and other family events (ENGA, MARB, etc.) are processed inline during the same loop that extracts `husbandID` and `wifeID`. If these event tags appear before HUSB/WIFE in the GEDCOM file, spouse IDs will be empty strings. GEDCOM does not guarantee tag order. Marriage/divorce handle this by deferring to after the loop, but CENS and other events do not. [gedcom_family.go:64-74](glx/lib/gedcom_family.go#L64-L74)
 
-- Clarify adoption semantics: `adoption` event type vs `adoption` relationship type vs `adoptive-parent-child` relationship type. Consider consolidating or documenting distinct use cases.
-- Consider consolidating `bat_mitzvah` (BATM) and `bas_mitzvah` (BASM) into a single event type - they represent the same ceremony with alternate spellings
-- Unify `EventParticipant`, `RelationshipParticipant`, and `AssertionParticipant` into a single `Participant` struct after the current refactor is complete
-- we shouldn't create assertions from imports without citations
-- decide what to do with QUAY ratings... (removed in beta.2)
-- Consider adding `media` as a third evidence option for assertions (alongside `citations` and `sources`) - useful for direct visual evidence like gravestone photos
-- Consider relaxing event participant requirement - the spec says "At least one participant is required (events without participants are not meaningful)" but historical events (wars, famines, natural disasters) may be relevant to genealogy without specific participants
-- JSON schemas don't validate entity `properties` structure (e.g., person name with fields). Properties are vocabulary-controlled and dynamic, so schema validation uses `additionalProperties: true`. Consider documenting this as intentional or adding runtime property validation in the CLI.
-- `godparent` exists as both a relationship type and participant role (applies_to: event, relationship). Consider documenting the distinction: relationship type represents ongoing godparent-godchild bond, participant role represents specific event participation (e.g., baptism ceremony).
-- Media schema is missing several fields documented in media.md (`type`, `date`, `subjects`, `source`, `citation`, `width`, `height`, `duration`, `file_size`). Many of these should move to vocabulary-controlled `properties` rather than top-level fields. Update schema and documentation together when refactoring media entity structure.
+---
 
-## GEDCOM Import: Census Tag Handling
+## 🟡 Import Gaps
 
-- **CENS (Census)**: Currently creates census events. Census is not an event - it's a source/citation that supports assertions about a person's attributes (residence, occupation, etc.). Should create citations from census records that can be attached to property assertions.
+Data that is parsed but silently dropped or not stored.
 
-## GEDCOM Import: Missing Data Storage
+- **Media entities with empty URI from GEDCOM import**: GEDCOM OBJE records with empty `FILE` values (e.g., cloud-hosted media referenced only by app-specific `_OID` tags) produce media entities with empty `uri`. Should either skip these media entities, populate URI from extension tags, or set a meaningful placeholder.
+- **Census NOTE discarded when SOUR exists**: In `convertCensus`, NOTE text from CENS records is only attached to synthetic citations. When SOUR sub-records exist, the NOTE is silently discarded. Should store on the person or pass through to citations.
+- **HEAD Metadata** ([gedcom_converter.go:220-221](glx/lib/gedcom_converter.go#L220-L221)): Store HEAD metadata (export_date, source_file, copyright, language, source_system).
+- **SUBM Metadata** ([gedcom_converter.go:246-247](glx/lib/gedcom_converter.go#L246-L247)): Store SUBM (submitter) metadata.
+- **NCHI Tag** ([gedcom_family.go](glx/lib/gedcom_family.go)): Store NCHI (number of children) — can differ from actual CHIL count.
+- **NAME TYPE** ([gedcom_name.go](glx/lib/gedcom_name.go)): Store NAME TYPE subfield (birth, married, aka).
+- **LANG Tag Normalization**: GEDCOM 5.5.x uses free-form text (`English`, `French`) while 7.0 uses ISO format (`en-US`). Should normalize 5.5.x values to ISO codes on import.
+- **PLAC Validation** ([gedcom_place.go](glx/lib/gedcom_place.go)): Reject non-geographic text like "Died in childbirth", "Unmarried", "Unknown".
 
-**Issue**: Data is being processed but not stored/exposed after import
+---
 
-- **gedcom_converter.go:102-103**: Store extension tag data (tags starting with `_`) - vendor-specific metadata like _MSTAT, _UID, _NSTY
-- **gedcom_converter.go:220-221**: Store HEAD metadata (export_date, source_file, copyright, language, source_system)
-- **gedcom_converter.go:246-247**: Store SUBM (submitter) metadata
-- **gedcom_family.go**: Store NCHI (number of children) - can differ from actual CHIL count
-- **gedcom_name.go**: Store NAME TYPE subfield (birth, married, aka)
-- **gedcom_place.go**: Validate PLAC fields - reject non-geographic text like "Died in childbirth", "Unmarried", "Unknown"
+## 🟡 Data Model & Design
 
-## GEDCOM Import: Notes Anti-Pattern Audit
+Design decisions that affect the spec and should be resolved before 1.0.
 
-**Anti-pattern**: Dumping structured data into Notes fields instead of proper typed fields/properties
+- **Source `description` GEDCOM mapping ambiguity**: The `description` field on Source maps to both GEDCOM SOUR.TEXT (text from source) and SOUR.NOTE (general note). These are semantically different — TEXT is an excerpt from the original, NOTE is researcher commentary. Consider splitting into separate fields or documenting the merge.
+- **Event participant requirement**: Consider relaxing — historical events (wars, famines, natural disasters) may be relevant to genealogy without specific participants.
+- **Gender/sex controlled vocabularies**: Should these be formalized?
+- **Property field data types**: Should property fields carry type information?
+- **Repository address fields**: Consider moving `address`, `city`, `state_province`, `postal_code`, `country` from direct entity fields into the `repository_properties` vocabulary for consistency with other entity types.
+- **Fields-only structured properties**: Spec now allows `fields` without `value` (e.g., crop coordinates). Ensure code and validation fully support this — validator should not warn on fields-only properties.
 
-### Repository (gedcom_repository.go)
-- **Line 104**: Additional phones concatenated into notes → Change `Phone string` to `Phones []string`
-- **Line 110**: Additional emails concatenated into notes → Change `Email string` to `Emails []string`
+---
 
-### Source (gedcom_source.go)
-- **Line 65**: ABBR (abbreviation) dumped in notes → Add `Abbreviation` field to Source struct
-- **Line 76**: CALN (call number) dumped in notes → Add to Citation or create RepositoryHolding struct
-- **Line 98**: EVEN (events recorded) dumped in notes → Add `EventsRecorded []string` field to Source
-- **Line 101**: AGNC (agency) dumped in notes → Add `Agency` field to Source struct
+## 🟡 Tooling & Infrastructure
 
-### Media (gedcom_media.go)
-- **Line 82, 180**: MEDI (medium type) dumped in notes → Add `Medium` or `MediaType` field to Media struct
-- **Line 96, 192**: CROP coordinates dumped in notes → Add structured `Crop *CropCoordinates` field
-- **Line 110**: Citation IDs dumped as strings in notes → Add `Citations []string` field to Media struct
+- **Markdown link validation in CI**: Add CI check to validate all internal markdown links in specification and documentation files.
+- **Review standard vocabularies**: Audit all standard vocabulary files (.glx) in [5-standard-vocabularies/](specification/5-standard-vocabularies/) for consistency and completeness.
 
-### Citation (gedcom_evidence.go)
-- **Line 63**: Source date dumped in notes → Add `SourceDate` field to Citation struct
-- **Line 38**: Embedded citations skipped entirely → Implement embedded citation support (no source reference)
+---
+
+## 🟢 Documentation
+
+- **Add validation rule sections**: Each entity type doc should include a consolidated "Validation Rules" section.
+- **Git Workflow Guide**: Create documentation covering Git workflows, branching strategies, collaboration patterns, and branch-based research methodologies for GLX archives.
+
+---
+
+## 🟢 Code Quality
+
+- **Require participant roles**: Should events, relationships, and assertions require participant roles?
+- **Add validator tags to GLX structs**: Use struct tags for validation.
+- **Move Loggers to their own package**: Better separation of concerns.
+- **Add make command for goreleaser**.
+- **`copyFile` discards `dstFile.Close()` error**: On NFS/network mounts, write errors surface at `Close()`. Should check the close error for the destination file. [media_copy.go:119-132](glx/media_copy.go#L119-L132)
+- **`decodeGEDCOMBlob` no input validation on byte range**: Characters outside valid range (0x2E-0x6D) produce garbage silently rather than returning an error. BLOB is deprecated and rare. [media_copy.go:143-155](glx/media_copy.go#L143-L155)
+- **No path traversal check on GEDCOM FILE references**: `../../etc/passwd` would be resolved by `filepath.Join`. Impact limited since destination uses basename only and user provides the GEDCOM file. [media_copy.go:102-114](glx/media_copy.go#L102-L114)
+
+---
+
+## 📝 Notes
+
+- All TODO comments in code reference this file
+- Keep this file as the single source of truth for project todos
+- When adding new todos, place them in the appropriate category with priority marker

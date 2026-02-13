@@ -6,11 +6,28 @@ layout: doc
 
 # Repository Entity
 
-[← Back to Entity Types](README.md)
+[← Back to Entity Types](README)
 
 ## Overview
 
 A Repository entity represents an institution, archive, library, or organization that holds genealogical sources. Repositories provide the physical or virtual location where evidence is housed and can be accessed.
+
+## File Format
+
+All GENEALOGIX files use entity type keys at the top level:
+
+```yaml
+# Any .glx file (commonly in repositories/ directory)
+repositories:
+  repository-national-archives:
+    name: "The National Archives"
+    type: archive
+    website: "https://www.nationalarchives.gov.uk"
+```
+
+**Key Points:**
+- Entity ID is the map key (`repository-national-archives`)
+- IDs can be descriptive or random, 1-64 alphanumeric/hyphens
 
 ## Core Concepts
 
@@ -29,7 +46,7 @@ GENEALOGIX supports various repository types:
 - **Government Agency**: Government record-keeping agency
 - **Other**: Other institution type
 
-**See [Vocabularies - Repository Types](vocabularies.md#repository-types-vocabulary) for:**
+**See [Vocabularies - Repository Types](vocabularies#repository-types-vocabulary) for:**
 - Complete list of standard repository types
 - How to add custom repository types
 - Vocabulary file structure and examples
@@ -53,22 +70,31 @@ GENEALOGIX supports various repository types:
 | `state_province` | string | State or province |
 | `postal_code` | string | Postal/zip code |
 | `country` | string | Country |
-| `phone` | string | Telephone number |
-| `email` | string | Email address |
 | `website` | string | URL to repository website |
-| `access_hours` | string | Hours of operation/access |
-| `properties` | object | Vocabulary-defined properties |
+| `properties` | object | Vocabulary-defined properties (see below) |
 | `notes` | string | Free-form notes |
-| `tags` | array | Tags for categorization |
+
+### Properties
+
+Contact information and access details are stored in the `properties` field. The following are standard properties from the default vocabulary; archives can define additional properties by extending the vocabulary:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `phones` | string[] | Phone number(s) for the repository |
+| `emails` | string[] | Email address(es) for the repository |
+| `fax` | string | Fax number |
+| `access_hours` | string | Hours of operation/access |
 | `access_restrictions` | string | Any restrictions on access |
-| `holding_types` | array | Types of materials held (microfilm, digital, books, etc.) |
+| `holding_types` | string[] | Types of materials held |
+| `external_ids` | string[] | External identifiers (FamilySearch, WikiTree, etc.) |
+
+**See [Vocabularies - Repository Properties](vocabularies#repository-properties-vocabulary) for the full vocabulary definition.**
 
 ## Usage Patterns
 
 ### Simple Local Repository
 
 ```yaml
-# repositories/repository-leeds.glx
 repositories:
   repository-leeds-library:
     name: "Leeds Library - Local Studies"
@@ -77,14 +103,14 @@ repositories:
     city: "Leeds"
     state_province: "Yorkshire"
     country: "England"
-    phone: "+44 113 247 6000"
     website: "https://www.leeds.gov.uk/libraries"
+    properties:
+      phones: "+44 113 247 6000"
 ```
 
 ### National Archive
 
 ```yaml
-# repositories/repository-tna.glx
 repositories:
   repository-tna:
     name: "The National Archives"
@@ -92,40 +118,40 @@ repositories:
     address: "Kew, Richmond"
     city: "London"
     country: "England"
-    phone: "+44 20 8876 3444"
-    email: "enquiry@nationalarchives.gov.uk"
     website: "https://www.nationalarchives.gov.uk"
-    access_hours: "Monday-Friday 9am-5pm"
-    holding_types:
-      - "government records"
-      - "microfilm"
-      - "digital images"
-    access_restrictions: "Some records require appointment"
+    properties:
+      phones: "+44 20 8876 3444"
+      emails: "enquiry@nationalarchives.gov.uk"
+      access_hours: "Monday-Friday 9am-5pm"
+      holding_types:
+        - "government records"
+        - "microfilm"
+        - "digital images"
+      access_restrictions: "Some records require appointment"
 ```
 
 ### Online Database
 
 ```yaml
-# repositories/repository-ancestry.glx
 repositories:
   repository-ancestry:
     name: "Ancestry.com"
     type: database
     website: "https://www.ancestry.com"
-    access_hours: "24/7"
-    holding_types:
-      - "census records"
-      - "vital records"
-      - "military records"
-      - "church records"
-      - "newspapers"
-    access_restrictions: "Subscription required"
+    properties:
+      access_hours: "24/7"
+      holding_types:
+        - "census records"
+        - "vital records"
+        - "military records"
+        - "church records"
+        - "newspapers"
+      access_restrictions: "Subscription required"
 ```
 
 ### Church Archive
 
 ```yaml
-# repositories/repository-church.glx
 repositories:
   repository-stpauls:
     name: "St Paul's Cathedral Archive"
@@ -133,14 +159,15 @@ repositories:
     address: "St Paul's Churchyard"
     city: "London"
     country: "England"
-    phone: "+44 20 7246 8348"
-    email: "archive@stpauls.co.uk"
-    holding_types:
-      - "parish registers"
-      - "marriage records"
-      - "baptismal records"
-      - "manuscripts"
-    access_restrictions: "By appointment only"
+    properties:
+      phones: "+44 20 7246 8348"
+      emails: "archive@stpauls.co.uk"
+      holding_types:
+        - "parish registers"
+        - "marriage records"
+        - "baptismal records"
+        - "manuscripts"
+      access_restrictions: "By appointment only"
 ```
 
 ## Repository in Sources
@@ -148,7 +175,6 @@ repositories:
 Repositories are referenced from Source entities:
 
 ```yaml
-# sources/source-wills.glx
 sources:
   source-tna-wills:
     title: "Wills and Probate Records"
@@ -182,26 +208,34 @@ repositories/
     └── repository-custom.glx
 ```
 
+## Validation Rules
+
+- `name` must be present and non-empty
+- `type` must be from the [repository types vocabulary](vocabularies#repository-types-vocabulary)
+- If `website` is specified, it should be a valid URL
+- Properties must be defined in the repository properties vocabulary
+
 ## GEDCOM Mapping
 
-| GLX Property | GEDCOM Element | Notes |
-|--------------|----------------|-------|
+| GLX Field | GEDCOM Tag | Notes |
+|-----------|------------|-------|
 | Entity ID (map key) | (synthetic) | Not in GEDCOM |
 | `name` | REPO.NAME | Repository name |
 | `address` | REPO.ADDR | Repository address |
-| `phone` | REPO.PHON | Phone number (non-standard) |
-| `email` | REPO.EMAIL | Email (non-standard) |
 | `website` | REPO.WWW | Website (non-standard) |
+| `properties.phones` | REPO.PHON | Phone number(s) |
+| `properties.emails` | REPO.EMAIL | Email address(es) |
+| `properties.external_ids` | REPO.EXID | External identifiers (GEDCOM 7.0) |
 
 ## Access Information
 
 Best practices for recording repository access:
 
 - Include both physical address and website URL if applicable
-- Note any access restrictions or requirements (appointment, membership, subscription)
-- Record hours of operation for physical repositories
-- Include phone/email for inquiries
-- Document required identification or credentials
+- Note any access restrictions in `properties.access_restrictions`
+- Record hours of operation in `properties.access_hours`
+- Include contact details in `properties.phones` and `properties.emails`
+- Document types of materials held in `properties.holding_types`
 
 ## Related Entities
 
@@ -209,10 +243,14 @@ Best practices for recording repository access:
 - **Citation**: May reference repository location information via Source
 - **Holdings**: Detailed inventory of materials within repository
 
+## Schema Reference
+
+See [repository.schema.json](../schema/v1/repository.schema.json) for the complete JSON Schema definition.
+
 ## See Also
 
-- [Source Entity](source.md) - Collections held in repositories
-- [Citation Entity](citation.md) - References to specific materials in repositories
+- [Source Entity](source) - Collections held in repositories
+- [Citation Entity](citation) - References to specific materials in repositories
 
 
 

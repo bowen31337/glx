@@ -6,11 +6,28 @@ layout: doc
 
 # Place Entity
 
-[← Back to Entity Types](README.md)
+[← Back to Entity Types](README)
 
 ## Overview
 
 A Place entity represents a geographic location relevant to the family archive. Places form a hierarchical structure that supports genealogical research across varying levels of granularity (country, region, county, town, street, etc.).
+
+## File Format
+
+All GENEALOGIX files use entity type keys at the top level:
+
+```yaml
+# Any .glx file (commonly in places/ directory)
+places:
+  place-leeds:
+    name: "Leeds"
+    type: city
+    parent: place-yorkshire
+```
+
+**Key Points:**
+- Entity ID is the map key (`place-leeds`)
+- IDs can be descriptive or random, 1-64 alphanumeric/hyphens
 
 ## Core Concepts
 
@@ -19,36 +36,21 @@ A Place entity represents a geographic location relevant to the family archive. 
 Places form a tree structure where each place can have a parent place, enabling representation of administrative hierarchies and geographic containment relationships.
 
 ```yaml
-# places/place-england.glx
 places:
   place-england:
     name: "England"
     type: country
 
-# places/place-yorkshire.glx
-places:
   place-yorkshire:
     name: "Yorkshire"
     type: county
     parent: place-england
 
-# places/place-leeds.glx
-places:
   place-leeds:
     name: "Leeds"
     type: city
     parent: place-yorkshire
 ```
-
-### Place Names
-
-Places support multiple names to represent:
-- Historical name changes
-- Alternative spellings and transliterations
-- Native language vs. colonial names
-- Informal/colloquial names
-
-Each name can be classified and dated.
 
 ## Fields
 
@@ -66,80 +68,61 @@ Each name can be classified and dated.
 | `properties` | object | Vocabulary-defined properties of the place |
 | `parent` | string | Reference to parent place in hierarchy |
 | `type` | string | Place type from `vocabularies/place-types.glx` |
-| `alternative_names` | array | Historical/alternative names for this place |
 | `latitude` | number | WGS84 latitude coordinate |
 | `longitude` | number | WGS84 longitude coordinate |
-| `jurisdiction` | string | Formal jurisdiction identifier or code |
-| `place_format` | string | Standard format for place hierarchy (GEDCOM PLAC.FORM style) |
 | `notes` | string | Free-form notes about the place |
-| `tags` | array | Tags for categorization |
+
+### Properties
+
+Place properties allow capturing historical information that doesn't fit into the standard structural fields. The following are standard properties from the default vocabulary; archives can define additional properties by extending the vocabulary.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `existed_from` | date | When the place came into existence |
+| `existed_to` | date | When the place ceased to exist |
+| `population` | integer | Population count (supports temporal values) |
+| `description` | string | Detailed description of the place |
+| `jurisdiction` | string | Formal jurisdiction identifier or code (e.g., ISO 3166, FIPS code) |
+| `place_format` | string | Standard format for place hierarchy (GEDCOM PLAC.FORM style) |
+| `alternative_names` | string[] | Historical or alternate names for a place (temporal, multi-value) |
+
+Example:
+```yaml
+places:
+  place-new-amsterdam:
+    name: "New Amsterdam"
+    type: city
+    properties:
+      existed_from: "1626"
+      existed_to: "1664"
+      population:
+        - value: 270
+          date: "1630"
+        - value: 1500
+          date: "1664"
+      description: "Dutch colonial settlement on Manhattan Island"
+      alternative_names:
+        - value: "Nieuw-Amsterdam"
+          date: "FROM 1626 TO 1664"
+```
+
+**See [Vocabularies - Place Properties](vocabularies#place-properties-vocabulary) for the full vocabulary definition.**
 
 ## Place Types
 
 Place types are defined in `vocabularies/place-types.glx` within each archive.
 
-**See [Vocabularies - Place Types](vocabularies.md#place-types-vocabulary) for:**
+**See [Vocabularies - Place Types](vocabularies#place-types-vocabulary) for:**
 - Complete list of standard place types
 - How to add custom place types
 - Vocabulary file structure and examples
 - Validation requirements
 
-### Alternative Names Structure
-
-```yaml
-alternative_names:
-  - name: "York"
-    type: "historical"
-    language: "en"
-    date_range:
-      start: "1066"
-      end: "present"
-  - name: "Jorvik"
-    type: "historical"
-    language: "en"
-    date_range:
-      start: "867"
-      end: "1066"
-```
-
 ## Usage Patterns
-
-### In Events/Facts
-
-Places are referenced in events to indicate where the event occurred:
-
-```yaml
-type: "birth"
-place: "place-leeds123"
-```
-
-### In Addresses
-
-Places can be components of addresses within person records or residence events:
-
-```yaml
-residence:
-  place: "place-leeds123"
-  date: "FROM 1850 TO 1900"
-```
-
-## GEDCOM Mapping
-
-| GLX Property | GEDCOM Element | Notes |
-|--------------|----------------|-------|
-| Entity ID (map key) | (synthetic) | Not in GEDCOM; generated from place data |
-| `name` | PLAC | Text value of PLAC tag |
-| `parent` | (implicit) | Represented in hierarchical PLAC structure |
-| `type` | PLAC.TYPE | Non-standard; used in extended GEDCOM |
-| `latitude` | PLAC.MAP.LATI | WGS84 latitude |
-| `longitude` | PLAC.MAP.LONG | WGS84 longitude |
-
-## Examples
 
 ### Simple Location
 
 ```yaml
-# places/place-paris.glx
 places:
   place-paris:
     name: "Paris"
@@ -152,28 +135,22 @@ places:
 ### Complex Hierarchical Location
 
 ```yaml
-# places/place-leeds-district.glx
 places:
   place-leeds-registration:
     name: "Leeds Registration District"
-    type: registration_district
+    type: district
     parent: place-yorkshire
-    alternative_names:
-      - name: "Leeds"
-        type: "informal"
-      - name: "West Riding of Yorkshire"
-        type: "historical"
     latitude: 53.8008
     longitude: -1.5491
-    jurisdiction: "england.yorkshire.leeds"
-    place_format: "City, County, Country"
+    properties:
+      jurisdiction: "england.yorkshire.leeds"
+      place_format: "City, County, Country"
     notes: "Historical registration district for civil registration purposes"
 ```
 
 ### Place with Temporal Properties
 
 ```yaml
-# places/place-new-york.glx
 places:
   place-new-york-city:
     name: "New York City"
@@ -192,6 +169,29 @@ places:
         - value: 8336817
           date: "2020"
       existed_from: "1624"
+```
+
+### Referencing Places
+
+Places are referenced in events and person properties:
+
+```yaml
+# In events
+events:
+  event-birth-john:
+    type: birth
+    place: place-leeds
+    participants:
+      - person: person-john
+        role: subject
+
+# In person properties
+persons:
+  person-john:
+    properties:
+      residence:
+        - value: place-leeds
+          date: "FROM 1850 TO 1900"
 ```
 
 ## File Organization
@@ -216,16 +216,33 @@ places/
     └── place-boston.glx
 ```
 
+## GEDCOM Mapping
+
+| GLX Field | GEDCOM Tag | Notes |
+|-----------|------------|-------|
+| Entity ID (map key) | (synthetic) | Not in GEDCOM; generated from place data |
+| `name` | PLAC | Text value of PLAC tag |
+| `parent` | (implicit) | Represented in hierarchical PLAC structure |
+| `type` | PLAC.TYPE | Non-standard; used in extended GEDCOM |
+| `latitude` | PLAC.MAP.LATI | WGS84 latitude |
+| `longitude` | PLAC.MAP.LONG | WGS84 longitude |
+| `properties.place_format` | PLAC.FORM | Place hierarchy format string |
+
 ## Validation Rules
 
 - Place hierarchy must be acyclic (no circular parent references)
 - Coordinates, if present, must be valid WGS84 values
-- Parent place must exist before referencing it
-- Type should follow standardized taxonomy
+- Parent place must reference an existing Place entity
+- Type must be from the [place types vocabulary](vocabularies#place-types-vocabulary)
+
+## Schema Reference
+
+See [place.schema.json](../schema/v1/place.schema.json) for the complete JSON Schema definition.
 
 ## See Also
 
-- [Event Entity](event.md)
-- [Vocabularies](vocabularies.md#place-types-vocabulary)
-- [Data Types](../6-data-types.md)
+- [Event Entity](event) - Events that occur at places
+- [Person Entity](person) - Residence and birth/death places
+- [Vocabularies](vocabularies#place-types-vocabulary) - Place types vocabulary
+- [Core Concepts - Data Types](../2-core-concepts#data-types) - Coordinate and date formats
 

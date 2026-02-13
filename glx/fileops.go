@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -27,6 +28,12 @@ const (
 	FileExtGLX  = ".glx"
 	FileExtYAML = ".yaml"
 	FileExtYML  = ".yml"
+)
+
+// File permission constants
+const (
+	dirPermissions  = 0o755
+	filePermissions = 0o644
 )
 
 // ensureGLXExtension adds .glx extension if not present
@@ -68,26 +75,34 @@ func isDirectoryEmpty(path string) error {
 	defer func() { _ = f.Close() }()
 
 	// Read exactly one directory entry.
-	// Readdirnames will return an error if the directory is empty.
-	// We expect an io.EOF error, which means it's empty.
+	// Readdirnames returns io.EOF if the directory is empty.
 	_, err = f.Readdirnames(1)
-	if err == nil { // if err is nil, directory is not empty
-		return ErrNonEmptyDirectory
+	if err != nil {
+		// io.EOF means directory is empty (success case)
+		if err == io.EOF {
+			return nil
+		}
+		// Other errors (permissions, I/O failures) should be returned
+		return fmt.Errorf("error reading directory: %w", err)
 	}
 
-	return nil // Directory is empty
+	// Successfully read an entry, so directory is not empty
+	return ErrNonEmptyDirectory
 }
 
-// walkGLXFiles walks a directory and calls the visitor function for each GLX file
-func walkGLXFiles(rootPath string, visitor func(path string, data []byte) error) error {
-	return filepath.WalkDir(rootPath, func(path string, d fs.DirEntry, err error) error {
+// collectGLXFilesFromDir recursively collects all GLX/YAML files from a directory
+// into a map with relative paths as keys and file contents as values.
+// Only files with .glx, .yaml, or .yml extensions are included.
+func collectGLXFilesFromDir(rootDir string) (map[string][]byte, error) {
+	files := make(map[string][]byte)
+
+	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if d.IsDir() {
 			return nil
 		}
-
 		if !isGLXFile(d.Name()) {
 			return nil
 		}
@@ -97,30 +112,6 @@ func walkGLXFiles(rootPath string, visitor func(path string, data []byte) error)
 			return fmt.Errorf("failed to read %s: %w", path, err)
 		}
 
-		return visitor(path, data)
-	})
-}
-
-// collectFilesFromDir recursively collects all files from a directory into a map
-// with relative paths as keys and file contents as values
-func collectFilesFromDir(rootDir string) (map[string][]byte, error) {
-	files := make(map[string][]byte)
-
-	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-
-		// Read file content
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("failed to read %s: %w", path, err)
-		}
-
-		// Get relative path from rootDir
 		relPath, err := filepath.Rel(rootDir, path)
 		if err != nil {
 			return fmt.Errorf("failed to get relative path: %w", err)
@@ -137,7 +128,7 @@ func collectFilesFromDir(rootDir string) (map[string][]byte, error) {
 // writeFilesToDir writes a map of files (relative path -> content) to a directory
 func writeFilesToDir(rootDir string, files map[string][]byte) error {
 	// Create root directory
-	if err := os.MkdirAll(rootDir, 0o755); err != nil {
+	if err := os.MkdirAll(rootDir, dirPermissions); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -147,12 +138,12 @@ func writeFilesToDir(rootDir string, files map[string][]byte) error {
 
 		// Create parent directory
 		parentDir := filepath.Dir(absPath)
-		if err := os.MkdirAll(parentDir, 0o755); err != nil {
+		if err := os.MkdirAll(parentDir, dirPermissions); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", parentDir, err)
 		}
 
 		// Write file
-		if err := os.WriteFile(absPath, content, 0o644); err != nil {
+		if err := os.WriteFile(absPath, content, filePermissions); err != nil {
 			return fmt.Errorf("failed to write file %s: %w", absPath, err)
 		}
 	}
@@ -163,7 +154,7 @@ func writeFilesToDir(rootDir string, files map[string][]byte) error {
 // createDirectoryStructure creates a list of directories
 func createDirectoryStructure(dirs []string) error {
 	for _, dir := range dirs {
-		if err := os.MkdirAll(dir, 0o755); err != nil {
+		if err := os.MkdirAll(dir, dirPermissions); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}

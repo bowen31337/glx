@@ -29,7 +29,13 @@ var rootCmd = &cobra.Command{
 
 GENEALOGIX is a modern, evidence-first, Git-native genealogy data standard.
 Use GLX to initialize new archives, validate files, and ensure data quality.`,
-	Version: "0.0.0-beta.2",
+	Version:       "0.0.0-beta.3",
+	SilenceErrors: true,
+	// SilenceUsage is set in PersistentPreRun (after arg validation) so that
+	// arg-count errors still show usage but runtime errors from RunE do not.
+	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+		cmd.SilenceUsage = true
+	},
 }
 
 // Execute runs the root command
@@ -47,12 +53,18 @@ func init() {
 	rootCmd.AddCommand(validateCmd)
 	rootCmd.AddCommand(splitCmd)
 	rootCmd.AddCommand(joinCmd)
-	rootCmd.AddCommand(checkSchemasCmd)
+
 }
 
 // ============================================================================
 // Import Command
 // ============================================================================
+
+// Format constants for import output format flag
+const (
+	FormatSingle = "single"
+	FormatMulti  = "multi"
+)
 
 var (
 	importOutput          string
@@ -79,23 +91,23 @@ The imported archive will include:
 - Evidence-based assertions
 
 Output formats:
-- single: Single YAML file (default)
-- multi: Multi-file directory structure (one file per entity)`,
-	Example: `  # Import to single file
-  glx import family.ged -o family.glx
+- multi: Multi-file directory structure (default, one file per entity)
+- single: Single YAML file`,
+	Example: `  # Import to multi-file directory (default)
+  glx import family.ged -o family-archive
 
-  # Import to multi-file directory
-  glx import family.ged -o family-archive --format multi
+  # Import to single file
+  glx import family.ged -o family.glx --format single
 
   # Import without validation
-  glx import family.ged -o family.glx --no-validate`,
+  glx import family.ged -o family-archive --no-validate`,
 	Args: cobra.ExactArgs(1),
 	RunE: runImport,
 }
 
 func init() {
 	importCmd.Flags().StringVarP(&importOutput, "output", "o", "", "Output file or directory (required)")
-	importCmd.Flags().StringVarP(&importFormat, "format", "f", "single", "Output format: single or multi")
+	importCmd.Flags().StringVarP(&importFormat, "format", "f", FormatMulti, "Output format: multi or single")
 	importCmd.Flags().BoolVar(&importNoValidate, "no-validate", false, "Skip validation before saving")
 	importCmd.Flags().BoolVarP(&importVerbose, "verbose", "v", false, "Verbose output")
 	importCmd.Flags().IntVar(&importShowFirstErrors, "show-first-errors", defaultShowFirstErrors, "Number of validation errors to show (0 for all)")
@@ -170,22 +182,24 @@ Performs comprehensive validation including:
 - YAML syntax correctness
 - Required fields presence
 - Entity ID format validation
-- Cross-reference integrity
-- Duplicate ID detection
+- Cross-reference integrity (directories only)
+- Duplicate ID detection (directories only)
 - Vocabulary validation (if vocabularies/ exists)
 
-When validating directories, automatically checks all .glx, .yaml, and .yml files
-and validates cross-references between entities.`,
-	Example: `  # Validate current directory
+Validation behavior:
+- Single file: Validates file structure only, skips cross-reference checks
+- Directory: Validates all .glx files with full cross-reference validation
+- No arguments: Validates current directory with full cross-reference validation`,
+	Example: `  # Validate current directory (with cross-reference checks)
   glx validate
 
-  # Validate specific directory
+  # Validate specific directory (with cross-reference checks)
   glx validate persons/
 
-  # Validate multiple paths
+  # Validate multiple paths (with cross-reference checks)
   glx validate persons/ events/ places/
 
-  # Validate single file
+  # Validate single file (structure only, no cross-reference checks)
   glx validate archive.glx`,
 	RunE: runValidate,
 }
@@ -221,7 +235,7 @@ The multi-file format organizes entities into separate directories:
 - assertions/ - One file per assertion (assertion-{id}.glx)
 - vocabularies/ - Standard vocabulary definitions
 
-Each entity file includes an _id field to preserve the entity ID.`,
+Each entity file uses standard GLX structure with the entity ID as the map key.`,
 	Example: `  # Split an archive
   glx split family.glx family-archive
 
@@ -270,7 +284,7 @@ The multi-file structure should contain:
 - media/ - Media entity files
 - assertions/ - Assertion entity files
 
-Entity IDs are restored from the _id field in each file.`,
+Entity IDs are read from the map key in each file.`,
 	Example: `  # Join an archive
   glx join family-archive family.glx
 
@@ -290,30 +304,3 @@ func runJoin(_ *cobra.Command, args []string) error {
 	return joinArchive(args[0], args[1], !joinNoValidate, joinVerbose, joinShowFirstErrors)
 }
 
-// ============================================================================
-// Check Schemas Command
-// ============================================================================
-
-var checkSchemasCmd = &cobra.Command{
-	Use:   "check-schemas",
-	Short: "Validate JSON schema files for required metadata",
-	Long: `Validate that JSON schema files contain required metadata fields.
-
-Checks all .json files in the schema/ directory to ensure they have:
-- $schema field (JSON Schema version)
-- $id field (unique identifier)
-
-This command is primarily used for GENEALOGIX specification development
-to ensure all schema files are properly formatted.`,
-	Example: `  # Check schemas in current directory
-  glx check-schemas
-
-  # Run from specification directory
-  cd specification/
-  glx check-schemas`,
-	RunE: runCheckSchemas,
-}
-
-func runCheckSchemas(_ *cobra.Command, _ []string) error {
-	return checkSchemaFiles()
-}

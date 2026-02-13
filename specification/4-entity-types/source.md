@@ -6,7 +6,7 @@ layout: doc
 
 # Source Entity
 
-[← Back to Entity Types](README.md)
+[← Back to Entity Types](README)
 
 ## Overview
 
@@ -35,7 +35,8 @@ sources:
   source-parish-register:
     title: "St. Paul's Parish Register, 1840-1860"
     type: church_register
-    creator: "Church of England"
+    authors:
+      - "Church of England"
     repository: repository-leeds-library
     date: "FROM 1840 TO 1860"
 ```
@@ -58,18 +59,14 @@ sources:
 | Field | Type | Description |
 |-------|------|-------------|
 | `type` | string | Source type from vocabulary |
-| `authors` | array | List of authors/creators |
+| `authors` | array | Author(s) or creator(s) — personal names or institutional names |
 | `date` | string | Date or date range of the source |
-| `citation` | string | Formatted citation for the source |
 | `description` | string | Description of the source |
 | `repository` | string | Reference to Repository entity |
-| `creator` | string | Creating organization or individual |
-| `publication_info` | object | Publication details |
 | `language` | string | Language of the source |
-| `coverage` | object | Geographic/temporal coverage |
 | `media` | array | References to Media entities |
+| `properties` | object | Vocabulary-defined properties (see [Properties](#properties)) |
 | `notes` | string | Free-form notes |
-| `tags` | array | Tags for categorization |
 
 ## Required Fields (Detailed)
 
@@ -77,10 +74,11 @@ sources:
 
 - Format: Any alphanumeric string with hyphens, 1-64 characters
 - Must be unique within the archive
-- Recommended formats:
-  - Descriptive: `source-birth-register`, `source-1851-census`
-  - Random hex: `source-a1b2c3d4` (for collaboration)
-  - Sequential: `source-001`, `source-002`
+- Example formats:
+  - Descriptive: `birth-register`, `1851-census`
+  - Random hex: `a1b2c3d4`
+  - Prefixed: `source-a1b2c3d4`
+  - Sequential: `001`, `002`
 
 ### `title`
 
@@ -128,24 +126,24 @@ type: church_register
 
 - Type: Array of Strings
 - Required: No
-- Description: Author(s) or creator(s) of the source
+- Description: Author(s) or creator(s) of the source. Maps to GEDCOM `SOUR.AUTH`.
+
+Use for both personal authors and institutional creators:
 
 Example:
 ```yaml
+# Personal author
+authors:
+  - "Elizabeth Shown Mills"
+
+# Institutional creator
+authors:
+  - "General Register Office"
+
+# Multiple authors
 authors:
   - "Elizabeth Shown Mills"
   - "John Doe"
-```
-
-### `creator`
-
-- Type: String
-- Required: No
-- Description: Creating organization or individual
-
-Example:
-```yaml
-creator: "General Register Office"
 ```
 
 ### `date`
@@ -175,17 +173,6 @@ Example:
 repository: repository-national-archives
 ```
 
-### `citation`
-
-- Type: String
-- Required: No
-- Description: Standard citation format for the source
-
-Example:
-```yaml
-citation: "1851 England Census, Yorkshire, Leeds, ED 5, folio 23"
-```
-
 ### `description`
 
 - Type: String
@@ -200,32 +187,6 @@ description: |
   families in the Wellington Street area.
 ```
 
-### `publication_info`
-
-- Type: Object
-- Required: No
-- Description: Publication details for published sources
-
-Structure:
-```yaml
-publication_info:
-  publisher: String
-  place: String
-  edition: String
-  isbn: String
-  pages: String
-```
-
-Example:
-```yaml
-publication_info:
-  publisher: "Genealogical Publishing Company"
-  place: "Baltimore, Maryland"
-  edition: "2nd Edition"
-  isbn: "978-0-8063-1234-5"
-  pages: "456"
-```
-
 ### `language`
 
 - Type: String
@@ -235,31 +196,6 @@ publication_info:
 Example:
 ```yaml
 language: "English"
-```
-
-### `coverage`
-
-- Type: Object
-- Required: No
-- Description: Geographic and temporal coverage of the source
-
-Structure:
-```yaml
-coverage:
-  spatial: String or Array
-  temporal: String
-  subjects: Array
-```
-
-Example:
-```yaml
-coverage:
-  spatial: "Leeds, Yorkshire, England"
-  temporal: "1840-1860"
-  subjects:
-    - baptisms
-    - marriages
-    - burials
 ```
 
 ### `media`
@@ -275,20 +211,39 @@ media:
   - media-register-scan-page-2
 ```
 
-### Other Fields
+### `properties`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `notes` | string | Research notes about the source |
-| `tags` | array | Tags for categorization |
+- Type: Object
+- Required: No
+- Description: Vocabulary-defined properties for additional source metadata
+
+The following are standard properties from the default vocabulary; archives can define additional properties by extending the vocabulary:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `abbreviation` | string | Short reference name (from GEDCOM ABBR) |
+| `call_number` | string | Repository catalog number (from GEDCOM CALN) |
+| `events_recorded` | string[] | Types of events documented (from GEDCOM EVEN) |
+| `agency` | string | Responsible agency (from GEDCOM AGNC) |
+| `coverage` | string | Geographic/temporal scope |
+| `external_ids` | string[] | External system identifiers |
+| `publication_info` | string | Publication details: publisher, place, edition (from GEDCOM PUBL) |
 
 Example:
 ```yaml
-notes: "Excellent condition, clearly legible"
-tags:
-  - primary-source
-  - church-records
-  - verified
+sources:
+  source-parish-register:
+    title: "St. Paul's Parish Register"
+    type: church_register
+    repository: repository-leeds-archives
+    properties:
+      abbreviation: "StP-Reg"
+      call_number: "PR/LEE/123"
+      events_recorded:
+        - "Baptisms"
+        - "Marriages"
+        - "Burials"
+      coverage: "Leeds, Yorkshire, 1840-1860"
 ```
 
 ## Usage Patterns
@@ -296,89 +251,65 @@ tags:
 ### Vital Record
 
 ```yaml
-# sources/source-birth-certificate.glx
 sources:
   source-birth-cert-john-smith:
     title: "Birth Certificate - John Smith, 1850"
     type: vital_record
-    creator: "General Register Office"
+    authors:
+      - "General Register Office"
     date: "1850-01-15"
     repository: repository-gro
     description: "Original birth certificate for John Smith, born Leeds"
     language: "English"
     media:
       - media-birth-cert-scan
-    tags:
-      - vital-record
-      - birth
-      - primary-source
 ```
 
 ### Census Record
 
 ```yaml
-# sources/source-1851-census.glx
 sources:
   source-census-1851-yorkshire:
     title: "1851 Census of England and Wales"
     type: census
-    creator: "UK Census Office"
+    authors:
+      - "UK Census Office"
     date: "1851-03-30"
     repository: repository-national-archives
-    citation: "1851 England Census, Yorkshire, Leeds, ED 5"
     description: |
       Census enumeration for Leeds, Yorkshire, England.
       Enumeration District 5, covering Wellington Street area.
-    coverage:
-      spatial: "Leeds, Yorkshire, England"
-      temporal: "1851-03-30"
     language: "English"
-    tags:
-      - census
-      - 1851
-      - yorkshire
 ```
 
 ### Church Register
 
 ```yaml
-# sources/source-parish-register.glx
 sources:
   source-st-pauls-register:
     title: "St. Paul's Cathedral Parish Register, 1840-1860"
     type: church_register
-    creator: "Church of England"
+    authors:
+      - "Church of England"
     date: "FROM 1840 TO 1860"
     repository: repository-leeds-archives
     description: |
       Parish registers for St. Paul's Cathedral, Leeds.
       Includes baptisms, marriages, and burials.
-      
+
       Coverage:
       - Baptisms: 1840-1860
       - Marriages: 1840-1860
       - Burials: 1845-1860
-    coverage:
-      spatial: "Leeds, Yorkshire, England"
-      temporal: "1840-1860"
-      subjects:
-        - baptisms
-        - marriages
-        - burials
     language: "English"
     media:
       - media-register-volume-1
     notes: "Well preserved, some water damage to pages 45-50"
-    tags:
-      - parish-register
-      - church-of-england
-      - primary-source
 ```
 
 ### Published Book
 
 ```yaml
-# sources/source-family-history.glx
 sources:
   source-smith-family-book:
     title: "The Smith Family of Yorkshire: A Genealogy"
@@ -386,86 +317,61 @@ sources:
     authors:
       - "Elizabeth Brown"
     date: "1985"
-    publication_info:
-      publisher: "Yorkshire Genealogical Society"
-      place: "Leeds, Yorkshire"
-      edition: "1st Edition"
-      pages: "324"
     repository: repository-family-history-library
     description: |
       Comprehensive genealogy of the Smith family of Leeds
       and surrounding areas, 1750-1950. Includes source
       citations and family group sheets.
-    coverage:
-      spatial:
-        - Leeds, Yorkshire
-        - Bradford, Yorkshire
-      temporal: "1750-1950"
     language: "English"
-    tags:
-      - published-genealogy
-      - secondary-source
-      - smith-family
+    properties:
+      publication_info: "Yorkshire Genealogical Society, Leeds, Yorkshire. 1st Edition, 324 pages."
 ```
 
 ### Online Database
 
 ```yaml
-# sources/source-ancestry-database.glx
 sources:
   source-ancestry-uk-census:
     title: "UK Census Collection, 1841-1911"
     type: database
-    creator: "Ancestry.com"
+    authors:
+      - "Ancestry.com"
     date: "FROM 1841 TO 1911"
     repository: repository-ancestry
     description: |
       Digitized and indexed UK census records from 1841-1911.
       Images and transcriptions available online.
-      
+
       Subscription required for access.
-    citation: "Ancestry.com. UK Census Collection [database online]"
-    coverage:
-      spatial: "United Kingdom"
-      temporal: "1841-1911"
     language: "English"
     notes: "Digital images of original records"
-    tags:
-      - online-database
-      - census
-      - subscription-required
 ```
 
 ### Newspaper
 
 ```yaml
-# sources/source-newspaper.glx
 sources:
   source-leeds-mercury:
     title: "Leeds Mercury"
     type: newspaper
-    creator: "Leeds Mercury Publishing Company"
+    authors:
+      - "Leeds Mercury Publishing Company"
     date: "1890-06-15"
     repository: repository-british-library
     description: "Daily newspaper published in Leeds, Yorkshire"
-    citation: "Leeds Mercury, 15 June 1890, page 3"
-    coverage:
-      spatial: "Leeds, Yorkshire, England"
-      temporal: "1890-06-15"
     language: "English"
 ```
 
 ### Oral History
 
 ```yaml
-# sources/source-interview.glx
 sources:
   source-mary-smith-interview:
     title: "Interview with Mary Smith"
     type: oral_history
-    creator: "Mary Smith (interviewee)"
     authors:
       - "Jane Researcher (interviewer)"
+      - "Mary Smith (interviewee)"
     date: "2020-03-15"
     description: |
       Oral history interview with Mary Smith discussing her
@@ -479,17 +385,13 @@ sources:
       - media-interview-transcript
     language: "English"
     notes: "Recorded with permission, transcript available"
-    tags:
-      - oral-history
-      - interview
-      - 20th-century
 ```
 
 ## Source Types
 
 Source types are defined in the archive's `vocabularies/source-types.glx` file.
 
-**See [Vocabularies - Source Types](vocabularies.md#source-types-vocabulary) for:**
+**See [Vocabularies - Source Types](vocabularies#source-types-vocabulary) for:**
 - Complete list of standard source types
 - How to add custom source types
 - Vocabulary file structure and examples
@@ -527,8 +429,7 @@ sources/
 Source
     ├── held in → Repository (via repository field)
     ├── referenced by → Citations (citations point to sources)
-    ├── documented by → Media (via media array)
-    └── may have → coverage information (geographic/temporal)
+    └── documented by → Media (via media array)
 
 Repository
     └── holds → Sources (sources reference repository)
@@ -540,57 +441,32 @@ Media
     └── documents → Source (media can be scans/photos of sources)
 ```
 
-## Standard Citation Formats
-
-Sources should include proper bibliographic citations. Common formats:
-
-### Published Book
-```yaml
-citation: "Author Name, Book Title (Place: Publisher, Year), page number."
-```
-
-### Vital Record
-```yaml
-citation: "Certificate type, Person Name, Date; Place; Repository, Call Number."
-```
-
-### Census
-```yaml
-citation: "Year Census, Country, State/County, Enumeration District, Page; Repository."
-```
-
-### Church Register
-```yaml
-citation: "Church Name, Register Type, Date; Place; Repository."
-```
-
-### Newspaper
-```yaml
-citation: "Newspaper Title, Date, Page Number, Column."
-```
-
 ## Validation Rules
 
 - `title` must be present and non-empty
 - If `repository` is specified, it must reference an existing Repository entity
 - If `media` array is present, all IDs must reference existing Media entities
 - `date` should follow standard date formats (YYYY, YYYY-MM-DD, or `FROM YYYY TO YYYY` for ranges)
-- `type` should be one of the defined source types if vocabularies are used
+- Type must be from the [source types vocabulary](vocabularies#source-types-vocabulary)
 
 ## GEDCOM Mapping
 
 Source entities map to GEDCOM source records:
 
-| GLX Property | GEDCOM Element | Notes |
-|--------------|----------------|-------|
+| GLX Field | GEDCOM Tag | Notes |
+|-----------|------------|-------|
 | Entity ID | `@SOUR@` | Source record ID |
 | `title` | `SOUR.TITL` | Source title |
-| `authors[0]` | `SOUR.AUTH` | Author (first only in GEDCOM) |
+| `authors[0]` | `SOUR.AUTH` | Author/creator (first only in GEDCOM) |
 | `date` | `SOUR.DATE` | Publication date |
-| `creator` | `SOUR.AGNC` | Responsible agency |
 | `repository` | `SOUR.REPO` | Repository reference |
-| `publication_info.publisher` | `SOUR.PUBL` | Publication info |
 | `description` | `SOUR.TEXT` or `SOUR.NOTE` | Source text/notes |
+| `properties.abbreviation` | `SOUR.ABBR` | Short title |
+| `properties.publication_info` | `SOUR.PUBL` | Publication info |
+| `properties.call_number` | `SOUR.REPO.CALN` | Call number at repository |
+| `properties.events_recorded` | `SOUR.DATA.EVEN` | Events in source |
+| `properties.agency` | `SOUR.DATA.AGNC` | Responsible agency |
+| `properties.external_ids` | `SOUR.EXID` | External identifiers (GEDCOM 7.0) |
 
 GEDCOM Example:
 ```
@@ -607,7 +483,8 @@ GENEALOGIX Equivalent:
 sources:
   source-st-pauls:
     title: "St. Paul's Parish Register"
-    creator: "Church of England"
+    authors:
+      - "Church of England"
     date: "FROM 1840 TO 1860"
     repository: repository-leeds-archives
     description: "Parish registers for baptisms, marriages, and burials"
@@ -619,7 +496,7 @@ sources:
 
 Include as much bibliographic information as possible:
 - Full title
-- Author/creator
+- Author(s)
 - Date or date range
 - Repository location
 - Repository catalog number
@@ -652,8 +529,8 @@ See [source.schema.json](../schema/v1/source.schema.json) for the complete JSON 
 
 ## See Also
 
-- [Core Concepts - Evidence Hierarchy](../2-core-concepts.md#evidence-hierarchy) - Understanding the evidence chain
-- [Repository Entity](repository.md) - Where sources are held
-- [Citation Entity](citation.md) - Specific references within sources
-- [Media Entity](media.md) - Digital preservation of sources
-- [Assertion Entity](assertion.md) - Conclusions drawn from sources
+- [Core Concepts - Evidence Chain](../2-core-concepts#evidence-chain) - Understanding the evidence chain
+- [Repository Entity](repository) - Where sources are held
+- [Citation Entity](citation) - Specific references within sources
+- [Media Entity](media) - Digital preservation of sources
+- [Assertion Entity](assertion) - Conclusions drawn from sources

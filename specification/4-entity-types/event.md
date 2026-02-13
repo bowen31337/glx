@@ -6,13 +6,13 @@ layout: doc
 
 # Event Entity
 
-[← Back to Entity Types](README.md)
+[← Back to Entity Types](README)
 
 ## Overview
 
 An Event entity represents a single occurrence in time, place, and context that is relevant to the family archive. Events are discrete happenings like birth, marriage, death, baptism, etc.
 
-**Note:** Facts and attributes (occupation, residence, nationality, religion, etc.) are represented as temporal properties on Person entities, not as events. See [Person Entity](person.md) for details on temporal properties.
+**Note:** Facts and attributes (occupation, residence, nationality, religion, etc.) are represented as temporal properties on Person entities, not as events. See [Person Entity](person) for details on temporal properties.
 
 ## File Format
 
@@ -61,12 +61,10 @@ Domain-specific events can be added via vocabularies:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `date` | string/object | Date as string or object with fuzzy support |
+| `date` | string | Date or date range (see [Date Format](../2-core-concepts#date-format-standard)) |
 | `place` | string | Reference to Place entity |
 | `properties` | object | Vocabulary-defined properties |
-| `description` | string | Narrative description |
 | `notes` | string | Free-form notes |
-| `tags` | array | Tags for categorization |
 
 ### Participant Object Fields
 
@@ -81,7 +79,7 @@ Domain-specific events can be added via vocabularies:
 ```yaml
 participants:
   - person: "person-abc123de"
-    role: "principal"
+    role: "subject"
     notes: "The bride"
   - person: "person-def456gh"
     role: "officiant"
@@ -94,12 +92,11 @@ participants:
 
 Event properties are defined in the archive's `vocabularies/event-properties.glx` file. Standard properties include:
 
-- `description` - Event description
-- `notes` - Additional notes about the event
+- `description` - Narrative description of the event
 
 **Note:** Event timing and location are handled by the `date` and `place` fields, not properties.
 
-**See [Vocabularies - Event Properties](vocabularies.md#event-properties-vocabulary) for:**
+**See [Vocabularies - Event Properties](vocabularies#event-properties-vocabulary) for:**
 - Complete list of standard event properties
 - How to add custom event properties
 
@@ -107,7 +104,7 @@ Event properties are defined in the archive's `vocabularies/event-properties.glx
 
 Event types are defined in the archive's `vocabularies/event-types.glx` file. Each archive includes standard types and can define custom types as needed.
 
-**See [Vocabularies - Event Types](vocabularies.md#event-types-vocabulary) for:**
+**See [Vocabularies - Event Types](vocabularies#event-types-vocabulary) for:**
 - Complete list of standard event types
 - How to add custom event types
 - Vocabulary file structure and examples
@@ -118,7 +115,6 @@ Event types are defined in the archive's `vocabularies/event-types.glx` file. Ea
 ### Birth Event Example
 
 ```yaml
-# events/event-birth.glx
 events:
   event-birth-john:
     type: birth
@@ -126,13 +122,12 @@ events:
     place: place-leeds
     participants:
       - person: person-john-smith
-        role: principal
+        role: subject
 ```
 
 ### Complex Event with Multiple Participants
 
 ```yaml
-# events/event-marriage.glx
 events:
   event-marriage-john-mary:
     type: marriage
@@ -151,7 +146,8 @@ events:
         notes: "Second witness"
       - person: person-reverend-black
         role: officiant
-    description: "Marriage celebrated at St Paul's Cathedral"
+    properties:
+      description: "Marriage celebrated at St Paul's Cathedral"
 ```
 
 ## File Organization
@@ -173,8 +169,8 @@ events/
 
 Most events map directly to GEDCOM tags:
 
-| GLX Type | GEDCOM Tag | Notes |
-|----------|-----------|-------|
+| GLX Event Type | GEDCOM Tag | Notes |
+|-----------|------------|-------|
 | `birth` | INDI.BIRT | Individual birth |
 | `death` | INDI.DEAT | Individual death |
 | `marriage` | FAM.MARR | Family marriage |
@@ -203,7 +199,7 @@ For events with multiple participants, GLX uses the ASSO (Associate) tag pattern
 
 Participant roles (principal, witness, officiant, etc.) are defined in the archive's `vocabularies/participant-roles.glx` file.
 
-**See [Vocabularies - Participant Roles](vocabularies.md#participant-roles-vocabulary) for:**
+**See [Vocabularies - Participant Roles](vocabularies#participant-roles-vocabulary) for:**
 - Complete list of standard participant roles
 - How to add custom roles
 - Vocabulary file structure and examples
@@ -211,23 +207,27 @@ Participant roles (principal, witness, officiant, etc.) are defined in the archi
 
 ## Validation Rules
 
-- Event type must be defined in `vocabularies/event-types.glx`
-- At least one participant is required (events without participants are not meaningful)
+- Event type must be from the [event types vocabulary](vocabularies#event-types-vocabulary)
+- At least one participant is required
 - Place, if referenced, must exist in the archive
 - All person references must point to existing Person entities
 - Date formats must follow genealogical date conventions
-- Participant roles must be defined in `vocabularies/participant-roles.glx`
+- Participant roles must be from the [participant roles vocabulary](vocabularies#participant-roles-vocabulary)
 
 ## Confidence and Provenance
 
-All supporting evidence for an event is stored in [Assertion Entities](assertion.md) that reference the event in their `subject` field. This keeps the event record clean while allowing for a rich, explicit evidence trail.
+All supporting evidence for an event is stored in [Assertion Entities](assertion) that reference the event in their `subject` field. This keeps the event record clean while allowing for a rich, explicit evidence trail.
+
+## Schema Reference
+
+See [event.schema.json](../schema/v1/event.schema.json) for the complete JSON Schema definition.
 
 ## See Also
 
-- [Person Entity](person.md) - Contains event references
-- [Assertion Entity](assertion.md) - Provides evidence for events
-- [Place Entity](place.md) - Geographic context for events
-- [Relationship Entity](relationship.md) - Multi-person events
+- [Person Entity](person) - Participates in events
+- [Assertion Entity](assertion) - Provides evidence for events
+- [Place Entity](place) - Geographic context for events
+- [Relationship Entity](relationship) - Multi-person events
 
 
 

@@ -38,9 +38,16 @@ func joinArchive(inputDir, outputPath string, validate, verbose bool, showFirstE
 		fmt.Printf("Loading multi-file archive: %s\n", inputDir)
 	}
 
-	glx, err := readMultiFileArchive(inputDir, validate)
+	glx, duplicates, err := LoadArchiveWithOptions(inputDir, validate)
 	if err != nil {
 		return err
+	}
+
+	if len(duplicates) > 0 {
+		fmt.Printf("Warning: found %d duplicate entity IDs\n", len(duplicates))
+		for _, dup := range duplicates {
+			fmt.Printf("  - %s\n", dup)
+		}
 	}
 
 	if verbose {

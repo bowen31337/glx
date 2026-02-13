@@ -15,9 +15,7 @@ export default defineConfig({
   ignoreDeadLinks: true,
 
   // Head configuration
-  head: [
-    ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }]
-  ],
+  head: [['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }]],
 
   // Vite configuration for file watching in Docker/WSL
   vite: {
@@ -58,8 +56,8 @@ export default defineConfig({
     'docs/examples/single-file/README.md': 'examples/single-file/index.md',
     'docs/examples/temporal-properties/README.md': 'examples/temporal-properties/index.md',
     'docs/examples/participant-assertions/README.md': 'examples/participant-assertions/index.md',
+    'docs/examples/assertion-workflow/README.md': 'examples/assertion-workflow/index.md',
     'docs/guides/:page*': 'guides/:page*',
-    'docs/development/:page*': 'development/:page*',
     'docs/examples/:page*': 'examples/:page*',
 
     // Specification section - specific files first, then wildcards
@@ -89,6 +87,7 @@ export default defineConfig({
           { text: 'Core Concepts', link: '/specification/2-core-concepts' },
           { text: 'Entity Types', link: '/specification/4-entity-types/' },
           { text: 'Standard Vocabularies', link: '/specification/5-standard-vocabularies/' },
+          { text: 'Glossary', link: '/specification/6-glossary' },
           { text: 'JSON Schemas', link: '/specification/schema/' }
         ]
       },
@@ -96,19 +95,13 @@ export default defineConfig({
         text: 'Guides',
         items: [
           { text: 'Best Practices', link: '/guides/best-practices' },
-          { text: 'Migration from GEDCOM', link: '/guides/migration-from-gedcom' },
-          { text: 'Glossary', link: '/guides/glossary' }
+          { text: 'Migration from GEDCOM', link: '/guides/migration-from-gedcom' }
         ]
       },
       { text: 'Examples', link: '/examples/' },
       {
         text: 'Development',
         items: [
-          { text: 'Architecture', link: '/development/architecture' },
-          { text: 'Setup', link: '/development/setup' },
-          { text: 'Testing Guide', link: '/development/testing-guide' },
-          { text: 'Schema Development', link: '/development/schema-development' },
-          { text: 'GEDCOM Import', link: '/development/gedcom-import' },
           { text: 'Contributing Guide', link: '/development/contributing' },
           { text: 'Code of Conduct', link: '/development/code-of-conduct' }
         ]
@@ -131,8 +124,32 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/specification/' },
             { text: 'Introduction', link: '/specification/1-introduction' },
-            { text: 'Core Concepts', link: '/specification/2-core-concepts' },
             { text: 'Archive Organization', link: '/specification/3-archive-organization' }
+          ]
+        },
+        {
+          text: 'Core Concepts',
+          items: [
+            { text: 'Overview', link: '/specification/2-core-concepts' },
+            {
+              text: 'Archive-Owned Vocabularies',
+              link: '/specification/2-core-concepts#archive-owned-vocabularies'
+            },
+            {
+              text: 'Entity Relationships',
+              link: '/specification/2-core-concepts#entity-relationships'
+            },
+            { text: 'Data Types', link: '/specification/2-core-concepts#data-types' },
+            {
+              text: 'Properties',
+              link: '/specification/2-core-concepts#properties-recording-conclusions'
+            },
+            {
+              text: 'Assertions',
+              link: '/specification/2-core-concepts#assertion-aware-data-model'
+            },
+            { text: 'Evidence Chain', link: '/specification/2-core-concepts#evidence-chain' },
+            { text: 'Collaboration', link: '/specification/2-core-concepts#collaboration' }
           ]
         },
         {
@@ -154,6 +171,10 @@ export default defineConfig({
         {
           text: 'Standard Vocabularies',
           link: '/specification/5-standard-vocabularies/'
+        },
+        {
+          text: 'Glossary',
+          link: '/specification/6-glossary'
         },
         {
           text: 'Schemas',
@@ -166,8 +187,32 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/specification/' },
             { text: 'Introduction', link: '/specification/1-introduction' },
-            { text: 'Core Concepts', link: '/specification/2-core-concepts' },
             { text: 'Archive Organization', link: '/specification/3-archive-organization' }
+          ]
+        },
+        {
+          text: 'Core Concepts',
+          items: [
+            { text: 'Overview', link: '/specification/2-core-concepts' },
+            {
+              text: 'Archive-Owned Vocabularies',
+              link: '/specification/2-core-concepts#archive-owned-vocabularies'
+            },
+            {
+              text: 'Entity Relationships',
+              link: '/specification/2-core-concepts#entity-relationships'
+            },
+            { text: 'Data Types', link: '/specification/2-core-concepts#data-types' },
+            {
+              text: 'Properties',
+              link: '/specification/2-core-concepts#properties-recording-conclusions'
+            },
+            {
+              text: 'Assertions',
+              link: '/specification/2-core-concepts#assertion-aware-data-model'
+            },
+            { text: 'Evidence Chain', link: '/specification/2-core-concepts#evidence-chain' },
+            { text: 'Collaboration', link: '/specification/2-core-concepts#collaboration' }
           ]
         },
         {
@@ -191,6 +236,10 @@ export default defineConfig({
           link: '/specification/5-standard-vocabularies/'
         },
         {
+          text: 'Glossary',
+          link: '/specification/6-glossary'
+        },
+        {
           text: 'Schemas',
           items: [{ text: 'JSON Schemas', link: '/specification/schema/' }]
         }
@@ -200,22 +249,11 @@ export default defineConfig({
           text: 'User Guides',
           items: [
             { text: 'Best Practices', link: '/guides/best-practices' },
-            { text: 'Migration from GEDCOM', link: '/guides/migration-from-gedcom' },
-            { text: 'Glossary', link: '/guides/glossary' }
+            { text: 'Migration from GEDCOM', link: '/guides/migration-from-gedcom' }
           ]
         }
       ],
       '/development/': [
-        {
-          text: 'Developer Guides',
-          items: [
-            { text: 'Architecture', link: '/development/architecture' },
-            { text: 'Setup', link: '/development/setup' },
-            { text: 'Testing Guide', link: '/development/testing-guide' },
-            { text: 'Schema Development', link: '/development/schema-development' },
-            { text: 'GEDCOM Import', link: '/development/gedcom-import' }
-          ]
-        },
         {
           text: 'Contributing',
           items: [
@@ -242,7 +280,8 @@ export default defineConfig({
           items: [
             { text: 'Single-File Archives', link: '/examples/single-file/' },
             { text: 'Temporal Properties', link: '/examples/temporal-properties/' },
-            { text: 'Participant Assertions', link: '/examples/participant-assertions/' }
+            { text: 'Participant Assertions', link: '/examples/participant-assertions/' },
+            { text: 'Assertion Workflow', link: '/examples/assertion-workflow/' }
           ]
         }
       ]
@@ -254,7 +293,7 @@ export default defineConfig({
     // Footer
     footer: {
       message: 'Licensed under Apache License 2.0',
-      copyright: 'Copyright © 2025 Oracynth, Inc.'
+      copyright: 'Copyright © 2025-2026 Oracynth, Inc.'
     },
 
     // Edit link

@@ -15,24 +15,20 @@
 package main
 
 import (
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestRunValidate_SingleValidFile(t *testing.T) {
-	// Test validating a single valid GLX file
-	// Need to change to the directory since single file validation loads archive from "."
-	originalDir, err := os.Getwd()
-	require.NoError(t, err)
-	defer func() { _ = os.Chdir(originalDir) }()
+	// Test validating a single valid GLX file (structure only, no cross-references)
+	t.Chdir("../docs/examples/basic-family")
 
-	err = os.Chdir("../docs/examples/basic-family")
-	require.NoError(t, err)
-
-	err = validatePaths([]string{"persons/person-father.glx"})
+	err := validatePaths([]string{"persons/person-father.glx"})
 	require.NoError(t, err, "should successfully validate a valid GLX file")
 }
 
@@ -45,28 +41,18 @@ func TestRunValidate_ValidDirectory(t *testing.T) {
 func TestRunValidate_CurrentDirectory(t *testing.T) {
 	// Test validating current directory (no args)
 	// Change to basic-family example
-	originalDir, err := os.Getwd()
-	require.NoError(t, err)
-	defer func() { _ = os.Chdir(originalDir) }()
+	t.Chdir("../docs/examples/basic-family")
 
-	err = os.Chdir("../docs/examples/basic-family")
-	require.NoError(t, err)
-
-	err = validatePaths([]string{})
+	err := validatePaths([]string{})
 	require.NoError(t, err, "should successfully validate current directory when no args provided")
 }
 
 func TestRunValidate_MultiplePaths(t *testing.T) {
 	// Test validating multiple paths at once
 	// Change to the archive directory to avoid loading invalid testdata
-	originalDir, err := os.Getwd()
-	require.NoError(t, err)
-	defer func() { _ = os.Chdir(originalDir) }()
+	t.Chdir("../docs/examples/basic-family")
 
-	err = os.Chdir("../docs/examples/basic-family")
-	require.NoError(t, err)
-
-	err = validatePaths([]string{"persons", "relationships"})
+	err := validatePaths([]string{"persons", "relationships"})
 	require.NoError(t, err, "should successfully validate multiple valid paths")
 }
 
@@ -129,14 +115,9 @@ func TestRunValidate_BrokenReferences(t *testing.T) {
 func TestRunValidate_NonExistentPath(t *testing.T) {
 	// Test with a path that doesn't exist in a clean directory
 	tmpDir := t.TempDir()
-	originalDir, err := os.Getwd()
-	require.NoError(t, err)
-	defer func() { _ = os.Chdir(originalDir) }()
+	t.Chdir(tmpDir)
 
-	err = os.Chdir(tmpDir)
-	require.NoError(t, err)
-
-	err = validatePaths([]string{"does-not-exist"})
+	err := validatePaths([]string{"does-not-exist"})
 	// When the path doesn't exist, WalkDir continues but finds 0 files
 	// The validation succeeds with 0 files validated
 	require.NoError(t, err, "non-existent path results in 0 files validated")
@@ -215,6 +196,83 @@ func TestRunValidate_WithVocabularies(t *testing.T) {
 	// Test validation of files that define and use vocabularies
 	err := validatePaths([]string{"../docs/examples/complete-family"})
 	require.NoError(t, err, "should successfully validate archive with vocabularies")
+}
+
+func TestRunValidate_MediaFileMissing(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a media entity referencing a local file that doesn't exist
+	mediaFile := filepath.Join(tmpDir, "media.glx")
+	err := os.WriteFile(mediaFile, []byte(`media:
+  media-photo:
+    uri: "media/files/nonexistent.jpg"
+    mime_type: "image/jpeg"
+    title: "Missing Photo"
+`), 0o644)
+	require.NoError(t, err)
+
+	// Capture stdout during validation
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	// Validation should succeed (warnings don't cause failure)
+	err = validatePaths([]string{tmpDir})
+
+	// Restore stdout and read captured output
+	w.Close()
+	os.Stdout = oldStdout
+	var buf strings.Builder
+	io.Copy(&buf, r)
+	output := buf.String()
+
+	// Verify validation succeeded
+	require.NoError(t, err, "missing media file should produce warning, not error")
+
+	// Verify warning was produced
+	require.Contains(t, output, "media[media-photo]: referenced file does not exist: media/files/nonexistent.jpg",
+		"should produce warning about missing media file")
+}
+
+func TestRunValidate_MediaFileExists(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create the media/files directory with the actual file
+	filesDir := filepath.Join(tmpDir, "media", "files")
+	err := os.MkdirAll(filesDir, 0o755)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(filesDir, "photo.jpg"), []byte("fake jpeg"), 0o644)
+	require.NoError(t, err)
+
+	// Create a media entity referencing it
+	mediaFile := filepath.Join(tmpDir, "media.glx")
+	err = os.WriteFile(mediaFile, []byte(`media:
+  media-photo:
+    uri: "media/files/photo.jpg"
+    mime_type: "image/jpeg"
+    title: "Existing Photo"
+`), 0o644)
+	require.NoError(t, err)
+
+	err = validatePaths([]string{tmpDir})
+	require.NoError(t, err, "existing media file should not produce warnings")
+}
+
+func TestRunValidate_MediaExternalURLSkipped(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a media entity with an external URL — should NOT warn
+	mediaFile := filepath.Join(tmpDir, "media.glx")
+	err := os.WriteFile(mediaFile, []byte(`media:
+  media-online:
+    uri: "https://example.com/photo.jpg"
+    mime_type: "image/jpeg"
+    title: "Online Photo"
+`), 0o644)
+	require.NoError(t, err)
+
+	err = validatePaths([]string{tmpDir})
+	require.NoError(t, err, "external URL should not trigger file existence check")
 }
 
 func TestRunValidate_YAMLAndYMLExtensions(t *testing.T) {

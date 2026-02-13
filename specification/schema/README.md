@@ -68,18 +68,18 @@ Breaking (major version bump):
 
 ## Schema References
 
-All schemas use `$id` URIs that resolve to canonical versions:
+All schemas use `$id` URIs that resolve to GitHub raw content. Examples of schema URIs:
 
 ```
-https://schema.genealogix.io/v1/person
-https://schema.genealogix.io/v1/relationship
-https://schema.genealogix.io/v1/assertion
+https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/person.schema.json
+https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/relationship.schema.json
+https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/assertion.schema.json
 ```
 
-These URIs serve the actual schema files via HTTP.
+These URIs directly serve the schema files from the main branch. Additional schemas follow the same pattern (e.g., `event.schema.json`, `source.schema.json`, `citation.schema.json`, etc.).
 
 ## Custom Extensions
 
-Archives can extend the base format using repository-owned vocabularies. See [Core Concepts](../2-core-concepts.md#repository-owned-vocabularies) for details.
+Archives can extend the base format using archive-owned vocabularies. See [Core Concepts](../2-core-concepts#archive-owned-vocabularies) for details.
 
 

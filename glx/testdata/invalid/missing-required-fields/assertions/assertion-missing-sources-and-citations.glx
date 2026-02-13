@@ -1,7 +1,6 @@
 assertions:
   assertion-missing-sources:
-    subject: person-123
-    claim: name
+    subject:
+      person: person-123
+    property: name
     value: "John"
-
-

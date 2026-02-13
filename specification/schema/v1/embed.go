@@ -1,3 +1,17 @@
+// Copyright 2025 Oracynth, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Package v1 provides embedded JSON schema files for GENEALOGIX v1 specification.
 package v1
 
@@ -65,3 +79,23 @@ var RelationshipPropertiesSchema []byte
 //
 //go:embed vocabularies/place-properties.schema.json
 var PlacePropertiesSchema []byte
+
+// MediaPropertiesSchema contains the embedded media-properties vocabulary schema.
+//
+//go:embed vocabularies/media-properties.schema.json
+var MediaPropertiesSchema []byte
+
+// RepositoryPropertiesSchema contains the embedded repository-properties vocabulary schema.
+//
+//go:embed vocabularies/repository-properties.schema.json
+var RepositoryPropertiesSchema []byte
+
+// CitationPropertiesSchema contains the embedded citation-properties vocabulary schema.
+//
+//go:embed vocabularies/citation-properties.schema.json
+var CitationPropertiesSchema []byte
+
+// SourcePropertiesSchema contains the embedded source-properties vocabulary schema.
+//
+//go:embed vocabularies/source-properties.schema.json
+var SourcePropertiesSchema []byte

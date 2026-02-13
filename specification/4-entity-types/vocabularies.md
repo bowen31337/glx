@@ -1,16 +1,16 @@
 ---
 title: Vocabularies
-description: Repository-owned controlled lists for types, roles, and classifications
+description: Archive-owned controlled lists for types, roles, and classifications
 layout: doc
 ---
 
 # Vocabularies
 
-[← Back to Entity Types](README.md)
+[← Back to Entity Types](README)
 
 ## Overview
 
-GENEALOGIX uses **repository-owned vocabularies** to define controlled lists of types, roles, and classifications used throughout the archive. Vocabularies are stored as YAML files in the `vocabularies/` directory and allow each archive to customize its terminology while maintaining consistency and validation.
+GENEALOGIX uses **archive-owned vocabularies** to define controlled lists of types, roles, and classifications used throughout the archive. Vocabulary files are ordinary `.glx` files that can live anywhere in the archive — the parser scans all `.glx` and `.yaml` files regardless of directory. By convention, the CLI places them in a `vocabularies/` directory (via `glx init` and `glx import`), but this is not a requirement.
 
 ## Benefits of Vocabularies
 
@@ -22,37 +22,42 @@ GENEALOGIX uses **repository-owned vocabularies** to define controlled lists of 
 
 ## Vocabulary Files
 
-All vocabulary files are stored in the `vocabularies/` directory of each archive:
-```
-vocabularies/
-├── event-types.glx
-├── relationship-types.glx
-├── place-types.glx
-├── source-types.glx
-├── media-types.glx
-├── confidence-levels.glx
-├── participant-roles.glx
-└── repository-types.glx
-```
+The standard vocabulary files are:
 
-When initializing a new archive with `glx init`, these files are automatically copied from the [Standard Vocabularies](../5-standard-vocabularies/) templates.
+- `event-types.glx`
+- `relationship-types.glx`
+- `place-types.glx`
+- `source-types.glx`
+- `media-types.glx`
+- `confidence-levels.glx`
+- `participant-roles.glx`
+- `repository-types.glx`
+- `person-properties.glx`
+- `event-properties.glx`
+- `relationship-properties.glx`
+- `place-properties.glx`
+- `media-properties.glx`
+- `repository-properties.glx`
+- `source-properties.glx`
+- `citation-properties.glx`
+
+When creating an archive with `glx init` or `glx import`, these files are automatically copied from the [Standard Vocabularies](../5-standard-vocabularies/) templates into a `vocabularies/` directory. You can reorganize or relocate them as you see fit — the parser discovers vocabulary definitions by their top-level keys, not by file path.
 
 ---
 
 ## Event Types Vocabulary
 
-**File**: `vocabularies/event-types.glx`
+**Default file**: `vocabularies/event-types.glx`
 
-**Used By**: [Event Entity](event.md#event-types)
+**Used By**: [Event Entity](event#event-types)
 
-**Purpose**: Defines all event and fact types used in the archive (birth, marriage, death, occupation, etc.)
+**Purpose**: Defines all event and fact types used in the archive (birth, marriage, death, immigration, etc.)
 
-**Standard Templates**: See [Standard Vocabularies - Event Types](/specification/5-standard-vocabularies/#event-types) for the complete default vocabulary with all standard event types.
+**Standard Templates**: See [Standard Vocabularies - Event Types](../5-standard-vocabularies/#event-types) for the complete default vocabulary with all standard event types.
 
 ### Structure
 
 ```yaml
-# vocabularies/event-types.glx
 event_types:
   birth:
     label: "Birth"
@@ -73,7 +78,7 @@ event_types:
     category: "lifecycle"
 ```
 
-**Note:** Attributes like occupation, residence, religion, and nationality are represented as temporal properties on Person entities, not as events. See [Person Entity](person.md) for details.
+**Note:** Attributes like occupation, residence, religion, and nationality are represented as temporal properties on Person entities, not as events. See [Person Entity](person) for details.
 
 ### Fields
 
@@ -88,14 +93,13 @@ event_types:
 
 **Standard Event Types**: GENEALOGIX provides standardized event type codes including lifecycle events (birth, death, marriage, adoption), religious events (baptism, confirmation, bar/bat mitzvah), legal events (annulment, probate, will), and migration events (immigration, emigration, naturalization).
 
-**Complete List**: See [Standard Vocabularies - Event Types](/specification/5-standard-vocabularies/#event-types) for the complete default vocabulary file with all standard types.
+**Complete List**: See [Standard Vocabularies - Event Types](../5-standard-vocabularies/#event-types) for the complete default vocabulary file with all standard types.
 
 ### Adding Additional Event Types
 
 Add additional event types for specialized research:
 
 ```yaml
-# vocabularies/event-types.glx
 event_types:
   # ... standard types ...
 
@@ -116,25 +120,24 @@ event_types:
 
 ## Relationship Types Vocabulary
 
-**File**: `vocabularies/relationship-types.glx`
+**Default file**: `vocabularies/relationship-types.glx`
 
-**Used By**: [Relationship Entity](relationship.md#relationship-types)
+**Used By**: [Relationship Entity](relationship#relationship-types)
 
 **Purpose**: Defines all relationship types between persons (marriage, parent-child, sibling, etc.)
 
-**Standard Templates**: See [Standard Vocabularies - Relationship Types](/specification/5-standard-vocabularies/#relationship-types) for the complete default vocabulary with all standard relationship types.
+**Standard Templates**: See [Standard Vocabularies - Relationship Types](../5-standard-vocabularies/#relationship-types) for the complete default vocabulary with all standard relationship types.
 
 ### Structure
 
 ```yaml
-# vocabularies/relationship-types.glx
 relationship_types:
   marriage:
     label: "Marriage"
     description: "Legal or religious union of two people"
     gedcom: "MARR"
   
-  parent-child:
+  parent_child:
     label: "Parent-Child"
     description: "Biological, adoptive, or legal parent-child relationship"
     gedcom: "CHIL/FAMC"
@@ -160,16 +163,15 @@ relationship_types:
 
 ### Standard Relationship Types
 
-**Standard Relationship Types**: GENEALOGIX provides 11 standardized relationship type codes including marriage, parent-child (plus biological, adoptive, and foster variants), sibling, adoption, step-parent, godparent, guardian, and partner relationships.
+**Standard Relationship Types**: GENEALOGIX provides 10 standardized relationship type codes including marriage, parent-child (plus biological, adoptive, and foster variants), sibling, step-parent, godparent, guardian, and partner relationships.
 
-**Complete List**: See [Standard Vocabularies - Relationship Types](/specification/5-standard-vocabularies/#relationship-types) for the complete default vocabulary file with all standard types.
+**Complete List**: See [Standard Vocabularies - Relationship Types](../5-standard-vocabularies/#relationship-types) for the complete default vocabulary file with all standard types.
 
 ### Adding Additional Relationship Types
 
 Add additional relationship types for specialized research:
 
 ```yaml
-# vocabularies/relationship-types.glx
 relationship_types:
   # ... standard types ...
 
@@ -187,18 +189,17 @@ relationship_types:
 
 ## Place Types Vocabulary
 
-**File**: `vocabularies/place-types.glx`
+**Default file**: `vocabularies/place-types.glx`
 
-**Used By**: [Place Entity](place.md#place-types)
+**Used By**: [Place Entity](place#place-types)
 
 **Purpose**: Defines geographic and administrative place classifications (country, state, city, parish, etc.)
 
-**Standard Templates**: See [Standard Vocabularies - Place Types](/specification/5-standard-vocabularies/#place-types) for the complete default vocabulary with all standard place types.
+**Standard Templates**: See [Standard Vocabularies - Place Types](../5-standard-vocabularies/#place-types) for the complete default vocabulary with all standard place types.
 
 ### Structure
 
 ```yaml
-# vocabularies/place-types.glx
 place_types:
   country:
     label: "Country"
@@ -237,16 +238,15 @@ place_types:
 
 ### Standard Place Types
 
-**Standard Place Types**: GENEALOGIX provides 11 standardized place type codes including administrative divisions (country, state, county, district), geographic features (city, town, region, neighborhood, street, building), and religious divisions (parish).
+**Standard Place Types**: GENEALOGIX provides 15 standardized place type codes including administrative divisions (country, state, county, district), geographic features (city, town, locality, region, neighborhood, street, building), religious divisions (parish, church), and institutions (hospital, cemetery).
 
-**Complete List**: See [Standard Vocabularies - Place Types](/specification/5-standard-vocabularies/#place-types) for the complete default vocabulary file with all standard types.
+**Complete List**: See [Standard Vocabularies - Place Types](../5-standard-vocabularies/#place-types) for the complete default vocabulary file with all standard types.
 
 ### Adding Additional Place Types
 
 Add additional place types for specialized research:
 
 ```yaml
-# vocabularies/place-types.glx
 place_types:
   # ... standard types ...
 
@@ -266,18 +266,17 @@ place_types:
 
 ## Source Types Vocabulary
 
-**File**: `vocabularies/source-types.glx`
+**Default file**: `vocabularies/source-types.glx`
 
-**Used By**: [Source Entity](source.md#source-types)
+**Used By**: [Source Entity](source#source-types)
 
 **Purpose**: Defines categories of sources (vital records, census, church registers, newspapers, etc.)
 
-**Standard Templates**: See [Standard Vocabularies - Source Types](/specification/5-standard-vocabularies/#source-types) for the complete default vocabulary with all standard source types.
+**Standard Templates**: See [Standard Vocabularies - Source Types](../5-standard-vocabularies/#source-types) for the complete default vocabulary with all standard source types.
 
 ### Structure
 
 ```yaml
-# vocabularies/source-types.glx
 source_types:
   vital_record:
     label: "Vital Record"
@@ -311,14 +310,13 @@ source_types:
 
 **Standard Source Types**: GENEALOGIX provides 16 standardized source type codes including vital records, census, church registers, military records, newspapers, probate, land records, court records, immigration records, directories, books, databases, oral history, correspondence, photograph collections, and other.
 
-**Complete List**: See [Standard Vocabularies - Source Types](/specification/5-standard-vocabularies/#source-types) for the complete default vocabulary file with all standard types.
+**Complete List**: See [Standard Vocabularies - Source Types](../5-standard-vocabularies/#source-types) for the complete default vocabulary file with all standard types.
 
 ### Adding Additional Source Types
 
 Add additional source types for specialized research:
 
 ```yaml
-# vocabularies/source-types.glx
 source_types:
   # ... standard types ...
 
@@ -332,18 +330,17 @@ source_types:
 
 ## Media Types Vocabulary
 
-**File**: `vocabularies/media-types.glx`
+**Default file**: `vocabularies/media-types.glx`
 
-**Used By**: [Media Entity](media.md#media-types)
+**Used By**: [Media Entity](media#media-types)
 
 **Purpose**: Defines categories of media objects (photographs, documents, audio, video, etc.)
 
-**Standard Templates**: See [Standard Vocabularies - Media Types](/specification/5-standard-vocabularies/#media-types) for the complete default vocabulary with all standard media types.
+**Standard Templates**: See [Standard Vocabularies - Media Types](../5-standard-vocabularies/#media-types) for the complete default vocabulary with all standard media types.
 
 ### Structure
 
 ```yaml
-# vocabularies/media-types.glx
 media_types:
   photograph:
     label: "Photograph"
@@ -383,14 +380,13 @@ media_types:
 
 **Standard Media Types**: GENEALOGIX provides 7 standardized media type codes including photograph, document, audio, video, scan, image, and certificate, each with default MIME types.
 
-**Complete List**: See [Standard Vocabularies - Media Types](/specification/5-standard-vocabularies/#media-types) for the complete default vocabulary file with all standard types.
+**Complete List**: See [Standard Vocabularies - Media Types](../5-standard-vocabularies/#media-types) for the complete default vocabulary file with all standard types.
 
 ### Adding Additional Media Types
 
 Add additional media types for specialized collections:
 
 ```yaml
-# vocabularies/media-types.glx
 media_types:
   # ... standard types ...
 
@@ -410,18 +406,17 @@ media_types:
 
 ## Confidence Levels Vocabulary
 
-**File**: `vocabularies/confidence-levels.glx`
+**Default file**: `vocabularies/confidence-levels.glx`
 
-**Used By**: [Assertion Entity](assertion.md#confidence)
+**Used By**: [Assertion Entity](assertion#confidence)
 
 **Purpose**: Defines confidence levels for assertions
 
-**Standard Templates**: See [Standard Vocabularies - Confidence Levels](/specification/5-standard-vocabularies/#confidence-levels) for the complete default vocabulary with all standard confidence levels.
+**Standard Templates**: See [Standard Vocabularies - Confidence Levels](../5-standard-vocabularies/#confidence-levels) for the complete default vocabulary with all standard confidence levels.
 
 ### Structure
 
 ```yaml
-# vocabularies/confidence-levels.glx
 confidence_levels:
   high:
     label: "High Confidence"
@@ -457,24 +452,23 @@ confidence_levels:
 - **Researcher's judgment**: Reflects overall confidence in conclusion
 - **Archive-defined**: Each archive can customize the meaning of confidence levels
 
-See [Assertion Entity - Confidence](assertion.md#confidence) for usage details.
+See [Assertion Entity - Confidence](assertion#confidence) for usage details.
 
 ---
 
 ## Repository Types Vocabulary
 
-**File**: `vocabularies/repository-types.glx`
+**Default file**: `vocabularies/repository-types.glx`
 
-**Used By**: [Repository Entity](repository.md#repository-types)
+**Used By**: [Repository Entity](repository#repository-types)
 
 **Purpose**: Defines categories of repositories (archives, libraries, churches, online databases, etc.)
 
-**Standard Templates**: See [Standard Vocabularies - Repository Types](/specification/5-standard-vocabularies/#repository-types) for the complete default vocabulary with all standard repository types.
+**Standard Templates**: See [Standard Vocabularies - Repository Types](../5-standard-vocabularies/#repository-types) for the complete default vocabulary with all standard repository types.
 
 ### Structure
 
 ```yaml
-# vocabularies/repository-types.glx
 repository_types:
   archive:
     label: "Archive"
@@ -511,24 +505,23 @@ repository_types:
 
 ### Standard Repository Types
 
-See [Repository Entity](repository.md#repository-types) for the complete list of standard repository types.
+See [Repository Entity](repository#repository-types) for the complete list of standard repository types.
 
 ---
 
 ## Participant Roles Vocabulary
 
-**File**: `vocabularies/participant-roles.glx`
+**Default file**: `vocabularies/participant-roles.glx`
 
-**Used By**: [Event Entity](event.md#participant-roles), [Relationship Entity](relationship.md#participant-roles)
+**Used By**: [Event Entity](event#participant-roles), [Relationship Entity](relationship#participant-roles)
 
 **Purpose**: Defines roles that people play in events and relationships (principal, witness, officiant, etc.)
 
-**Standard Templates**: See [Standard Vocabularies - Participant Roles](/specification/5-standard-vocabularies/#participant-roles) for the complete default vocabulary with all standard participant roles.
+**Standard Templates**: See [Standard Vocabularies - Participant Roles](../5-standard-vocabularies/#participant-roles) for the complete default vocabulary with all standard participant roles.
 
 ### Structure
 
 ```yaml
-# vocabularies/participant-roles.glx
 participant_roles:
   # Event roles
   principal:
@@ -599,7 +592,7 @@ Common relationship roles:
 - `spouse` - Marriage partner
 - `parent` - Parent in parent-child relationship
 - `child` - Child in parent-child relationship
-- `adoptive-parent`, `adopted-child` - Adoption roles
+- `adoptive_parent`, `adopted_child` - Adoption roles
 - `sibling` - Brother or sister
 
 ---
@@ -627,14 +620,18 @@ vocabularies/
 ├── person-properties.glx
 ├── event-properties.glx
 ├── relationship-properties.glx
-└── place-properties.glx
+├── place-properties.glx
+├── media-properties.glx
+├── repository-properties.glx
+├── source-properties.glx
+└── citation-properties.glx
 ```
 
 ### Person Properties Vocabulary
 
-**File**: `vocabularies/person-properties.glx`
+**Default file**: `vocabularies/person-properties.glx`
 
-**Used By**: [Person Entity](person.md#properties)
+**Used By**: [Person Entity](person#properties)
 
 **Purpose**: Defines properties that can be set on person entities (birth date, occupation, residence, etc.)
 
@@ -642,41 +639,47 @@ vocabularies/
 
 GENEALOGIX provides standard person properties:
 
-| Property | Type | Temporal | Description |
-|----------|------|----------|-------------|
-| `name` | string (with fields) | Yes | Person's name as recorded, with optional structured fields (given, surname, prefix, suffix, etc.) |
-| `gender` | string | Yes | Gender identity |
-| `born_on` | date | No | Date of birth |
-| `born_at` | places | No | Place of birth |
-| `died_on` | date | No | Date of death |
-| `died_at` | places | No | Place of death |
-| `occupation` | string | Yes | Profession or trade |
-| `residence` | places | Yes | Place of residence |
-| `religion` | string | Yes | Religious affiliation |
-| `education` | string | Yes | Educational attainment |
-| `ethnicity` | string | Yes | Ethnic background |
-| `nationality` | string | Yes | National citizenship |
+| Property | Type | Temporal | GEDCOM | Description |
+|----------|------|----------|--------|-------------|
+| `name` | string (with fields) | Yes | | Person's name as recorded, with optional structured fields (given, surname, prefix, suffix, etc.) |
+| `gender` | string | Yes | | Gender identity |
+| `born_on` | date | No | | Date of birth |
+| `born_at` | places | No | | Place of birth |
+| `died_on` | date | No | | Date of death |
+| `died_at` | places | No | | Place of death |
+| `occupation` | string | Yes | OCCU | Profession or trade |
+| `title` | string | Yes | TITL | Nobility or honorific title |
+| `residence` | places | Yes | | Place of residence |
+| `religion` | string | Yes | RELI | Religious affiliation |
+| `education` | string | Yes | EDUC | Educational attainment |
+| `ethnicity` | string | Yes | | Ethnic background |
+| `nationality` | string | Yes | NATI | National citizenship |
+| `caste` | string | Yes | CAST | Caste, tribe, or social group |
+| `ssn` | string | No | SSN | Social Security Number |
+| `external_ids` | string (multi) | No | EXID | External identifiers from other systems |
 
 ### Event Properties Vocabulary
 
-**File**: `vocabularies/event-properties.glx`
+**Default file**: `vocabularies/event-properties.glx`
 
-**Used By**: [Event Entity](event.md#properties)
+**Used By**: [Event Entity](event#properties)
 
 **Purpose**: Defines properties that can be set on event entities
 
 Event properties are generally less common than person properties, since most event data is structural (type, date, place, participants). Standard properties include:
 
+- `age_at_event` - Age of the person at the time of the event (GEDCOM: AGE)
+- `cause` - Cause of the event, e.g., cause of death (GEDCOM: CAUS)
+- `event_subtype` - Further classification of the event type (GEDCOM: TYPE)
 - `description` - Event description
-- `notes` - Additional notes
 
-**Note:** Event timing and location are handled by the `date` and `place` fields directly on the event, not as properties.
+**Note:** Event timing and location are handled by the `date` and `place` fields directly on the event, not as properties. The `notes` field is a standard entity field available on all entity types, not a property.
 
 ### Relationship Properties Vocabulary
 
-**File**: `vocabularies/relationship-properties.glx`
+**Default file**: `vocabularies/relationship-properties.glx`
 
-**Used By**: [Relationship Entity](relationship.md#properties)
+**Used By**: [Relationship Entity](relationship#properties)
 
 **Purpose**: Defines properties that can be set on relationship entities
 
@@ -686,13 +689,12 @@ Standard properties include:
 - `ended_on` - When the relationship ended
 - `location` - Location of the relationship
 - `description` - Relationship description
-- `notes` - Additional notes
 
 ### Place Properties Vocabulary
 
-**File**: `vocabularies/place-properties.glx`
+**Default file**: `vocabularies/place-properties.glx`
 
-**Used By**: [Place Entity](place.md#properties)
+**Used By**: [Place Entity](place#properties)
 
 **Purpose**: Defines properties that can be set on place entities
 
@@ -702,7 +704,80 @@ Standard properties include:
 - `existed_to` - When the place ceased to exist
 - `population` - Population count (temporal)
 - `description` - Place description
-- `notes` - Additional notes
+- `jurisdiction` - Formal jurisdiction identifier or code
+- `place_format` - Standard format string for place hierarchy
+- `alternative_names` - Historical or alternate names for a place (temporal, multi-value)
+
+### Media Properties Vocabulary
+
+**Default file**: `vocabularies/media-properties.glx`
+
+**Used By**: [Media Entity](media#properties)
+
+**Purpose**: Defines properties that can be set on media entities
+
+Standard properties include:
+
+- `subjects` - People or entities depicted/recorded
+- `width` - Width in pixels (for images/video)
+- `height` - Height in pixels (for images/video)
+- `duration` - Duration in seconds (for audio/video)
+- `file_size` - File size in bytes
+- `crop` - Crop coordinates for images
+- `medium` - Physical medium type
+- `original_filename` - Original filename when imported
+- `photographer` - Person who captured the media
+- `location` - Location where media was captured
+
+### Repository Properties Vocabulary
+
+**Default file**: `vocabularies/repository-properties.glx`
+
+**Used By**: [Repository Entity](repository#properties)
+
+**Purpose**: Defines properties that can be set on repository entities for contact information, access details, and holdings
+
+Standard properties include:
+
+- `phones` - Phone number(s) for the repository
+- `emails` - Email address(es) for the repository
+- `fax` - Fax number
+- `access_hours` - Hours of operation/access
+- `access_restrictions` - Any restrictions on access (appointment required, subscription, etc.)
+- `holding_types` - Types of materials held (microfilm, digital, books, etc.)
+- `external_ids` - External identifiers from other systems (FamilySearch, WikiTree, etc.)
+
+### Source Properties Vocabulary
+
+**Default file**: `vocabularies/source-properties.glx`
+
+**Used By**: [Source Entity](source#properties)
+
+**Purpose**: Defines properties that can be set on source entities for bibliographic metadata
+
+Standard properties include:
+
+- `abbreviation` - Short reference name or title for the source (from GEDCOM ABBR)
+- `call_number` - Repository catalog or call number (from GEDCOM CALN)
+- `events_recorded` - Types of events this source documents (from GEDCOM EVEN)
+- `agency` - Agency responsible for creating/maintaining this source (from GEDCOM AGNC)
+- `coverage` - Geographic or temporal scope of source content
+- `external_ids` - External identifiers from other systems
+- `publication_info` - Publication details: publisher, place, edition (from GEDCOM PUBL)
+
+### Citation Properties Vocabulary
+
+**Default file**: `vocabularies/citation-properties.glx`
+
+**Used By**: [Citation Entity](citation#properties)
+
+**Purpose**: Defines properties that can be set on citation entities for locator and transcription details
+
+Standard properties include:
+
+- `locator` - Location within source where cited material can be found (page number, film number, image number, entry reference, etc.; from GEDCOM PAGE)
+- `text_from_source` - Transcription or excerpt of relevant text from the source (from GEDCOM TEXT)
+- `source_date` - Date when the source recorded the information (from GEDCOM DATE)
 
 ### Property Definition Structure
 
@@ -710,11 +785,18 @@ Each property in a property vocabulary is defined with the following fields:
 
 ```yaml
 person_properties:
-  birth_date:
-    label: "Date of Birth"
-    description: "Person's date of birth"
+  born_on:
+    label: "Birth Date"
+    description: "Date of birth"
     value_type: date
     temporal: false
+
+  occupation:
+    label: "Occupation"
+    description: "Profession or trade"
+    value_type: string
+    temporal: true
+    gedcom: "OCCU"
 
   residence:
     label: "Residence"
@@ -730,9 +812,107 @@ person_properties:
 | `value_type` | No* | Data type: `string`, `date`, `integer`, or `boolean` |
 | `reference_type` | No* | Entity type for references: `persons`, `places`, `events`, `relationships`, `sources`, `citations`, `repositories`, `media` |
 | `temporal` | No | Whether property can change over time (default: false) |
+| `multi_value` | No | Whether property can have multiple values as an array (default: false) |
+| `gedcom` | No | Corresponding GEDCOM tag for import/export mapping (e.g., `OCCU`, `PAGE`) |
 | `fields` | No | Sub-schema for structured property components (see below) |
 
-*Exactly one of `value_type` or `reference_type` should be specified
+***Exactly one of `value_type` or `reference_type` must be specified** (there is no implicit default)
+
+### Multi-Value Properties
+
+Some properties naturally have multiple values. For example, a repository may have several phone numbers, or a media item may depict multiple people. The `multi_value` attribute indicates that a property accepts an array of values.
+
+#### Defining Multi-Value Properties
+
+```yaml
+repository_properties:
+  phones:
+    label: "Phone Numbers"
+    description: "Telephone numbers for the repository"
+    value_type: string
+    multi_value: true
+
+  emails:
+    label: "Email Addresses"
+    description: "Email addresses for the repository"
+    value_type: string
+    multi_value: true
+
+media_properties:
+  subjects:
+    label: "Subjects"
+    description: "People depicted in the media"
+    reference_type: persons
+    multi_value: true
+```
+
+#### Using Multi-Value Properties in Data
+
+When a property has `multi_value: true`, provide values as a YAML array:
+
+```yaml
+repositories:
+  repository-family-history-library:
+    name: "Family History Library"
+    properties:
+      phones:
+        - "+1 801-240-2584"
+        - "+1 801-240-2331"
+      emails:
+        - "fhl@familysearch.org"
+        - "research@familysearch.org"
+      holding_types:
+        - "microfilm"
+        - "digital"
+        - "books"
+```
+
+For reference properties with `multi_value: true`:
+
+```yaml
+media:
+  media-family-photo:
+    uri: "media/files/family-reunion-1985.jpg"
+    properties:
+      subjects:
+        - person-john
+        - person-mary
+        - person-sarah
+```
+
+#### Multi-Value with Temporal Properties
+
+A property can be both `multi_value: true` and `temporal: true`. In this case, each temporal entry contains an array:
+
+```yaml
+person_properties:
+  nicknames:
+    label: "Nicknames"
+    description: "Informal names used for the person"
+    value_type: string
+    multi_value: true
+    temporal: true
+```
+
+```yaml
+persons:
+  person-john:
+    properties:
+      nicknames:
+        - value:
+            - "Johnny"
+            - "Jack"
+          date: "FROM 1950 TO 1970"
+        - value:
+            - "Big John"
+            - "J.D."
+          date: "FROM 1970"
+```
+
+#### Validation Behavior
+
+- **Single value for multi_value property**: Validators should accept a single value (not in array) and treat it as a one-element array
+- **Array for non-multi_value property**: Validators should issue an error if an array is provided for a property without `multi_value: true`
 
 ### Structured Properties with Fields
 
@@ -781,7 +961,7 @@ Each field in the `fields` map is defined with:
 
 When a property has `fields` defined, the property value can be either:
 
-1. **Simple value** - Just a string (backward compatible):
+1. **Simple value** - Just a string:
    ```yaml
    properties:
      name: "John Smith"
@@ -828,6 +1008,65 @@ The `value` field should always contain the complete value as recorded, while `f
 - Allows flexible parsing (not all sources have all components)
 - Supports temporal changes (name changes over time)
 - Enables rich querying and display
+
+#### Field Validation
+
+When validating structured properties with `fields`, the following rules apply:
+
+**All Fields Are Optional**
+
+Fields defined in a vocabulary are never required. You can provide any subset of the defined fields:
+
+```yaml
+properties:
+  name:
+    value: "Dr. John Smith Jr."
+    fields:
+      given: "John"
+      surname: "Smith"
+      # prefix and suffix omitted - this is valid
+```
+
+**Unknown Fields Generate Warnings**
+
+If a property value includes fields not defined in the vocabulary, validators should issue a warning (not an error). This allows archives to capture additional data while encouraging consistency:
+
+```yaml
+properties:
+  name:
+    value: "John Smith"
+    fields:
+      given: "John"
+      surname: "Smith"
+      clan: "MacLeod"  # WARNING: unknown field if not defined in vocabulary
+```
+
+**The `value` Field**
+
+When a property has a natural single-value representation, include `value` alongside `fields` to preserve the original recorded form:
+
+```yaml
+# Value + fields: preserves original while providing structure
+properties:
+  name:
+    value: "John Smith"
+    fields:
+      given: "John"
+      surname: "Smith"
+```
+
+When there is no natural single-value representation, fields-only is valid:
+
+```yaml
+# Fields only: appropriate for structured data like coordinates
+properties:
+  crop:
+    fields:
+      top: 450
+      left: 100
+      width: 800
+      height: 200
+```
 
 #### Custom Structured Properties
 
@@ -890,14 +1129,13 @@ properties:
       date: "FROM 1920 TO 1950"
 ```
 
-See [Data Types - Temporal Values](../6-data-types.md#temporal-values) for complete documentation.
+See [Core Concepts - Data Types - Temporal Properties](../2-core-concepts#temporal-properties) for complete documentation.
 
 ### Adding Additional Properties
 
 Add additional properties for archive-specific needs:
 
 ```yaml
-# vocabularies/person-properties.glx
 person_properties:
   # Standard properties...
 
@@ -917,23 +1155,24 @@ person_properties:
 
 ### Context-Aware Validation
 
-Assertions use property vocabularies for context-aware claim validation:
+Assertions use property vocabularies for context-aware property validation:
 
 ```yaml
 assertions:
   assertion-john-birth:
-    subject: person-john
-    claim: born_on  # Validated against person_properties
+    subject:
+      person: person-john
+    property: born_on  # Validated against person_properties
     value: "1850-01-15"
     citations: [citation-birth]
     confidence: high
 ```
 
 The validator:
-1. Determines the subject's entity type (person, event, relationship, or place)
+1. Determines the subject's entity type from the typed reference (person, event, relationship, or place)
 2. Looks up the appropriate property vocabulary for that type
-3. Validates the `claim` against the vocabulary
-4. **Emits warnings for unknown claims** (allows flexibility for emerging properties)
+3. Validates the `property` against the vocabulary
+4. **Emits warnings for unknown properties** (allows flexibility for emerging properties)
 5. Validates the value according to the property's `value_type` or `reference_type`
 6. **Emits errors for broken references** when a property is defined with `reference_type` but the referenced entity doesn't exist
 
@@ -991,13 +1230,14 @@ The following issues generate warnings but don't fail validation:
          custom_field: "some value"  # WARNING: unknown property
    ```
 
-2. **Unknown assertion claims**: Claims used but not defined in property vocabularies
+2. **Unknown assertion properties**: Properties used but not defined in property vocabularies
    ```yaml
-   # Warning: custom_claim not in person_properties vocabulary
+   # Warning: custom_property not in person_properties vocabulary
    assertions:
      assertion-custom:
-       subject: person-john
-       claim: custom_claim  # WARNING: unknown claim
+       subject:
+         person: person-john
+       property: custom_property  # WARNING: unknown property
        value: "some value"
    ```
 
@@ -1030,7 +1270,6 @@ $ glx validate
 ### Step 1: Add to Vocabulary File
 
 ```yaml
-# vocabularies/event-types.glx
 event_types:
   # ... standard types ...
 
@@ -1045,13 +1284,15 @@ event_types:
 ### Step 2: Use in Entity
 
 ```yaml
-# events/event-land-grant.glx
 events:
   event-john-land-grant:
     type: land-grant  # Custom type from vocabulary
     date: "1850-03-10"
     place: place-indiana
-    value: "160 acres in Howard County"
+    participants:
+      - person: person-john
+        role: subject
+    notes: "160 acres in Howard County"
 ```
 
 ### Step 3: Validate
@@ -1082,7 +1323,7 @@ When adding additional types:
 
 ### Keep Vocabularies Consistent
 
-- Use consistent naming conventions (lowercase with hyphens)
+- Use consistent naming conventions (lowercase with underscores)
 - Group related types together
 - Add comments to explain complex types
 - Version vocabulary files alongside schema updates
@@ -1115,25 +1356,6 @@ event_types:
     color: "#4A90E2"
     requires_place: true
     requires_participants: true
-```
-
-### Hierarchical Types
-
-Create type hierarchies:
-
-```yaml
-event_types:
-  military:
-    label: "Military Service"
-    category: "lifecycle"
-
-  military.enlistment:
-    label: "Military Enlistment"
-    parent: "military"
-
-  military.discharge:
-    label: "Military Discharge"
-    parent: "military"
 ```
 
 ### Localization
@@ -1170,6 +1392,10 @@ Each vocabulary type has a corresponding JSON Schema for validation:
 | Event Properties | [event-properties.schema.json](../schema/v1/vocabularies/event-properties.schema.json) |
 | Relationship Properties | [relationship-properties.schema.json](../schema/v1/vocabularies/relationship-properties.schema.json) |
 | Place Properties | [place-properties.schema.json](../schema/v1/vocabularies/place-properties.schema.json) |
+| Media Properties | [media-properties.schema.json](../schema/v1/vocabularies/media-properties.schema.json) |
+| Repository Properties | [repository-properties.schema.json](../schema/v1/vocabularies/repository-properties.schema.json) |
+| Source Properties | [source-properties.schema.json](../schema/v1/vocabularies/source-properties.schema.json) |
+| Citation Properties | [citation-properties.schema.json](../schema/v1/vocabularies/citation-properties.schema.json) |
 
 All vocabulary schemas are located in `specification/schema/v1/vocabularies/` and define:
 - Required top-level key (e.g., `event_types`, `relationship_types`)
@@ -1181,15 +1407,15 @@ Vocabulary files are validated by the `glx validate` command using these schemas
 
 ## See Also
 
-- **[Standard Vocabularies](/specification/5-standard-vocabularies/)** - Complete default vocabulary files with all standard types
-- [Core Concepts - Repository-Owned Vocabularies](../2-core-concepts.md#repository-owned-vocabularies)
-- [Archive Organization](../3-archive-organization.md) - Where vocabulary files are stored
-- [Event Entity](event.md) - Event types vocabulary
-- [Relationship Entity](relationship.md) - Relationship types vocabulary
-- [Place Entity](place.md) - Place types vocabulary
-- [Source Entity](source.md) - Source types vocabulary
-- [Media Entity](media.md) - Media types vocabulary
-- [Citation Entity](citation.md) - Citation documentation
+- **[Standard Vocabularies](../5-standard-vocabularies/)** - Complete default vocabulary files with all standard types
+- [Core Concepts - Archive-Owned Vocabularies](../2-core-concepts#archive-owned-vocabularies)
+- [Archive Organization](../3-archive-organization) - Where vocabulary files are stored
+- [Event Entity](event) - Event types vocabulary
+- [Relationship Entity](relationship) - Relationship types vocabulary
+- [Place Entity](place) - Place types vocabulary
+- [Source Entity](source) - Source types vocabulary
+- [Media Entity](media) - Media types vocabulary
+- [Citation Entity](citation) - Citation documentation
 
 ---
 

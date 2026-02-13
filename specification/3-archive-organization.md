@@ -78,7 +78,7 @@ Each `.glx` file must:
 - Pass JSON schema validation for structural correctness
 - Contain properly formatted entity IDs (alphanumeric with hyphens, 1-64 characters)
 
-### 2. Repository-Level Validation
+### 2. Archive-Level Validation
 
 Across all files in an archive, the validator checks:
 
@@ -87,13 +87,12 @@ Across all files in an archive, the validator checks:
 - All entity cross-references must point to existing entities
 - All vocabulary type references must be defined (event_types, relationship_types, etc.)
 - All property `reference_type` values must point to existing entities
-- Entity ID patterns must match their type (e.g., `person-` prefix for persons)
 
 **Warnings (Soft Failures):**
 - Unknown properties (not defined in property vocabularies) generate warnings
-- Unknown assertion claims (not defined in property vocabularies) generate warnings
+- Unknown assertion properties (not defined in property vocabularies) generate warnings
 
-See [Entity Types - Validation](4-entity-types/README.md#validation) and [Vocabularies - Vocabulary Validation](4-entity-types/vocabularies.md#vocabulary-validation) for complete validation policy.
+See [Vocabularies - Vocabulary Validation](4-entity-types/vocabularies#vocabulary-validation) for complete validation policy.
 
 ## Organization Strategies
 
@@ -114,6 +113,9 @@ family-archive/
 │   └── event-birth-abc.glx
 ├── relationships/
 │   └── rel-marriage-001.glx
+├── media/
+│   └── files/                   # Local media files (images, PDFs, etc.)
+│       └── birth-certificate.jpg
 └── vocabularies/
     ├── relationship-types.glx
     ├── event-types.glx
@@ -150,7 +152,10 @@ persons:
 **Structure:**
 ```
 family-archive/
-└── family.glx
+├── family.glx
+└── media/
+    └── files/                   # Local media files (images, PDFs, etc.)
+        └── birth-certificate.jpg
 ```
 
 **File Contents:**
@@ -240,7 +245,7 @@ family-archive/
 │   └── place-types.glx
 └── media/
     ├── photos.glx           # References to photo files
-    └── files/
+    └── files/               # Actual media files (binary content)
         ├── photo-001.jpg
         └── photo-002.jpg
 ```
@@ -255,6 +260,12 @@ family-archive/
 - Mixed collaboration patterns
 - Gradual migration from single-file format
 
+## Media File Storage
+
+The standard location for local media files (images, documents, audio, video) within any GLX archive is **`media/files/`** at the archive root. Media entity metadata (`.glx` files) references these files via the `uri` field using paths relative to the archive root (e.g., `media/files/portrait.jpg`).
+
+This convention applies to all organization strategies — single-file, multi-file, and hybrid. The `glx import` command automatically populates `media/files/` when importing from GEDCOM. See [Media Entity - File Storage](4-entity-types/media#file-storage) for details.
+
 ## ID Format Standards
 
 Entity IDs can be any unique identifier you choose, with the following constraints:
@@ -262,76 +273,65 @@ Entity IDs can be any unique identifier you choose, with the following constrain
 **Requirements:**
 - 1-64 characters in length
 - Alphanumeric characters (a-z, A-Z, 0-9) and hyphens only
-- Must be unique across the entire repository
+- Must be unique across the entire archive
 
-**Recommended Format** (for collaboration):
-- Prefix with entity type for clarity: `person-`, `event-`, `place-`, etc.
-- Use random hex for uniqueness: `person-a1b2c3d4`, `event-12345678`
-- Keeps IDs short and collision-resistant
+> **Note:** Examples in this documentation use prefixes (e.g., `person-abc123`) for readability. Prefixes are not required—any format meeting the requirements above is valid.
 
-**Alternative Formats** (also valid):
-- Descriptive: `person-john-smith-1850`, `place-leeds-yorkshire`
-- Sequential: `person-001`, `person-002`, `event-001`
-- UUID-style: `person-550e8400-e29b-41d4-a716`
-- Custom: Any format meeting the requirements above
+**Example Formats:**
+- Random hex: `a1b2c3d4`, `12345678`
+- Prefixed: `person-a1b2c3d4`, `event-12345678`
+- Descriptive: `john-smith-1850`, `leeds-yorkshire`
+- Sequential: `001`, `002`, `person-001`
+- UUID-style: `550e8400-e29b-41d4-a716`
 
 ### ID Generation Examples
 
-**Random hex (recommended for collaboration):**
+**Random hex:**
 ```bash
 # Bash
-echo "person-$(openssl rand -hex 4)"
+echo "$(openssl rand -hex 4)"
 
 # Python
 import secrets
-f"person-{secrets.token_hex(4)}"
+secrets.token_hex(4)
 
 # JavaScript
 const crypto = require('crypto');
-`person-${crypto.randomBytes(4).toString('hex')}`
+crypto.randomBytes(4).toString('hex')
 
 # Go
 import "crypto/rand"
 b := make([]byte, 4)
 rand.Read(b)
-fmt.Sprintf("person-%x", b)
+fmt.Sprintf("%x", b)
 ```
 
-**Descriptive (easier for humans):**
-- `person-john-smith`
-- `event-birth-john-1850`
-- `place-leeds-uk`
-- `source-parish-register-leeds`
+**Descriptive:**
+- `john-smith`
+- `birth-john-1850`
+- `leeds-uk`
+- `parish-register-leeds`
 
-**Note:** Descriptive IDs are fine for personal use but may cause conflicts when merging archives. Use random IDs for collaborative projects.
+**Note:** Descriptive IDs are fine for personal use but may cause conflicts when merging archives. Random IDs reduce collision risk in collaborative projects.
 
-## Vocabularies Directory
+## Vocabulary Files
 
-Every GENEALOGIX archive should include a `vocabularies/` directory containing controlled vocabulary definitions. These files define valid types for entities:
+Every GENEALOGIX archive should include vocabulary definitions. These files define valid types and properties for entities. Like all `.glx` files, vocabulary files can live anywhere in the archive — the parser identifies them by their top-level keys, not by location.
 
-```
-vocabularies/
-├── relationship-types.glx    # Marriage, parent-child, adoption, etc.
-├── event-types.glx           # Birth, death, baptism, occupation, etc.
-├── place-types.glx           # Country, city, parish, etc.
-├── repository-types.glx      # Archive, library, church, etc.
-├── participant-roles.glx     # Principal, witness, officiant, etc.
-├── media-types.glx           # Photo, document, audio, etc.
-└── confidence-levels.glx     # High, medium, low, disputed
-```
+By convention, the CLI places vocabulary files in a `vocabularies/` directory (via `glx init` and `glx import`), but you're free to organize them however you like (alongside entity files, in a custom directory, etc.).
 
-### Vocabulary Files
+### Format
 
 Vocabulary files use the same GLX format with vocabulary-specific top-level keys:
 
 ```yaml
-# vocabularies/relationship-types.glx
+# relationship-types.glx
 relationship_types:
   marriage:
     label: "Marriage"
     description: "Legal or religious union of two people"
     gedcom: "MARR"
-  parent-child:
+  parent_child:
     label: "Parent-Child"
     description: "Biological, adoptive, or legal parent-child relationship"
     gedcom: "CHIL/FAMC"
@@ -340,17 +340,17 @@ relationship_types:
 
 ### Initialization
 
-When you run `glx init`, the CLI automatically creates the `vocabularies/` directory by copying the standard vocabulary templates from [Standard Vocabularies](5-standard-vocabularies/). You can then customize these files to add archive-specific types.
+When you run `glx init` or `glx import`, the CLI copies the standard vocabulary templates from [Standard Vocabularies](5-standard-vocabularies/) into a `vocabularies/` directory. You can then customize these files to add archive-specific types, or move them to a different location.
 
-See [Core Concepts](2-core-concepts.md#repository-owned-vocabularies) for details on defining custom vocabulary entries and [Standard Vocabularies](5-standard-vocabularies/) for the complete set of standard vocabulary files.
+See [Core Concepts](2-core-concepts#archive-owned-vocabularies) for details on defining custom vocabulary entries and [Standard Vocabularies](5-standard-vocabularies/) for the complete set of standard vocabulary files.
 
 ## Important Notes
 
 - **Folder names are conventions**, not requirements
-- **Parser must scan ALL** `.glx` and `.yaml` files in the repository
+- **Parser must scan ALL** `.glx` and `.yaml` files in the archive
 - **Duplicate entity IDs** across files is an error
 - **Entity type keys are required** at the top level of every file
-- **Cross-references are validated** at repository level
+- **Cross-references are validated** at archive level
 - **Vocabularies define valid types** - entities must reference types from vocabulary files
 
 ## Git Workflow Integration
@@ -358,7 +358,7 @@ See [Core Concepts](2-core-concepts.md#repository-owned-vocabularies) for detail
 ### .gitignore Recommendations
 
 ```gitignore
-# GENEALOGIX Repository
+# GENEALOGIX Archive
 *.tmp
 *.bak
 .DS_Store
@@ -418,7 +418,7 @@ Manual approach: Extract each entity into its own file with the appropriate enti
 The `glx validate` command performs comprehensive validation:
 
 ```bash
-# Validate entire repository (recommended - checks all cross-references)
+# Validate entire archive (recommended - checks all cross-references)
 glx validate
 
 # Validate individual file (structural validation only, limited cross-reference checking)
@@ -430,7 +430,7 @@ glx validate persons/
 
 **Validation Output:**
 - ✓ **Pass**: File/entity is valid
-- ⚠ **Warning**: Soft validation issue (unknown property, unknown claim)
+- ⚠ **Warning**: Soft validation issue (unknown property)
 - ❌ **Error**: Hard validation failure (missing reference, invalid structure)
 
 **Exit Codes:**
@@ -446,11 +446,14 @@ See [Validation Levels](#validation-levels) above for details on what is validat
 3. **Group related entities** when using multi-file format
 4. **Commit frequently** with descriptive messages
 5. **Validate often** to catch errors early
-6. **Document your organization** in the repository README
+6. **Document your organization** in the archive README
 
 ## Examples
 
 See the `docs/examples/` directory for complete working examples:
-- `docs/examples/complete-family/` - Multi-file organization
+- `docs/examples/complete-family/` - Multi-file organization with all entity types
 - `docs/examples/single-file/` - Single-file archive
-- `docs/examples/mixed-format/` - Hybrid approach
+- `docs/examples/basic-family/` - Basic family structure
+- `docs/examples/minimal/` - Minimal archive example
+- `docs/examples/temporal-properties/` - Temporal property examples
+- `docs/examples/participant-assertions/` - Participant assertion examples

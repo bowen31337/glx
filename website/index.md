@@ -37,34 +37,6 @@ features:
   - icon: 🚀
     title: Modern Tooling
     details: CLI tool with GEDCOM import, validation, split/join operations, and cross-reference checking.
-
-  - icon: 🤝
-    title: Open Standard
-    details: Apache 2.0 licensed specification with an active community and open governance.
-
-  - icon: 🌳
-    title: Git-Native Architecture
-    details: Full version control and collaboration support using Git workflows that genealogists already know and trust.
-
-  - icon: 📋
-    title: Human-Readable Format
-    details: Clear YAML files instead of binary formats make your genealogy data easy to read, edit, and review.
-
-  - icon: 📚
-    title: Evidence-First Model
-    details: Every genealogical claim is backed by documented sources, creating a complete audit trail from repository to conclusion.
-
-  - icon: 🔍
-    title: Confidence Levels
-    details: Express researcher certainty in conclusions with structured confidence levels for all assertions.
-
-  - icon: ✅
-    title: Schema Validation
-    details: JSON Schema-based validation ensures data integrity and catches errors before they propagate.
-
-  - icon: 🔗
-    title: Complete Provenance
-    details: Full audit trail from original source documents through citations to final genealogical conclusions.
 ---
 
 ## Why GENEALOGIX?
@@ -73,33 +45,37 @@ Traditional genealogy software traps your research in proprietary databases and 
 
 ### Quick Comparison
 
-| Feature               | GEDCOM               | GENEALOGIX               |
-| --------------------- | -------------------- | ------------------------ |
-| **Collaboration**     | File sharing only    | Git-native workflows     |
-| **Evidence Tracking** | Basic source records | Complete evidence chains |
-| **Version Control**   | Manual or difficult  | Built-in Git integration |
-| **Human Readability** | Binary-like format   | Clear YAML structure     |
-| **Validation**        | Syntax only          | Schema-based validation  |
-| **Extensibility**     | Limited              | JSON Schema based        |
-| **Data Portability**  | Vendor lock-in       | Open format you own      |
-| **Interoperability**  | GEDCOM export only   | Import/export + Git workflows |
-| **Custom Types**      | Fixed schema         | Archive-defined vocabularies |
+| Feature               | GEDCOM                       | GENEALOGIX                    |
+| --------------------- | ---------------------------- | ----------------------------- |
+| **Collaboration**     | File sharing only            | Git-native workflows          |
+| **Evidence Tracking** | Basic source records         | Complete evidence chains      |
+| **Version Control**   | Manual or difficult          | Built-in Git integration      |
+| **Human Readability** | Binary-like format           | Clear YAML structure          |
+| **Validation**        | Inconsistent implementations | Schema-based validation       |
+| **Extensibility**     | Limited                      | JSON Schema based             |
+| **Data Portability**  | Vendor lock-in               | Open format you own           |
+| **Interoperability**  | GEDCOM export only           | Import/export + Git workflows |
+| **Custom Types**      | Fixed schema                 | Archive-defined vocabularies  |
 
-## Quick Start
+## What is a GLX Archive?
+
+A GENEALOGIX archive is a collection of plain YAML files — one per person, event, place, source, and so on — organized in a simple folder structure. Each archive also includes vocabulary files that define the types your research uses (event types, relationship types, etc.), so the archive is completely self-describing.
+
+Because it's just files and folders, you can edit your archive in any text editor, store it anywhere, back it up however you like, and track every change with Git. There's no database, no proprietary binary format, and no software required to read your data.
+
+::: tip Ready to dive in?
+Follow the [Quickstart Guide](/quickstart) to create your first archive in 5 minutes, or read the [Core Concepts](/specification/2-core-concepts) to understand the architecture.
+:::
+
+## Migrating from GEDCOM?
+
+If you already have a GEDCOM file, the `glx` CLI can import it automatically:
 
 ```bash
-# Install the glx CLI tool
-go install github.com/genealogix/glx/glx@latest
-
-# Import from GEDCOM
-glx import family.ged -o family.glx
-
-# Or create a new genealogix repository
-glx init
-
-# Validate your archive
-glx validate
+glx import family.ged -o family-archive
 ```
+
+See the full [Migration from GEDCOM](/guides/migration-from-gedcom) guide for field mapping details, troubleshooting, and post-migration workflow.
 
 ## Community
 
@@ -112,4 +88,4 @@ glx validate
 
 **Made with ❤️ for genealogists, by genealogists**
 
-Licensed under [Apache License 2.0](https://github.com/genealogix/glx/blob/main/LICENSE) • Copyright © 2025 Oracynth, Inc.
+Licensed under [Apache License 2.0](https://github.com/genealogix/glx/blob/main/LICENSE) • Copyright © 2025-2026 Oracynth, Inc.

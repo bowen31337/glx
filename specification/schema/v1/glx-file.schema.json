@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://genealogix.org/schema/v1/glx-file.schema.json",
+  "$id": "https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/glx-file.schema.json",
   "title": "GENEALOGIX File",
   "description": "A GENEALOGIX file can contain any combination of entities, vocabularies, and property definitions.",
   "type": "object",
@@ -171,6 +171,38 @@
       "description": "Place property vocabulary",
       "patternProperties": {
         "^[a-zA-Z0-9_-]+$": { "$ref": "vocabularies/place-properties.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "media_properties": {
+      "type": "object",
+      "description": "Media property vocabulary",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": { "$ref": "vocabularies/media-properties.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "repository_properties": {
+      "type": "object",
+      "description": "Repository property vocabulary",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": { "$ref": "vocabularies/repository-properties.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "citation_properties": {
+      "type": "object",
+      "description": "Citation property vocabulary",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": { "$ref": "vocabularies/citation-properties.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "source_properties": {
+      "type": "object",
+      "description": "Source property vocabulary",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": { "$ref": "vocabularies/source-properties.schema.json" }
       },
       "additionalProperties": false
     }

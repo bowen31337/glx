@@ -1,33 +1,37 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/source",
+  "$id": "https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/source.schema.json",
   "title": "Source",
   "description": "A source record (document, oral history, media). ID comes from the map key in the parent structure.",
   "type": "object",
   "required": ["title"],
   "properties": {
-    "title": { "type": "string", "minLength": 1 },
-    "type": { "type": "string" },
-    "authors": { "type": "array", "items": { "type": "string" } },
-    "date": { "type": "string" },
-    "citation": { "type": "string" },
-    "description": { "type": "string" },
+    "title": { "type": "string", "minLength": 1, "description": "Full title of the source" },
+    "type": { "type": "string", "description": "Source type from vocabulary (validated against source_types vocabulary)" },
+    "authors": { "type": "array", "items": { "type": "string" }, "description": "Author(s) or creator(s) of the source" },
+    "date": { "type": "string", "description": "Publication date or date range covered by the source" },
+    "description": { "type": "string", "description": "Detailed description of the source content and scope" },
     "repository": {
       "type": "string",
       "pattern": "^[a-zA-Z0-9-]{1,64}$",
       "description": "Reference to Repository where source is held"
     },
-    "creator": { "type": "string" },
-    "publication_info": { "type": "object" },
-    "language": { "type": "string" },
-    "coverage": { "type": "object" },
-    "notes": { "type": "string" },
+    "language": { "type": "string", "description": "Language of the source" },
+    "notes": { "type": "string", "description": "Free-form notes about the source" },
     "media": {
       "type": "array",
-      "items": { "type": "string" },
+      "description": "References to Media entities",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9-]{1,64}$"
+      },
       "uniqueItems": true
     },
-    "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+    "properties": {
+      "type": "object",
+      "description": "Vocabulary-defined properties (abbreviation, call_number, events_recorded, agency, coverage, external_ids, publication_info)",
+      "additionalProperties": true
+    }
   },
   "additionalProperties": false
 }

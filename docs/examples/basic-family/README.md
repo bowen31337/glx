@@ -13,9 +13,6 @@ with two children and basic relationship entries.
 
 ```
 basic-family/
-├── .glx-archive/
-│   ├── config.glx
-│   └── schema-version.glx
 ├── persons/
 │   ├── person-mother.glx
 │   ├── person-father.glx
@@ -25,10 +22,7 @@ basic-family/
 │   ├── rel-marriage.glx
 │   ├── rel-parent-alice.glx
 │   └── rel-parent-bob.glx
-├── sources/
-│   └── README.md
-├── media/
-│   └── README.md
+├── vocabularies/           # Symlinks to standard vocabularies
 └── README.md
 ```
 
@@ -69,7 +63,7 @@ persons:
 ### persons/person-child-alice.glx
 ```yaml
 persons:
-  person-child-alice:
+  person-alice:
     properties:
       name:
         value: "Alice Thompson"
@@ -82,7 +76,7 @@ persons:
 ### persons/person-child-bob.glx
 ```yaml
 persons:
-  person-child-bob:
+  person-bob:
     properties:
       name:
         value: "Robert Thompson"
@@ -114,7 +108,7 @@ relationships:
         role: parent
       - person: person-father
         role: parent
-      - person: person-child-alice
+      - person: person-alice
         role: child
 ```
 
@@ -128,7 +122,7 @@ relationships:
         role: parent
       - person: person-father
         role: parent
-      - person: person-child-bob
+      - person: person-bob
         role: child
 ```
 
@@ -137,16 +131,12 @@ relationships:
 ```bash
 glx validate
 # ✓ All files valid
-
-glx check-schemas
-# ✓ schemas valid
 ```
 
 ## What This Demonstrates
 
 - Marriage and parent-child relationship entries
 - Multiple persons with cross-referenced relationships
-- Config and schema version files
 - Layout ready for adding sources, media, and assertions
 
 ## Next Steps

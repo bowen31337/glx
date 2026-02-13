@@ -19,27 +19,32 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/genealogix/glx/glx/lib"
 	"gopkg.in/yaml.v3"
+
+	glxlib "github.com/genealogix/glx/go-glx"
 )
 
 // runInit initializes a new GLX archive in the specified directory
 func runInit(targetDir string, singleFile bool, numTestData int) error {
 	// If target is '.', check if it's empty. Otherwise, check if it exists and is not empty.
 	info, err := os.Stat(targetDir)
-	if err == nil { // Path exists
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("could not stat target directory '%s': %w", targetDir, err)
+		}
+		// Path doesn't exist, will be created below
+	} else {
+		// Path exists
 		if !info.IsDir() {
 			return fmt.Errorf("%w: %s", ErrTargetNotDirectory, targetDir)
 		}
 		if err := isDirectoryEmpty(targetDir); err != nil {
 			return err
 		}
-	} else if !os.IsNotExist(err) { // Some other error
-		return fmt.Errorf("could not stat target directory '%s': %w", targetDir, err)
 	}
 
 	// Create the directory if it doesn't exist
-	if err := os.MkdirAll(targetDir, 0o755); err != nil {
+	if err := os.MkdirAll(targetDir, dirPermissions); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", targetDir, err)
 	}
 
@@ -75,7 +80,7 @@ repositories: {}
 assertions: {}
 media: {}
 `
-	if err := os.WriteFile("archive.glx", []byte(template), 0o644); err != nil {
+	if err := os.WriteFile("archive.glx", []byte(template), filePermissions); err != nil {
 		return fmt.Errorf("failed to create archive.glx: %w", err)
 	}
 
@@ -111,18 +116,18 @@ func createMultiFileArchive(targetDir string, numTestData int) error {
 	}
 
 	// Create .gitignore file
-	if err := os.WriteFile(".gitignore", defaultGitignore, 0o644); err != nil {
+	if err := os.WriteFile(".gitignore", defaultGitignore, filePermissions); err != nil {
 		return fmt.Errorf("failed to create .gitignore: %w", err)
 	}
 
 	// Create README.md for the repository
-	if err := os.WriteFile("README.md", defaultReadme, 0o644); err != nil {
+	if err := os.WriteFile("README.md", defaultReadme, filePermissions); err != nil {
 		return fmt.Errorf("failed to create README.md: %w", err)
 	}
 
 	if numTestData > 0 {
 		fmt.Printf("Generating test data for %d persons...\n", numTestData)
-		testData, err := lib.GenerateTestData(numTestData)
+		testData, err := glxlib.GenerateTestData(numTestData)
 		if err != nil {
 			return fmt.Errorf("failed to generate test data: %w", err)
 		}
@@ -148,7 +153,7 @@ func createMultiFileArchive(targetDir string, numTestData int) error {
 }
 
 // writeTestData writes test data to entity files
-func writeTestData(data *lib.GLXFile) error {
+func writeTestData(data *glxlib.GLXFile) error {
 	entityTypes := map[string]map[string]any{
 		"persons":       mustMarshal(data.Persons),
 		"relationships": mustMarshal(data.Relationships),
@@ -173,7 +178,7 @@ func writeTestData(data *lib.GLXFile) error {
 			if err != nil {
 				return fmt.Errorf("failed to marshal %s: %w", id, err)
 			}
-			if err := os.WriteFile(fileName, yamlData, 0o644); err != nil {
+			if err := os.WriteFile(fileName, yamlData, filePermissions); err != nil {
 				return fmt.Errorf("failed to write file %s: %w", fileName, err)
 			}
 		}

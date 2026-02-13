@@ -12,7 +12,6 @@ Analyze all specification files in the `specification/` directory:
 - `1-introduction.md` - Project overview and purpose
 - `2-core-concepts.md` - Core GLX concepts
 - `3-archive-organization.md` - How GLX archives are structured
-- `6-data-types.md` - Common data types used throughout
 - `README.md` - Specification index
 
 ### Entity Type Specifications
@@ -169,3 +168,14 @@ At the end, provide:
 - Flag issues even if you're not 100% certain - better to investigate than miss problems
 - If examples use vocabulary terms, verify those terms exist in vocabulary files
 - Schema-related issues should be reported via `/check-schema-drift` instead
+
+## Cross-Reference with todo.md
+
+**IMPORTANT**: Before finalizing your report, read `todo.md` and exclude any issues that are already tracked there. The todo.md file is the canonical list of known issues.
+
+When you find an issue:
+1. Check if it's already in todo.md under any section (Documentation, Type System, GEDCOM Import, Validation, etc.)
+2. If already tracked: Do NOT include it in your report
+3. If NOT tracked: Include it in your report with full details
+
+This prevents duplicate tracking and keeps the audit focused on newly discovered issues.

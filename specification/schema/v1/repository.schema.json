@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://schema.genealogix.io/v1/repository",
+  "$id": "https://raw.githubusercontent.com/genealogix/glx/main/specification/schema/v1/repository.schema.json",
   "title": "Repository",
   "description": "An institution or organization that holds genealogical sources. ID comes from the map key in the parent structure.",
   "type": "object",
@@ -10,11 +10,6 @@
       "type": "string",
       "minLength": 1,
       "description": "Name of the repository"
-    },
-    "properties": {
-      "type": "object",
-      "description": "Vocabulary-defined properties of the repository",
-      "additionalProperties": true
     },
     "type": {
       "type": "string",
@@ -41,47 +36,19 @@
       "type": "string",
       "description": "Country"
     },
-    "phone": {
-      "type": "string",
-      "description": "Telephone number"
-    },
-    "email": {
-      "type": "string",
-      "format": "email",
-      "description": "Email address"
-    },
     "website": {
       "type": "string",
       "format": "uri",
       "description": "URL to repository website"
     },
-    "access_hours": {
-      "type": "string",
-      "description": "Hours of operation or access"
-    },
-    "access_restrictions": {
-      "type": "string",
-      "description": "Any restrictions on access (e.g., by appointment only, membership required)"
-    },
-    "holding_types": {
-      "type": "array",
-      "description": "Types of materials held",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
+    "properties": {
+      "type": "object",
+      "description": "Vocabulary-defined properties (phones, emails, fax, access_hours, access_restrictions, holding_types, external_ids)",
+      "additionalProperties": true
     },
     "notes": {
       "type": "string",
       "description": "Free-form notes about the repository"
-    },
-    "tags": {
-      "type": "array",
-      "description": "User-defined tags for organization",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
     }
   },
   "additionalProperties": false

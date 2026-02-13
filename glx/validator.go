@@ -20,10 +20,11 @@ import (
 	"maps"
 	"strings"
 
-	"github.com/genealogix/glx/glx/lib"
-	schema "github.com/genealogix/glx/specification/schema/v1"
 	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v3"
+
+	glxlib "github.com/genealogix/glx/go-glx"
+	schema "github.com/genealogix/glx/specification/schema/v1"
 )
 
 const (
@@ -140,7 +141,7 @@ func resolveRefsWithRoot(obj any, root map[string]any) error {
 }
 
 // resolveMapValues recursively processes all values in a map
-func resolveMapValues(m map[string]any, root map[string]any) error {
+func resolveMapValues(m, root map[string]any) error {
 	for _, value := range m {
 		if err := resolveRefsWithRoot(value, root); err != nil {
 			return err
@@ -151,7 +152,7 @@ func resolveMapValues(m map[string]any, root map[string]any) error {
 }
 
 // resolveJSONPointerRef resolves a JSON Pointer reference like #/definitions/Something
-func resolveJSONPointerRef(target map[string]any, root map[string]any, refStr string) error {
+func resolveJSONPointerRef(target, root map[string]any, refStr string) error {
 	resolved, err := resolveJSONPointer(root, refStr)
 	if err != nil {
 		return fmt.Errorf("failed to resolve JSON pointer %s: %w", refStr, err)
@@ -198,7 +199,7 @@ func resolveFileRef(target map[string]any, refStr string) error {
 }
 
 // resolveVocabularyRef extracts the pattern/entry definition from vocabulary schemas
-func resolveVocabularyRef(target map[string]any, refSchema map[string]any) error {
+func resolveVocabularyRef(target, refSchema map[string]any) error {
 	props, ok := refSchema["properties"].(map[string]any)
 	if !ok {
 		// No properties, use whole schema
@@ -342,9 +343,9 @@ func ValidateGLXFileStructure(doc map[string]any) []string {
 
 	// Validate entity ID formats (only for entity types, not vocabularies or property definitions)
 	entityTypes := []string{
-		lib.EntityTypePersons, lib.EntityTypeEvents, lib.EntityTypeRelationships,
-		lib.EntityTypePlaces, lib.EntityTypeSources, lib.EntityTypeCitations,
-		lib.EntityTypeRepositories, lib.EntityTypeAssertions, lib.EntityTypeMedia,
+		glxlib.EntityTypePersons, glxlib.EntityTypeEvents, glxlib.EntityTypeRelationships,
+		glxlib.EntityTypePlaces, glxlib.EntityTypeSources, glxlib.EntityTypeCitations,
+		glxlib.EntityTypeRepositories, glxlib.EntityTypeAssertions, glxlib.EntityTypeMedia,
 	}
 
 	for _, entityType := range entityTypes {

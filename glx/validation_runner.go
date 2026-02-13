@@ -19,9 +19,14 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
+
+	glxlib "github.com/genealogix/glx/go-glx"
 )
 
 // validatePaths performs comprehensive validation on the specified paths
+//
+//nolint:gocognit,gocyclo
 func validatePaths(args []string) error {
 	paths := args
 	if len(paths) == 0 {
@@ -85,17 +90,47 @@ func validatePaths(args []string) error {
 	}
 
 	// Second pass: load and cross-reference validation
-	// We assume a single archive root for simplicity here. A more robust implementation
-	// might handle multiple disconnected roots.
-	archiveRoot := "."
+	// Determine if we should do cross-reference validation
+	var archiveRoot string
+	var shouldValidateCrossRefs bool
+
 	if len(paths) == 1 {
-		info, err := os.Stat(paths[0])
-		if err == nil && info.IsDir() {
-			archiveRoot = paths[0]
+		if info, err := os.Stat(paths[0]); err == nil {
+			if info.IsDir() {
+				// Directory: validate with cross-references
+				archiveRoot = paths[0]
+				shouldValidateCrossRefs = true
+			} else {
+				// Single file: skip cross-reference validation
+				shouldValidateCrossRefs = false
+			}
+		}
+	} else if len(paths) == 0 {
+		// No paths specified, validate current directory
+		archiveRoot = "."
+		shouldValidateCrossRefs = true
+	} else {
+		// Multiple paths: use first path's directory or current dir
+		// This case is less common but we'll try to make it work
+		if info, err := os.Stat(paths[0]); err == nil {
+			if info.IsDir() {
+				archiveRoot = paths[0]
+			} else {
+				archiveRoot = filepath.Dir(paths[0])
+			}
+			shouldValidateCrossRefs = true
 		}
 	}
 
-	archive, duplicates, err := LoadArchive(archiveRoot)
+	if !shouldValidateCrossRefs {
+		fmt.Println("⚠️  Cross-reference validation skipped (single file specified).")
+		fmt.Printf("Validated %d file.\n", fileCount)
+		fmt.Println("✅ File structure is valid.")
+
+		return nil
+	}
+
+	archive, duplicates, err := LoadArchiveWithOptions(archiveRoot, false)
 	if err != nil {
 		// This error comes from LoadArchive if a file fails validation during load
 		fmt.Fprintf(os.Stderr, "Error loading archive: %v\n", err)
@@ -115,6 +150,9 @@ func validatePaths(args []string) error {
 	for _, err := range result.Errors {
 		allErrors = append(allErrors, err.Message)
 	}
+
+	// Third pass: check media file existence on disk
+	allWarnings = append(allWarnings, validateMediaFileExistence(archive, archiveRoot)...)
 
 	fmt.Printf("Validated %d files.\n", fileCount)
 	if len(allWarnings) > 0 {
@@ -136,4 +174,41 @@ func validatePaths(args []string) error {
 	fmt.Println("✅ Archive is valid.")
 
 	return nil
+}
+
+// validateMediaFileExistence checks that media entities with local relative URIs
+// point to files that actually exist on disk. Returns warnings for missing files.
+func validateMediaFileExistence(archive *glxlib.GLXFile, archiveRoot string) []string {
+	var warnings []string
+	for mediaID, media := range archive.Media {
+		if !isLocalMediaURI(media.URI) {
+			continue
+		}
+		filePath := filepath.Join(archiveRoot, media.URI)
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			warnings = append(warnings, fmt.Sprintf(
+				"media[%s]: referenced file does not exist: %s", mediaID, media.URI))
+		}
+	}
+
+	return warnings
+}
+
+// isLocalMediaURI returns true if a URI is a local relative path (not a URL,
+// absolute path, or empty string) that should exist on disk.
+func isLocalMediaURI(uri string) bool {
+	if uri == "" {
+		return false
+	}
+	if strings.Contains(uri, "://") || strings.HasPrefix(uri, "mailto:") {
+		return false
+	}
+	if strings.HasPrefix(uri, "/") {
+		return false
+	}
+	if len(uri) >= 2 && uri[1] == ':' {
+		return false
+	}
+
+	return true
 }
