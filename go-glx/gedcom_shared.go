@@ -132,6 +132,8 @@ func extractEventDetails(eventID string, eventRecord *GEDCOMRecord, event *Event
 	}
 
 	var placeID string
+	seenCitations := map[string]bool{}
+	seenSources := map[string]bool{}
 
 	for _, sub := range eventRecord.SubRecords {
 		switch sub.Tag {
@@ -185,13 +187,15 @@ func extractEventDetails(eventID string, eventRecord *GEDCOMRecord, event *Event
 					// Error already logged in createCitationFromSOUR, skip
 					continue
 				}
-				if result.CitationID != "" {
+				if result.CitationID != "" && !seenCitations[result.CitationID] {
+					seenCitations[result.CitationID] = true
 					citations, ok := event.Properties[PropertyCitations].([]string)
 					if !ok {
 						citations = []string{}
 					}
 					event.Properties[PropertyCitations] = append(citations, result.CitationID)
-				} else if result.SourceID != "" {
+				} else if result.SourceID != "" && !seenSources[result.SourceID] {
+					seenSources[result.SourceID] = true
 					sources, ok := event.Properties[PropertySources].([]string)
 					if !ok {
 						sources = []string{}
@@ -234,3 +238,4 @@ func extractExternalIDs(record *GEDCOMRecord) []map[string]string {
 
 	return exids
 }
+
