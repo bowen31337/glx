@@ -14,10 +14,7 @@
 
 package glx
 
-import (
-	"strings"
-	"unicode"
-)
+import "strings"
 
 // Soundex computes the American Soundex code for a name, following the
 // NARA (National Archives) algorithm used by the US Census Bureau.
@@ -27,11 +24,11 @@ func Soundex(name string) string {
 		return ""
 	}
 
-	// Normalize: uppercase, letters only
-	var letters []rune
+	// Normalize: uppercase, ASCII letters only (Soundex is defined for A-Z)
+	var letters []byte
 	for _, r := range strings.ToUpper(name) {
-		if unicode.IsLetter(r) {
-			letters = append(letters, r)
+		if r >= 'A' && r <= 'Z' {
+			letters = append(letters, byte(r))
 		}
 	}
 	if len(letters) == 0 {
@@ -39,12 +36,12 @@ func Soundex(name string) string {
 	}
 
 	// First letter is kept as-is
-	code := []byte{byte(letters[0])}
+	code := []byte{letters[0]}
 
 	// Map remaining letters to digits
-	prev := soundexDigit(letters[0])
+	prev := soundexDigitByte(letters[0])
 	for i := 1; i < len(letters) && len(code) < 4; i++ {
-		digit := soundexDigit(letters[i])
+		digit := soundexDigitByte(letters[i])
 		if digit == '0' {
 			// H and W don't separate identical digits; vowels (AEIOUY) do
 			if letters[i] == 'A' || letters[i] == 'E' || letters[i] == 'I' ||
@@ -67,9 +64,9 @@ func Soundex(name string) string {
 	return string(code)
 }
 
-// soundexDigit returns the Soundex digit for a letter, or '0' for vowels/H/W.
-func soundexDigit(r rune) byte {
-	switch r {
+// soundexDigitByte returns the Soundex digit for an uppercase ASCII letter, or '0' for vowels/H/W.
+func soundexDigitByte(r byte) byte {
+	switch rune(r) {
 	case 'B', 'F', 'P', 'V':
 		return '1'
 	case 'C', 'G', 'J', 'K', 'Q', 'S', 'X', 'Z':
@@ -106,7 +103,7 @@ type PhoneticMatch struct {
 // phonetically match the query using Soundex. Matches against both given
 // names and surnames.
 func PhoneticPersonSearch(archive *GLXFile, query string) []PhoneticMatch {
-	if query == "" {
+	if archive == nil || query == "" {
 		return nil
 	}
 

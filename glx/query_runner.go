@@ -95,6 +95,11 @@ func validateQueryFlags(entityType string, opts queryOpts) error {
 		}
 	}
 
+	// --phonetic requires --name
+	if opts.Phonetic && opts.Name == "" {
+		return fmt.Errorf("--phonetic requires --name to be specified")
+	}
+
 	return nil
 }
 
@@ -179,10 +184,17 @@ func queryPersons(archive *glxlib.GLXFile, opts queryOpts) error {
 			matched := false
 			if opts.Phonetic {
 				// Phonetic matching: compare Soundex codes of each name word
+				// against each query word (supports multi-word queries like "Jane Miller")
+				queryWords := strings.Fields(opts.Name)
 				for _, n := range allNames {
-					for _, word := range strings.Fields(n) {
-						if glxlib.SoundexMatch(word, opts.Name) {
-							matched = true
+					for _, nameWord := range strings.Fields(n) {
+						for _, qWord := range queryWords {
+							if glxlib.SoundexMatch(nameWord, qWord) {
+								matched = true
+								break
+							}
+						}
+						if matched {
 							break
 						}
 					}
