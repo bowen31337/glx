@@ -73,7 +73,7 @@ All CLI tools that currently read `born_on`/`born_at`/`died_on`/`died_at` from p
 func FindPersonEvent(archive *GLXFile, personID string, eventType string) *Event
 ```
 
-Returns the first event of the given type where the person is a participant. Returns nil if not found.
+Returns the first event of the given type where the person is a **principal/subject participant**. Must filter by participant role — a person who was a witness to someone else's birth is not the subject of that birth event. Returns nil if not found.
 
 **Files to update:**
 
