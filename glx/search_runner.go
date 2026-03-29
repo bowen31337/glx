@@ -53,12 +53,42 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 
 	matchFn := containsMatch(query, caseSensitive)
 
-	// Helper to search a properties map
+	// Helper to search a properties map (sorted keys for deterministic output)
 	searchProps := func(entityType, id string, props map[string]any) {
-		for key, val := range props {
-			if s := fmt.Sprint(val); matchFn(s) {
+		keys := make([]string, 0, len(props))
+		for k := range props {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			if s := fmt.Sprint(props[key]); matchFn(s) {
 				results = append(results, searchResult{entityType, id, key, truncate(s, 80)})
 			}
+		}
+	}
+
+	// Helper to search a string slice (ref IDs, authors, etc.)
+	searchSlice := func(entityType, id, field string, items []string) {
+		for _, item := range items {
+			if matchFn(item) {
+				results = append(results, searchResult{entityType, id, field, item})
+			}
+		}
+	}
+
+	// Helper to search participants
+	searchParticipants := func(entityType, id string, participants []glxlib.Participant) {
+		for _, p := range participants {
+			if matchFn(p.Person) {
+				results = append(results, searchResult{entityType, id, "participant", p.Person})
+			}
+			if matchFn(p.Role) {
+				results = append(results, searchResult{entityType, id, "participant.role", p.Role})
+			}
+			if matchFn(p.Notes) {
+				results = append(results, searchResult{entityType, id, "participant.notes", truncate(p.Notes, 80)})
+			}
+			searchProps(entityType, id, p.Properties)
 		}
 	}
 
@@ -77,7 +107,7 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 		}
 	}
 
-	// Events — includes PlaceID, Type, Participants
+	// Events
 	for _, id := range sortedKeys(archive.Events) {
 		ev := archive.Events[id]
 		if ev == nil {
@@ -102,11 +132,7 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 			results = append(results, searchResult{"events", id, "notes", truncate(ev.Notes, 80)})
 		}
 		searchProps("events", id, ev.Properties)
-		for _, p := range ev.Participants {
-			if matchFn(p.Person) {
-				results = append(results, searchResult{"events", id, "participant", p.Person})
-			}
-		}
+		searchParticipants("events", id, ev.Participants)
 	}
 
 	// Places — includes ParentID, Type
@@ -133,7 +159,7 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 		searchProps("places", id, place.Properties)
 	}
 
-	// Sources — includes Type, Authors, Date, RepositoryID, Notes
+	// Sources
 	for _, id := range sortedKeys(archive.Sources) {
 		src := archive.Sources[id]
 		if src == nil {
@@ -157,15 +183,18 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 		if matchFn(src.RepositoryID) {
 			results = append(results, searchResult{"sources", id, "repository", src.RepositoryID})
 		}
-		for _, author := range src.Authors {
-			if matchFn(author) {
-				results = append(results, searchResult{"sources", id, "author", author})
-			}
+		if matchFn(src.Language) {
+			results = append(results, searchResult{"sources", id, "language", src.Language})
 		}
+		if matchFn(src.Notes) {
+			results = append(results, searchResult{"sources", id, "notes", truncate(src.Notes, 80)})
+		}
+		searchSlice("sources", id, "author", src.Authors)
+		searchSlice("sources", id, "media", src.Media)
 		searchProps("sources", id, src.Properties)
 	}
 
-	// Citations — includes SourceID, RepositoryID, Notes
+	// Citations
 	for _, id := range sortedKeys(archive.Citations) {
 		cit := archive.Citations[id]
 		if cit == nil {
@@ -180,10 +209,14 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 		if matchFn(cit.RepositoryID) {
 			results = append(results, searchResult{"citations", id, "repository", cit.RepositoryID})
 		}
+		if matchFn(cit.Notes) {
+			results = append(results, searchResult{"citations", id, "notes", truncate(cit.Notes, 80)})
+		}
+		searchSlice("citations", id, "media", cit.Media)
 		searchProps("citations", id, cit.Properties)
 	}
 
-	// Repositories — includes Type, Notes
+	// Repositories
 	for _, id := range sortedKeys(archive.Repositories) {
 		repo := archive.Repositories[id]
 		if repo == nil {
@@ -198,9 +231,22 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 		if matchFn(repo.Type) {
 			results = append(results, searchResult{"repositories", id, "type", repo.Type})
 		}
+		if matchFn(repo.Address) {
+			results = append(results, searchResult{"repositories", id, "address", repo.Address})
+		}
+		if matchFn(repo.City) {
+			results = append(results, searchResult{"repositories", id, "city", repo.City})
+		}
+		if matchFn(repo.Website) {
+			results = append(results, searchResult{"repositories", id, "website", repo.Website})
+		}
+		if matchFn(repo.Notes) {
+			results = append(results, searchResult{"repositories", id, "notes", truncate(repo.Notes, 80)})
+		}
+		searchProps("repositories", id, repo.Properties)
 	}
 
-	// Assertions — includes Value, Confidence, Notes
+	// Assertions
 	for _, id := range sortedKeys(archive.Assertions) {
 		a := archive.Assertions[id]
 		if a == nil {
@@ -209,21 +255,45 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 		if matchFn(id) {
 			results = append(results, searchResult{"assertions", id, "id", id})
 		}
+		if matchFn(a.Subject.Person) {
+			results = append(results, searchResult{"assertions", id, "subject.person", a.Subject.Person})
+		}
+		if matchFn(a.Subject.Event) {
+			results = append(results, searchResult{"assertions", id, "subject.event", a.Subject.Event})
+		}
+		if matchFn(a.Subject.Relationship) {
+			results = append(results, searchResult{"assertions", id, "subject.relationship", a.Subject.Relationship})
+		}
+		if matchFn(a.Subject.Place) {
+			results = append(results, searchResult{"assertions", id, "subject.place", a.Subject.Place})
+		}
 		if matchFn(a.Property) {
 			results = append(results, searchResult{"assertions", id, "property", a.Property})
 		}
 		if matchFn(a.Value) {
 			results = append(results, searchResult{"assertions", id, "value", a.Value})
 		}
+		if matchFn(string(a.Date)) {
+			results = append(results, searchResult{"assertions", id, "date", string(a.Date)})
+		}
 		if matchFn(a.Confidence) {
 			results = append(results, searchResult{"assertions", id, "confidence", a.Confidence})
+		}
+		if matchFn(a.Status) {
+			results = append(results, searchResult{"assertions", id, "status", a.Status})
 		}
 		if matchFn(a.Notes) {
 			results = append(results, searchResult{"assertions", id, "notes", truncate(a.Notes, 80)})
 		}
+		searchSlice("assertions", id, "source", a.Sources)
+		searchSlice("assertions", id, "citation", a.Citations)
+		searchSlice("assertions", id, "media", a.Media)
+		if a.Participant != nil {
+			searchParticipants("assertions", id, []glxlib.Participant{*a.Participant})
+		}
 	}
 
-	// Relationships — includes Type, Notes
+	// Relationships
 	for _, id := range sortedKeys(archive.Relationships) {
 		rel := archive.Relationships[id]
 		if rel == nil {
@@ -235,17 +305,19 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 		if matchFn(rel.Type) {
 			results = append(results, searchResult{"relationships", id, "type", rel.Type})
 		}
+		if matchFn(rel.StartEvent) {
+			results = append(results, searchResult{"relationships", id, "start_event", rel.StartEvent})
+		}
+		if matchFn(rel.EndEvent) {
+			results = append(results, searchResult{"relationships", id, "end_event", rel.EndEvent})
+		}
 		if matchFn(rel.Notes) {
 			results = append(results, searchResult{"relationships", id, "notes", truncate(rel.Notes, 80)})
 		}
-		for _, p := range rel.Participants {
-			if matchFn(p.Person) {
-				results = append(results, searchResult{"relationships", id, "participant", p.Person})
-			}
-		}
+		searchParticipants("relationships", id, rel.Participants)
 	}
 
-	// Media — includes Type, Notes
+	// Media
 	for _, id := range sortedKeys(archive.Media) {
 		m := archive.Media[id]
 		if m == nil {
@@ -260,9 +332,25 @@ func searchArchive(archive *glxlib.GLXFile, query string, caseSensitive bool) []
 		if matchFn(m.Type) {
 			results = append(results, searchResult{"media", id, "type", m.Type})
 		}
+		if matchFn(m.URI) {
+			results = append(results, searchResult{"media", id, "uri", m.URI})
+		}
+		if matchFn(m.MimeType) {
+			results = append(results, searchResult{"media", id, "mime_type", m.MimeType})
+		}
 		if matchFn(m.Description) {
 			results = append(results, searchResult{"media", id, "description", truncate(m.Description, 80)})
 		}
+		if matchFn(string(m.Date)) {
+			results = append(results, searchResult{"media", id, "date", string(m.Date)})
+		}
+		if matchFn(m.Source) {
+			results = append(results, searchResult{"media", id, "source", m.Source})
+		}
+		if matchFn(m.Notes) {
+			results = append(results, searchResult{"media", id, "notes", truncate(m.Notes, 80)})
+		}
+		searchProps("media", id, m.Properties)
 	}
 
 	return deduplicateResults(results)
