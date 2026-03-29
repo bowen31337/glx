@@ -30,6 +30,7 @@ import (
 type queryOpts struct {
 	Archive    string
 	Name       string
+	Phonetic   bool
 	BornBefore int
 	BornAfter  int
 	Type       string
@@ -60,6 +61,7 @@ func validateQueryFlags(entityType string, opts queryOpts) error {
 
 	checks := []check{
 		{"--name", opts.Name != ""},
+		{"--phonetic", opts.Phonetic},
 		{"--born-before", opts.BornBefore != 0},
 		{"--born-after", opts.BornAfter != 0},
 		{"--type", opts.Type != ""},
@@ -75,7 +77,7 @@ func validateQueryFlags(entityType string, opts queryOpts) error {
 
 	// Map each entity type to its supported flags.
 	supported := map[string]map[string]bool{
-		"persons":       {"--name": true, "--born-before": true, "--born-after": true, "--birthplace": true},
+		"persons":       {"--name": true, "--phonetic": true, "--born-before": true, "--born-after": true, "--birthplace": true},
 		"events":        {"--type": true, "--before": true, "--after": true},
 		"assertions":    {"--confidence": true, "--status": true, "--source": true, "--citation": true, "--subject": true},
 		"sources":       {"--name": true, "--type": true},
@@ -175,10 +177,25 @@ func queryPersons(archive *glxlib.GLXFile, opts queryOpts) error {
 
 		if opts.Name != "" {
 			matched := false
-			for _, n := range allNames {
-				if containsFold(n, opts.Name) {
-					matched = true
-					break
+			if opts.Phonetic {
+				// Phonetic matching: compare Soundex codes of each name word
+				for _, n := range allNames {
+					for _, word := range strings.Fields(n) {
+						if glxlib.SoundexMatch(word, opts.Name) {
+							matched = true
+							break
+						}
+					}
+					if matched {
+						break
+					}
+				}
+			} else {
+				for _, n := range allNames {
+					if containsFold(n, opts.Name) {
+						matched = true
+						break
+					}
 				}
 			}
 			if !matched {
