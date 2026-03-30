@@ -1,13 +1,25 @@
 package glx
 
-// FindPersonEvent finds the first event of the given type where the specified
-// person is a principal participant (not a witness, informant, or other role).
-// Returns the event ID and the event, or ("", nil) if not found.
+import "sort"
+
+// FindPersonEvent finds the event of the given type where the specified person
+// is a principal participant (not a witness, informant, or other role).
+// When multiple matching events exist, returns the one with the lowest ID
+// for deterministic behavior. Returns ("", nil) if not found.
 func FindPersonEvent(archive *GLXFile, personID, eventType string) (string, *Event) {
 	if archive == nil {
 		return "", nil
 	}
-	for id, event := range archive.Events {
+
+	// Sort event IDs for deterministic iteration order.
+	ids := make([]string, 0, len(archive.Events))
+	for id := range archive.Events {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+
+	for _, id := range ids {
+		event := archive.Events[id]
 		if event == nil || event.Type != eventType {
 			continue
 		}
