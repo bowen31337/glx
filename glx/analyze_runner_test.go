@@ -30,7 +30,7 @@ func TestAnalyzeGaps_MissingBirth(t *testing.T) {
 	}
 
 	issues := analyzeGaps(archive)
-	found := findIssue(issues, "person-a", "born_on")
+	found := findIssue(issues, "person-a", "birth_event")
 	if found == nil {
 		t.Fatal("expected missing birth issue for person-a")
 	}
@@ -50,7 +50,7 @@ func TestAnalyzeGaps_HasBirth(t *testing.T) {
 	}
 
 	issues := analyzeGaps(archive)
-	found := findIssue(issues, "person-a", "born_on")
+	found := findIssue(issues, "person-a", "birth_event")
 	if found != nil {
 		t.Error("should not flag missing birth when birth event exists")
 	}
@@ -67,7 +67,7 @@ func TestAnalyzeGaps_MissingDeath(t *testing.T) {
 	}
 
 	issues := analyzeGaps(archive)
-	found := findIssue(issues, "person-a", "died_on")
+	found := findIssue(issues, "person-a", "death_event")
 	if found == nil {
 		t.Fatal("expected missing death issue for person born in 1850")
 	}
@@ -84,7 +84,7 @@ func TestAnalyzeGaps_MissingDeath_RecentBirth(t *testing.T) {
 	}
 
 	issues := analyzeGaps(archive)
-	found := findIssue(issues, "person-a", "died_on")
+	found := findIssue(issues, "person-a", "death_event")
 	if found != nil {
 		t.Error("should not flag missing death for person born in 1990")
 	}

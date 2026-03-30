@@ -183,7 +183,7 @@ func checkMissingBirth(archive *glxlib.GLXFile, id, name string) []AnalysisIssue
 		Severity: "high",
 		Person:   id,
 		Message:  fmt.Sprintf("%s — no birth date or place", name),
-		Property: "born_on",
+		Property: "birth_event",
 	}}
 }
 
@@ -212,7 +212,7 @@ func checkMissingDeath(archive *glxlib.GLXFile, id, name string) []AnalysisIssue
 		Severity: "high",
 		Person:   id,
 		Message:  fmt.Sprintf("%s — no death date or place", name),
-		Property: "died_on",
+		Property: "death_event",
 	}}
 }
 
