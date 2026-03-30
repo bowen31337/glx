@@ -29,16 +29,16 @@ func newTestArchiveForCoverage() *glxlib.GLXFile {
 			"person-john": {
 				Properties: map[string]any{
 					glxlib.PersonPropertyName:   "John Smith",
-					glxlib.PersonPropertyBornOn: "1840",
-					glxlib.PersonPropertyBornAt: "place-ny",
-					glxlib.PersonPropertyDiedOn: "1910",
-					glxlib.PersonPropertyDiedAt: "place-ny",
+					glxlib.DeprecatedPropertyBornOn: "1840",
+					glxlib.DeprecatedPropertyBornAt: "place-ny",
+					glxlib.DeprecatedPropertyDiedOn: "1910",
+					glxlib.DeprecatedPropertyDiedAt: "place-ny",
 				},
 			},
 			"person-jane": {
 				Properties: map[string]any{
 					glxlib.PersonPropertyName:   "Jane Doe",
-					glxlib.PersonPropertyBornOn: "1845",
+					glxlib.DeprecatedPropertyBornOn: "1845",
 				},
 			},
 			"person-no-dates": {
@@ -567,7 +567,7 @@ func TestCollectPersonStates_FromEventPlace(t *testing.T) {
 			"person-1": {
 				Properties: map[string]any{
 					glxlib.PersonPropertyName:   "Test Person",
-					glxlib.PersonPropertyBornOn: "1850",
+					glxlib.DeprecatedPropertyBornOn: "1850",
 				},
 			},
 		},
@@ -859,7 +859,7 @@ func TestBuildOtherRecords_ProbateNoPriority_NoDeath(t *testing.T) {
 		Persons: map[string]*glxlib.Person{
 			"person-alive": {Properties: map[string]any{
 				glxlib.PersonPropertyName:   "Living Person",
-				glxlib.PersonPropertyBornOn: "1980",
+				glxlib.DeprecatedPropertyBornOn: "1980",
 			}},
 		},
 		Events:        map[string]*glxlib.Event{},
@@ -887,8 +887,8 @@ func TestBuildOtherRecords_ProbateNoPriority_NoFamily(t *testing.T) {
 		Persons: map[string]*glxlib.Person{
 			"person-loner": {Properties: map[string]any{
 				glxlib.PersonPropertyName:   "Loner Person",
-				glxlib.PersonPropertyBornOn: "1800",
-				glxlib.PersonPropertyDiedOn: "1870",
+				glxlib.DeprecatedPropertyBornOn: "1800",
+				glxlib.DeprecatedPropertyDiedOn: "1870",
 			}},
 		},
 		Events:        map[string]*glxlib.Event{},
