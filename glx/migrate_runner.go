@@ -182,6 +182,8 @@ func migrateBirthDeathProperties(archive *glxlib.GLXFile) (*MigrateReport, error
 		report.AssertionsMigrated++
 	}
 
+	archive.InvalidateCache()
+
 	return report, nil
 }
 
