@@ -607,9 +607,6 @@ GEDCOM is a simpler format than GLX. Custom vocabularies (like `battle`, `corona
 If you have an archive that uses the deprecated `born_on`/`born_at`/`died_on`/`died_at` person properties, `glx migrate` converts them to birth/death Event entities:
 
 ```bash
-# Preview what would change
-glx migrate --dry-run
-
 # Run the migration
 glx migrate
 ```

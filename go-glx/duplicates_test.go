@@ -110,74 +110,6 @@ func TestScoreNameSimilarity_StructuredFields(t *testing.T) {
 	assert.Contains(t, detail, "surname exact")
 }
 
-// --- Year scoring tests ---
-
-func TestScoreYearSimilarity_ExactMatch(t *testing.T) {
-	propsA := map[string]any{"born_on": "1850"}
-	propsB := map[string]any{"born_on": "1850"}
-	score, detail := scoreYearSimilarity(propsA, propsB, "born_on")
-	assert.Equal(t, 1.0, score)
-	assert.Equal(t, "exact match", detail)
-}
-
-func TestScoreYearSimilarity_WithinOneYear(t *testing.T) {
-	propsA := map[string]any{"born_on": "1850"}
-	propsB := map[string]any{"born_on": "1851"}
-	score, _ := scoreYearSimilarity(propsA, propsB, "born_on")
-	assert.Equal(t, 0.75, score)
-}
-
-func TestScoreYearSimilarity_WithinTwoYears(t *testing.T) {
-	propsA := map[string]any{"born_on": "1850"}
-	propsB := map[string]any{"born_on": "1852"}
-	score, _ := scoreYearSimilarity(propsA, propsB, "born_on")
-	assert.Equal(t, 0.5, score)
-}
-
-func TestScoreYearSimilarity_FarApart(t *testing.T) {
-	propsA := map[string]any{"born_on": "1850"}
-	propsB := map[string]any{"born_on": "1870"}
-	score, _ := scoreYearSimilarity(propsA, propsB, "born_on")
-	assert.Equal(t, 0.0, score)
-}
-
-func TestScoreYearSimilarity_MissingYear(t *testing.T) {
-	propsA := map[string]any{"born_on": "1850"}
-	propsB := map[string]any{}
-	score, detail := scoreYearSimilarity(propsA, propsB, "born_on")
-	assert.Equal(t, 0.0, score)
-	assert.Equal(t, "no data", detail)
-}
-
-func TestScoreYearSimilarity_DateQualifiers(t *testing.T) {
-	propsA := map[string]any{"born_on": "ABT 1850"}
-	propsB := map[string]any{"born_on": "1850"}
-	score, _ := scoreYearSimilarity(propsA, propsB, "born_on")
-	assert.Equal(t, 1.0, score, "ABT qualifier should still match year")
-}
-
-// --- Place scoring tests ---
-
-func TestScorePlaceSimilarity_SamePlaceID(t *testing.T) {
-	propsA := map[string]any{"born_at": "place-madison-wi"}
-	propsB := map[string]any{"born_at": "place-madison-wi"}
-	score, _ := scorePlaceSimilarity(propsA, propsB, "born_at", nil)
-	assert.Equal(t, 1.0, score)
-}
-
-func TestScorePlaceSimilarity_DifferentPlaceID(t *testing.T) {
-	propsA := map[string]any{"born_at": "place-madison-wi"}
-	propsB := map[string]any{"born_at": "place-milwaukee-wi"}
-	score, _ := scorePlaceSimilarity(propsA, propsB, "born_at", nil)
-	assert.Equal(t, 0.0, score)
-}
-
-func TestScorePlaceSimilarity_MissingPlace(t *testing.T) {
-	propsA := map[string]any{"born_at": "place-madison-wi"}
-	propsB := map[string]any{}
-	score, _ := scorePlaceSimilarity(propsA, propsB, "born_at", nil)
-	assert.Equal(t, 0.0, score)
-}
 
 // --- Relationship/event scoring tests ---
 
@@ -306,9 +238,9 @@ func TestFindDuplicates_ThresholdFiltering(t *testing.T) {
 func TestFindDuplicates_PersonFilter(t *testing.T) {
 	archive := &GLXFile{
 		Persons: map[string]*Person{
-			"person-a": {Properties: map[string]any{"name": "John Smith", "born_on": "1850"}},
-			"person-b": {Properties: map[string]any{"name": "John Smith", "born_on": "1850"}},
-			"person-c": {Properties: map[string]any{"name": "John Smith", "born_on": "1850"}},
+			"person-a": {Properties: map[string]any{"name": "John Smith"}},
+			"person-b": {Properties: map[string]any{"name": "John Smith"}},
+			"person-c": {Properties: map[string]any{"name": "John Smith"}},
 		},
 	}
 	result, err := FindDuplicates(archive, DuplicateOptions{Threshold: 0.5, PersonFilter: "person-a"})
@@ -323,9 +255,9 @@ func TestFindDuplicates_PersonFilter(t *testing.T) {
 func TestFindDuplicates_SortedByScoreDescending(t *testing.T) {
 	archive := &GLXFile{
 		Persons: map[string]*Person{
-			"person-john-1": {Properties: map[string]any{"name": "John Smith", "born_on": "1850"}},
-			"person-john-2": {Properties: map[string]any{"name": "John Smith", "born_on": "1850"}},
-			"person-john-3": {Properties: map[string]any{"name": "Jon Smyth", "born_on": "1855"}},
+			"person-john-1": {Properties: map[string]any{"name": "John Smith"}},
+			"person-john-2": {Properties: map[string]any{"name": "John Smith"}},
+			"person-john-3": {Properties: map[string]any{"name": "Jon Smyth"}},
 		},
 	}
 	result, err := FindDuplicates(archive, DuplicateOptions{Threshold: 0.3})

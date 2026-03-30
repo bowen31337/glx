@@ -157,10 +157,6 @@ Defines standard and custom properties for person entities (birth date, occupati
 **Standard Properties Include:**
 - `name` - Unified name property with optional structured fields (type, given, surname, prefix, suffix, etc.) (temporal)
 - `gender` - Gender identity (temporal)
-- `born_on` - Date of birth
-- `born_at` - Place of birth (reference)
-- `died_on` - Date of death
-- `died_at` - Place of death (reference)
 - `occupation` - Profession (temporal, GEDCOM: OCCU)
 - `title` - Nobility or honorific title (temporal, GEDCOM: TITL)
 - `residence` - Place of residence (temporal, reference)

@@ -27,6 +27,14 @@ type MigrateReport struct {
 	EventsMerged       int
 	PropertiesRemoved  int
 	AssertionsMigrated int
+	VocabEntriesRemoved int
+}
+
+var deprecatedProps = []string{
+	glxlib.DeprecatedPropertyBornOn,
+	glxlib.DeprecatedPropertyBornAt,
+	glxlib.DeprecatedPropertyDiedOn,
+	glxlib.DeprecatedPropertyDiedAt,
 }
 
 // migrateBirthDeathProperties converts deprecated born_on/born_at/died_on/died_at
@@ -36,6 +44,16 @@ func migrateBirthDeathProperties(archive *glxlib.GLXFile) (*MigrateReport, error
 
 	if archive.Events == nil {
 		archive.Events = make(map[string]*glxlib.Event)
+	}
+
+	// Remove deprecated entries from person property vocabulary.
+	if archive.PersonProperties != nil {
+		for _, prop := range deprecatedProps {
+			if _, exists := archive.PersonProperties[prop]; exists {
+				delete(archive.PersonProperties, prop)
+				report.VocabEntriesRemoved++
+			}
+		}
 	}
 
 	// Sort person IDs for deterministic output order.
@@ -87,12 +105,7 @@ func migrateBirthDeathProperties(archive *glxlib.GLXFile) (*MigrateReport, error
 		}
 
 		// Remove deprecated properties from the person.
-		for _, prop := range []string{
-			glxlib.DeprecatedPropertyBornOn,
-			glxlib.DeprecatedPropertyBornAt,
-			glxlib.DeprecatedPropertyDiedOn,
-			glxlib.DeprecatedPropertyDiedAt,
-		} {
+		for _, prop := range deprecatedProps {
 			if _, exists := person.Properties[prop]; exists {
 				delete(person.Properties, prop)
 				report.PropertiesRemoved++
@@ -101,6 +114,54 @@ func migrateBirthDeathProperties(archive *glxlib.GLXFile) (*MigrateReport, error
 		if len(person.Properties) == 0 {
 			person.Properties = nil
 		}
+	}
+
+	// Second pass: catch any remaining assertions that reference deprecated
+	// property names but weren't processed above (e.g., the person didn't have
+	// the deprecated properties but assertions still reference them).
+	for _, assertion := range archive.Assertions {
+		if assertion == nil {
+			continue
+		}
+		personID := assertion.Subject.Person
+		if personID == "" {
+			continue
+		}
+
+		var eventType string
+		var newProp string
+		switch assertion.Property {
+		case glxlib.DeprecatedPropertyBornOn:
+			eventType, newProp = glxlib.EventTypeBirth, "date"
+		case glxlib.DeprecatedPropertyBornAt:
+			eventType, newProp = glxlib.EventTypeBirth, "place"
+		case glxlib.DeprecatedPropertyDiedOn:
+			eventType, newProp = glxlib.EventTypeDeath, "date"
+		case glxlib.DeprecatedPropertyDiedAt:
+			eventType, newProp = glxlib.EventTypeDeath, "place"
+		default:
+			continue
+		}
+
+		eventID, _ := glxlib.FindPersonEvent(archive, personID, eventType)
+		if eventID == "" {
+			// Create a minimal event so the assertion has a valid target.
+			newID, err := glxlib.GenerateRandomID()
+			if err != nil {
+				return nil, fmt.Errorf("generating event ID for orphaned assertion: %w", err)
+			}
+			eventID = "event-" + newID
+			archive.Events[eventID] = &glxlib.Event{
+				Type: eventType,
+				Participants: []glxlib.Participant{
+					{Person: personID, Role: glxlib.ParticipantRolePrincipal},
+				},
+			}
+			report.EventsCreated++
+		}
+		assertion.Subject = glxlib.EntityRef{Event: eventID}
+		assertion.Property = newProp
+		report.AssertionsMigrated++
 	}
 
 	return report, nil

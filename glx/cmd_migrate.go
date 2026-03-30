@@ -102,6 +102,7 @@ func migrateArchive(archivePath string) error {
 	fmt.Printf("  Events merged:        %d\n", report.EventsMerged)
 	fmt.Printf("  Properties removed:   %d\n", report.PropertiesRemoved)
 	fmt.Printf("  Assertions migrated:  %d\n", report.AssertionsMigrated)
+	fmt.Printf("  Vocab entries removed: %d\n", report.VocabEntriesRemoved)
 
 	return nil
 }

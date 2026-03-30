@@ -400,32 +400,6 @@ func compareGivenNames(a, b string) float64 {
 	return normalizedLevenshtein(a, b)
 }
 
-// scoreYearSimilarity compares year values from person properties.
-func scoreYearSimilarity(propsA, propsB map[string]any, propertyKey string) (float64, string) {
-	yearA := ExtractPropertyYear(propsA, propertyKey)
-	yearB := ExtractPropertyYear(propsB, propertyKey)
-
-	if yearA == 0 || yearB == 0 {
-		return 0, "no data"
-	}
-
-	diff := yearA - yearB
-	if diff < 0 {
-		diff = -diff
-	}
-
-	switch {
-	case diff == 0:
-		return 1.0, "exact match"
-	case diff <= 1:
-		return 0.75, "within 1 year"
-	case diff <= 2:
-		return 0.5, "within 2 years"
-	default:
-		return 0, "different"
-	}
-}
-
 // scoreEventYearSimilarity compares years from two events.
 func scoreEventYearSimilarity(eventA, eventB *Event) (float64, string) {
 	yearA, yearB := 0, 0
@@ -484,39 +458,6 @@ func scoreEventPlaceSimilarity(eventA, eventB *Event, archive *GLXFile) (float64
 	return 0, "different"
 }
 
-// scorePlaceSimilarity compares place references from person properties.
-func scorePlaceSimilarity(propsA, propsB map[string]any, propertyKey string, archive *GLXFile) (float64, string) {
-	placeA := propertyToString(propsA, propertyKey)
-	placeB := propertyToString(propsB, propertyKey)
-
-	if placeA == "" || placeB == "" {
-		return 0, "no data"
-	}
-
-	if placeA == placeB {
-		placeName := placeA
-		if archive != nil && archive.Places != nil {
-			if p, ok := archive.Places[placeA]; ok && p != nil {
-				placeName = p.Name
-			}
-		}
-		return 1.0, placeName
-	}
-
-	return 0, "different"
-}
-
-// propertyToString extracts a string value from a properties map.
-func propertyToString(props map[string]any, key string) string {
-	raw, ok := props[key]
-	if !ok {
-		return ""
-	}
-	if s, ok := raw.(string); ok {
-		return s
-	}
-	return ""
-}
 
 // scoreSharedRelationships scores the overlap in related persons.
 func scoreSharedRelationships(idA, idB string, idx *duplicateIndex) (float64, string) {

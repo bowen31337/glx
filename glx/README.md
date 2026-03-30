@@ -1145,9 +1145,6 @@ glx migrate [path] [flags]
 **Arguments:**
 - `[path]` - Path to a multi-file archive directory or a single-file `.glx` archive (defaults to current directory)
 
-**Options:**
-- `--dry-run` - Preview changes without writing files
-
 **What it does:**
 - Converts `born_on`/`born_at` person properties to birth Event entities
 - Converts `died_on`/`died_at` person properties to death Event entities
@@ -1160,9 +1157,6 @@ glx migrate [path] [flags]
 ```bash
 # Migrate the current directory
 glx migrate
-
-# Preview changes without writing
-glx migrate --dry-run
 
 # Migrate a specific archive
 glx migrate my-family-archive
