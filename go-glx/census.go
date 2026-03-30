@@ -465,16 +465,21 @@ func generateCensusAssertions(census *CensusData, resolvedIDs []string, placeID,
 
 		// Birth year from age — assertion targets the birth event
 		if member.Age != nil {
-			birthEventID := findOrCreateBirthEvent(personID, pidSlug, yearStr, existing, result)
+			birthEventID := findOrCreateBirthEvent(personID, pidSlug, existing, result)
 			birthYear := census.Year - *member.Age
+			dateValue := fmt.Sprintf("ABT %d", birthYear)
 			assertionID := uniqueAssertionID(fmt.Sprintf("assertion-%s-birth-year-%s", pidSlug, yearStr), existing, result)
 			result.Assertions[assertionID] = &Assertion{
 				Subject:    EntityRef{Event: birthEventID},
 				Property:   "date",
-				Value:      fmt.Sprintf("ABT %d", birthYear),
+				Value:      dateValue,
 				Citations:  []string{citationID},
 				Confidence: ConfidenceLevelLow,
 				Notes:      fmt.Sprintf("Estimated from age %d in %d census. Census ages are frequently off by 1-2 years.", *member.Age, census.Year),
+			}
+			// Populate event date if empty so CLI tools can read it directly.
+			if evt := result.Event[birthEventID]; evt != nil && evt.Date == "" {
+				evt.Date = DateString(dateValue)
 			}
 		}
 
@@ -496,7 +501,7 @@ func generateCensusAssertions(census *CensusData, resolvedIDs []string, placeID,
 			birthplaceRef = resolveBirthplace(member.Birthplace, existing, result)
 		}
 		if birthplaceRef != "" {
-			birthEventID := findOrCreateBirthEvent(personID, pidSlug, yearStr, existing, result)
+			birthEventID := findOrCreateBirthEvent(personID, pidSlug, existing, result)
 			assertionID := uniqueAssertionID(fmt.Sprintf("assertion-%s-birthplace-%s", pidSlug, yearStr), existing, result)
 			result.Assertions[assertionID] = &Assertion{
 				Subject:    EntityRef{Event: birthEventID},
@@ -505,6 +510,10 @@ func generateCensusAssertions(census *CensusData, resolvedIDs []string, placeID,
 				Citations:  []string{citationID},
 				Confidence: ConfidenceLevelMedium,
 				Notes:      birthplaceNote(census.Year, member.Birthplace, member.BirthplaceID),
+			}
+			// Populate event place if empty so CLI tools can read it directly.
+			if evt := result.Event[birthEventID]; evt != nil && evt.PlaceID == "" {
+				evt.PlaceID = birthplaceRef
 			}
 		}
 
@@ -689,7 +698,7 @@ func uniqueCitationID(baseID string, existing *GLXFile, result *CensusResult) st
 
 // findOrCreateBirthEvent locates an existing birth event for the person in
 // the archive or current batch, or creates a new one if none exists.
-func findOrCreateBirthEvent(personID, pidSlug, yearStr string, existing *GLXFile, result *CensusResult) string {
+func findOrCreateBirthEvent(personID, pidSlug string, existing *GLXFile, result *CensusResult) string {
 	// Check existing archive
 	if existing != nil {
 		if id, _ := FindPersonEvent(existing, personID, EventTypeBirth); id != "" {
