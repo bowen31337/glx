@@ -78,7 +78,9 @@ func migrateArchive(archivePath string) error {
 		return fmt.Errorf("migration failed: %w", err)
 	}
 
-	if report.EventsCreated == 0 && report.EventsMerged == 0 {
+	if report.EventsCreated == 0 && report.EventsMerged == 0 &&
+		report.PropertiesRemoved == 0 && report.AssertionsMigrated == 0 &&
+		report.VocabEntriesRemoved == 0 {
 		fmt.Println("No deprecated properties found. Archive is already up to date.")
 		return nil
 	}
