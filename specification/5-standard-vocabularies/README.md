@@ -150,7 +150,7 @@ Property vocabularies define the custom properties available for each entity typ
 
 ### Person Properties
 
-Defines standard and custom properties for person entities (birth date, occupation, residence, etc.). Supports temporal properties that change over time.
+Defines standard and custom properties for person entities (name, gender, occupation, residence, etc.). Supports temporal properties that change over time.
 
 **View Source:** [person-properties.glx](https://github.com/genealogix/glx/blob/main/specification/5-standard-vocabularies/person-properties.glx)
 

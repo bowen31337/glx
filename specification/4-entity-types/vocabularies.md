@@ -634,7 +634,7 @@ vocabularies/
 
 **Used By**: [Person Entity](person#properties)
 
-**Purpose**: Defines properties that can be set on person entities (birth date, occupation, residence, etc.)
+**Purpose**: Defines properties that can be set on person entities (name, gender, occupation, residence, etc.)
 
 ### Standard Properties
 

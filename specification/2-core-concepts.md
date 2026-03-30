@@ -349,11 +349,17 @@ Reference types indicate that a property value is a string identifier that must 
 - **repositories** - Reference to a repository entity
 - **media** - Reference to a media entity
 
-**Example:**
+**Examples:**
 ```yaml
+# Simple reference to a place
 properties:
-  residence: "place-leeds"  # Reference to a place
-  residence:                # Temporal reference to a place
+  residence: "place-leeds"
+```
+
+```yaml
+# Temporal reference to a place (changed over time)
+properties:
+  residence:
     - value: "place-london"
       date: "FROM 1900 TO 1920"
 ```
