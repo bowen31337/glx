@@ -79,6 +79,8 @@ func FindPersonEvent(archive *GLXFile, personID string, eventType string) *Event
 
 Returns the first event of the given type where the person is a **principal/subject participant**. Must filter by participant role — a person who was a witness to someone else's birth is not the subject of that birth event. Returns nil if not found.
 
+**`FindPersonEvent` role filtering**: The function must only match participants whose role indicates they are the subject of the event (e.g., `"principal"`, `"subject"`, or empty/default role). It must NOT match witnesses, informants, or other non-subject roles. Check the participant role vocabulary for the exact values used by the GEDCOM importer.
+
 **Files to update:**
 
 | File | Current usage | New behavior |
@@ -90,6 +92,19 @@ Returns the first event of the given type where the person is a **principal/subj
 | `glx/analyze_suggestions.go` | Extracts birth/death year from properties | Extract from event date |
 | `glx/query_runner.go` | `--birthplace` filter matches against `born_at` property | Match against birth event's place ID |
 | `glx/duplicates_runner.go` | Reads `born_on` for person disambiguation | Read from birth event date |
+| `glx/coverage_runner.go` | Reads all four properties into `PersonCoverageResult` | Read from birth/death events |
+| `glx/analyze_consistency.go` | Reads `born_on`/`died_on` at 8+ call sites for temporal consistency checks | Use event dates |
+| `glx/analyze_child_census.go` | Reads `born_on`/`died_on` for child birth/death year estimation | Use event dates |
+| `glx/tree_runner.go` | Reads `born_on`/`died_on` for display labels | Use event dates |
+| `glx/tree_suggestions.go` | Reads `born_on`/`born_at` for census suggestions | Use event dates/places |
+| `glx/places_runner.go` | `placeRefPropertyKeys`/`placeUsedProperties` hard-code `born_at`/`died_at` | Track place refs via event PlaceID instead |
+| `glx/census_runner.go` | Checks assertion property against `PersonPropertyBornAt` | Check against event-targeted assertions |
+| `glx/coverage_state_census.go` | Calls `placeRefsFromProperty` on `born_at`/`died_at` | Use event PlaceID |
+| `go-glx/duplicates.go` | `scorePersonSimilarity` reads all four constants | Use `FindPersonEvent` for comparison |
+| `go-glx/validation_temporal.go` | Reads `born_on`/`died_on` for all date-ordering checks (died-before-born, parent-child age) | Must be rewritten to use event dates — without this, all temporal validation silently passes |
+| `go-glx/diff.go` | Reads `born_on`/`died_on` for disambiguation labels | Use event dates |
+| `go-glx/gedcom_export_person.go` | `skipPersonProperties` map references all four constants | Update skip map to use `Deprecated*` constants (or remove entries if no longer needed) |
+| `go-glx/census.go` | Creates assertions with `Property: PersonPropertyBornOn`/`BornAt` in `AddCensus` | Must be redesigned to create event-targeted assertions instead of person-property assertions |
 
 ### 6. Rename/Reference Tracking
 
@@ -121,10 +136,10 @@ Reads an archive, performs the following for each person. **This must be zero da
 
 For each person with `born_on`/`born_at`/`died_on`/`died_at` properties:
 
-1. **No existing birth/death event**: Create a birth/death Event entity with the date and/or place from the properties, with the person as principal participant
-2. **Existing birth/death event**: Merge property data into the event — if the event is missing a date or place that the property has, add it to the event. Do not overwrite existing event data.
+1. **No existing birth/death event**: Create a birth/death Event entity with `Date` from `born_on`/`died_on` and `PlaceID` from `born_at`/`died_at`, with the person as principal participant
+2. **Existing birth/death event**: Merge property data into the event — if the event's `Date` is empty and the property has a date, set `event.Date`. If the event's `PlaceID` is empty and the property has a place, set `event.PlaceID`. Do not overwrite existing event data.
 3. Remove `born_on`, `born_at`, `died_on`, `died_at` from the person's properties
-4. Convert property assertions (`Subject: {Person: id}, Property: "born_on"` etc.) to event assertions (`Subject: {Event: id}`) pointing at the corresponding event property. Preserve all source/citation references.
+4. Convert property assertions: change `Subject` from `{Person: id}` to `{Event: id}` and update `Property` field (`"born_on"`/`"died_on"` → `"date"`, `"born_at"`/`"died_at"` → `"place"`). Preserve all source/citation references.
 
 **Output**: Writes the migrated archive. Reports what was changed.
 
