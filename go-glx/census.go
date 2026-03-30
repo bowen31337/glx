@@ -463,13 +463,14 @@ func generateCensusAssertions(census *CensusData, resolvedIDs []string, placeID,
 		// collisions when multiple members share the same name.
 		pidSlug := slugify("", personID)
 
-		// Birth year from age
+		// Birth year from age — assertion targets the birth event
 		if member.Age != nil {
+			birthEventID := findOrCreateBirthEvent(personID, pidSlug, yearStr, existing, result)
 			birthYear := census.Year - *member.Age
 			assertionID := uniqueAssertionID(fmt.Sprintf("assertion-%s-birth-year-%s", pidSlug, yearStr), existing, result)
 			result.Assertions[assertionID] = &Assertion{
-				Subject:    EntityRef{Person: personID},
-				Property:   PersonPropertyBornOn,
+				Subject:    EntityRef{Event: birthEventID},
+				Property:   "date",
 				Value:      fmt.Sprintf("ABT %d", birthYear),
 				Citations:  []string{citationID},
 				Confidence: ConfidenceLevelLow,
@@ -477,7 +478,7 @@ func generateCensusAssertions(census *CensusData, resolvedIDs []string, placeID,
 			}
 		}
 
-		// Birthplace
+		// Birthplace — assertion targets the birth event
 		birthplaceRef := member.BirthplaceID
 		if birthplaceRef != "" {
 			// Validate that the explicit birthplace ID exists
@@ -495,10 +496,11 @@ func generateCensusAssertions(census *CensusData, resolvedIDs []string, placeID,
 			birthplaceRef = resolveBirthplace(member.Birthplace, existing, result)
 		}
 		if birthplaceRef != "" {
+			birthEventID := findOrCreateBirthEvent(personID, pidSlug, yearStr, existing, result)
 			assertionID := uniqueAssertionID(fmt.Sprintf("assertion-%s-birthplace-%s", pidSlug, yearStr), existing, result)
 			result.Assertions[assertionID] = &Assertion{
-				Subject:    EntityRef{Person: personID},
-				Property:   PersonPropertyBornAt,
+				Subject:    EntityRef{Event: birthEventID},
+				Property:   "place",
 				Value:      birthplaceRef,
 				Citations:  []string{citationID},
 				Confidence: ConfidenceLevelMedium,
@@ -683,6 +685,39 @@ func uniqueCitationID(baseID string, existing *GLXFile, result *CensusResult) st
 		}
 		candidate = truncateIDWithSuffix(baseID, suffix)
 	}
+}
+
+// findOrCreateBirthEvent locates an existing birth event for the person in
+// the archive or current batch, or creates a new one if none exists.
+func findOrCreateBirthEvent(personID, pidSlug, yearStr string, existing *GLXFile, result *CensusResult) string {
+	// Check existing archive
+	if existing != nil {
+		if id, _ := FindPersonEvent(existing, personID, EventTypeBirth); id != "" {
+			return id
+		}
+	}
+
+	// Check current batch
+	for eid, evt := range result.Event {
+		if evt.Type == EventTypeBirth {
+			for _, p := range evt.Participants {
+				if p.Person == personID && isSubjectRole(p.Role) {
+					return eid
+				}
+			}
+		}
+	}
+
+	// Create new birth event
+	birthEventID := uniqueEventID(fmt.Sprintf("event-birth-%s", pidSlug), existing, result)
+	result.Event[birthEventID] = &Event{
+		Type:  EventTypeBirth,
+		Title: "Birth",
+		Participants: []Participant{
+			{Person: personID, Role: ParticipantRolePrincipal},
+		},
+	}
+	return birthEventID
 }
 
 // uniqueEventID returns an event ID that doesn't collide with existing archive

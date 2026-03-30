@@ -268,32 +268,25 @@ func scorePair(idA, idB string, personA, personB *Person, archive *GLXFile, idx 
 	signals = append(signals, DuplicateSignal{"Name similarity", weightName, nameScore, nameDetail})
 	totalScore += weightName * nameScore
 
-	propsA := personA.Properties
-	propsB := personB.Properties
-	if propsA == nil {
-		propsA = map[string]any{}
-	}
-	if propsB == nil {
-		propsB = map[string]any{}
-	}
-
-	// Birth year
-	byScore, byDetail := scoreYearSimilarity(propsA, propsB, PersonPropertyBornOn)
+	// Birth year and place
+	_, birthA := FindPersonEvent(archive, idA, EventTypeBirth)
+	_, birthB := FindPersonEvent(archive, idB, EventTypeBirth)
+	byScore, byDetail := scoreEventYearSimilarity(birthA, birthB)
 	signals = append(signals, DuplicateSignal{"Birth year", weightBirthYear, byScore, byDetail})
 	totalScore += weightBirthYear * byScore
 
-	// Birth place
-	bpScore, bpDetail := scorePlaceSimilarity(propsA, propsB, PersonPropertyBornAt, archive)
+	bpScore, bpDetail := scoreEventPlaceSimilarity(birthA, birthB, archive)
 	signals = append(signals, DuplicateSignal{"Birth place", weightBirthPlace, bpScore, bpDetail})
 	totalScore += weightBirthPlace * bpScore
 
-	// Death year
-	dyScore, dyDetail := scoreYearSimilarity(propsA, propsB, PersonPropertyDiedOn)
+	// Death year and place
+	_, deathA := FindPersonEvent(archive, idA, EventTypeDeath)
+	_, deathB := FindPersonEvent(archive, idB, EventTypeDeath)
+	dyScore, dyDetail := scoreEventYearSimilarity(deathA, deathB)
 	signals = append(signals, DuplicateSignal{"Death year", weightDeathYear, dyScore, dyDetail})
 	totalScore += weightDeathYear * dyScore
 
-	// Death place
-	dpScore, dpDetail := scorePlaceSimilarity(propsA, propsB, PersonPropertyDiedAt, archive)
+	dpScore, dpDetail := scoreEventPlaceSimilarity(deathA, deathB, archive)
 	signals = append(signals, DuplicateSignal{"Death place", weightDeathPlace, dpScore, dpDetail})
 	totalScore += weightDeathPlace * dpScore
 
@@ -431,6 +424,64 @@ func scoreYearSimilarity(propsA, propsB map[string]any, propertyKey string) (flo
 	default:
 		return 0, "different"
 	}
+}
+
+// scoreEventYearSimilarity compares years from two events.
+func scoreEventYearSimilarity(eventA, eventB *Event) (float64, string) {
+	yearA, yearB := 0, 0
+	if eventA != nil {
+		yearA = ExtractFirstYear(string(eventA.Date))
+	}
+	if eventB != nil {
+		yearB = ExtractFirstYear(string(eventB.Date))
+	}
+
+	if yearA == 0 || yearB == 0 {
+		return 0, "no data"
+	}
+
+	diff := yearA - yearB
+	if diff < 0 {
+		diff = -diff
+	}
+
+	switch {
+	case diff == 0:
+		return 1.0, "exact match"
+	case diff <= 1:
+		return 0.75, "within 1 year"
+	case diff <= 2:
+		return 0.5, "within 2 years"
+	default:
+		return 0, "different"
+	}
+}
+
+// scoreEventPlaceSimilarity compares place references from two events.
+func scoreEventPlaceSimilarity(eventA, eventB *Event, archive *GLXFile) (float64, string) {
+	placeA, placeB := "", ""
+	if eventA != nil {
+		placeA = eventA.PlaceID
+	}
+	if eventB != nil {
+		placeB = eventB.PlaceID
+	}
+
+	if placeA == "" || placeB == "" {
+		return 0, "no data"
+	}
+
+	if placeA == placeB {
+		placeName := placeA
+		if archive != nil && archive.Places != nil {
+			if p, ok := archive.Places[placeA]; ok && p != nil {
+				placeName = p.Name
+			}
+		}
+		return 1.0, placeName
+	}
+
+	return 0, "different"
 }
 
 // scorePlaceSimilarity compares place references from person properties.

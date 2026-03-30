@@ -239,12 +239,18 @@ func TestFindDuplicates_SinglePerson(t *testing.T) {
 func TestFindDuplicates_ObviousDuplicate(t *testing.T) {
 	archive := &GLXFile{
 		Persons: map[string]*Person{
-			"person-r-webb": {Properties: map[string]any{
-				"name": "R Webb", "born_on": "1815", "born_at": "place-va",
-			}},
-			"person-robert-webb": {Properties: map[string]any{
-				"name": "Robert Webb", "born_on": "1815", "born_at": "place-va",
-			}},
+			"person-r-webb":      {Properties: map[string]any{"name": "R Webb"}},
+			"person-robert-webb": {Properties: map[string]any{"name": "Robert Webb"}},
+		},
+		Events: map[string]*Event{
+			"event-birth-r-webb": {
+				Type: EventTypeBirth, Date: "1815", PlaceID: "place-va",
+				Participants: []Participant{{Person: "person-r-webb", Role: ParticipantRolePrincipal}},
+			},
+			"event-birth-robert-webb": {
+				Type: EventTypeBirth, Date: "1815", PlaceID: "place-va",
+				Participants: []Participant{{Person: "person-robert-webb", Role: ParticipantRolePrincipal}},
+			},
 		},
 	}
 	result, err := FindDuplicates(archive, DuplicateOptions{Threshold: 0.5})
@@ -256,8 +262,18 @@ func TestFindDuplicates_ObviousDuplicate(t *testing.T) {
 func TestFindDuplicates_RelatedPersonsSkipped(t *testing.T) {
 	archive := &GLXFile{
 		Persons: map[string]*Person{
-			"person-john": {Properties: map[string]any{"name": "John Smith", "born_on": "1850"}},
-			"person-john-jr": {Properties: map[string]any{"name": "John Smith", "born_on": "1875"}},
+			"person-john":    {Properties: map[string]any{"name": "John Smith"}},
+			"person-john-jr": {Properties: map[string]any{"name": "John Smith"}},
+		},
+		Events: map[string]*Event{
+			"event-birth-john": {
+				Type: EventTypeBirth, Date: "1850",
+				Participants: []Participant{{Person: "person-john", Role: ParticipantRolePrincipal}},
+			},
+			"event-birth-john-jr": {
+				Type: EventTypeBirth, Date: "1875",
+				Participants: []Participant{{Person: "person-john-jr", Role: ParticipantRolePrincipal}},
+			},
 		},
 		Relationships: map[string]*Relationship{
 			"rel-1": {
