@@ -532,6 +532,74 @@ func TestConvertResidence_TwoUndatedAppendsToList(t *testing.T) {
 	}
 }
 
+// TestConvertResidence_NoPlacCreatesEvent tests that a RESI record without a PLAC
+// sub-record creates a residence event instead of being silently dropped.
+// This is the bug reported in #488.
+func TestConvertResidence_NoPlacCreatesEvent(t *testing.T) {
+	gedcom := `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Heinrich /Bullinger/
+1 RESI
+2 DATE 1580
+2 TYPE married
+2 NOTE Lived in Zurich
+0 TRLR`
+
+	glxFile, _, err := ImportGEDCOM(strings.NewReader(gedcom), nil)
+	require.NoError(t, err)
+
+	// Should create a residence event (not a property, since no PLAC)
+	var residenceEvent *Event
+	for _, event := range glxFile.Events {
+		if event.Type == EventTypeResidence {
+			residenceEvent = event
+			break
+		}
+	}
+
+	require.NotNil(t, residenceEvent, "RESI without PLAC should create a residence event, not be dropped")
+	assert.Equal(t, DateString("1580"), residenceEvent.Date)
+	assert.Len(t, residenceEvent.Participants, 1)
+	assert.True(t, strings.HasPrefix(residenceEvent.Participants[0].Person, "person-"),
+		"participant should reference a person entity, got %q", residenceEvent.Participants[0].Person)
+	assert.NotEmpty(t, residenceEvent.Title, "residence event should have a generated title")
+
+	// TYPE should be stored as event_subtype property (not in notes)
+	assert.Equal(t, "married", residenceEvent.Properties["event_subtype"],
+		"RESI TYPE should be stored as event_subtype property")
+
+	// NOTE should be preserved
+	assert.Contains(t, residenceEvent.Notes, "Lived in Zurich",
+		"RESI NOTE should be preserved in event notes")
+}
+
+// TestConvertResidence_BareRESIYCreatesEvent tests that a bare "RESI Y" marker
+// creates a residence event with no date or place.
+func TestConvertResidence_BareRESIYCreatesEvent(t *testing.T) {
+	gedcom := `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Test /Person/
+1 RESI Y
+0 TRLR`
+
+	glxFile, _, err := ImportGEDCOM(strings.NewReader(gedcom), nil)
+	require.NoError(t, err)
+
+	var residenceEvent *Event
+	for _, event := range glxFile.Events {
+		if event.Type == EventTypeResidence {
+			residenceEvent = event
+			break
+		}
+	}
+
+	require.NotNil(t, residenceEvent, "bare RESI Y should create a residence event, not be dropped")
+}
+
 func TestImportPersonNote_StoredInNotesField(t *testing.T) {
 	gedcom := "0 HEAD\n1 GEDC\n2 VERS 5.5.1\n" +
 		"0 @I1@ INDI\n1 NAME John /Smith/\n1 NOTE This is a person note\n" +
@@ -684,6 +752,253 @@ func TestImportTITL_WithDatePreserved(t *testing.T) {
 			assert.Contains(t, itemMap, "date")
 		}
 	}
+}
+
+// TestImportASSOEvent_WitnessAdded tests that ASSO subrecords on events
+// create additional participants with the correct role. Fixes #527.
+func TestImportASSOEvent_WitnessAdded(t *testing.T) {
+	gedcom := `0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+0 @I1@ INDI
+1 NAME John /Smith/
+1 BIRT
+2 DATE 15 JAN 1850
+2 PLAC Leeds, Yorkshire, England
+2 ASSO @I2@
+3 ROLE WITN
+0 @I2@ INDI
+1 NAME Jane /Doe/
+0 TRLR`
+
+	glxFile, _, err := ImportGEDCOM(strings.NewReader(gedcom), nil)
+	require.NoError(t, err)
+
+	// Find the birth event
+	var birthEvent *Event
+	for _, event := range glxFile.Events {
+		if event.Type == EventTypeBirth {
+			birthEvent = event
+			break
+		}
+	}
+	require.NotNil(t, birthEvent, "birth event should exist")
+
+	// Should have 2 participants: principal (John) + witness (Jane)
+	assert.Len(t, birthEvent.Participants, 2, "birth event should have principal + witness")
+
+	var hasWitness bool
+	for _, p := range birthEvent.Participants {
+		if p.Role == ParticipantRoleWitness {
+			hasWitness = true
+		}
+	}
+	assert.True(t, hasWitness, "birth event should have a witness participant from ASSO")
+}
+
+// TestImportASSOEvent_OfficiantRole tests that ASSO with ROLE OFFICIATOR maps to officiant.
+// This verifies ROLE parsing actually works (not just default witness).
+func TestImportASSOEvent_OfficiantRole(t *testing.T) {
+	gedcom := `0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+0 @I1@ INDI
+1 NAME John /Smith/
+1 BIRT
+2 DATE 15 JAN 1850
+2 ASSO @I2@
+3 ROLE OFFICIATOR
+0 @I2@ INDI
+1 NAME Rev. Thomas /Brown/
+0 TRLR`
+
+	glxFile, _, err := ImportGEDCOM(strings.NewReader(gedcom), nil)
+	require.NoError(t, err)
+
+	var birthEvent *Event
+	for _, event := range glxFile.Events {
+		if event.Type == EventTypeBirth {
+			birthEvent = event
+			break
+		}
+	}
+	require.NotNil(t, birthEvent)
+	require.Len(t, birthEvent.Participants, 2)
+
+	// Verify the ASSO participant has officiant role, not default witness
+	var assoRole string
+	for _, p := range birthEvent.Participants {
+		if p.Role != ParticipantRolePrincipal {
+			assoRole = p.Role
+		}
+	}
+	assert.Equal(t, ParticipantRoleOfficiant, assoRole, "ASSO with ROLE OFFICIATOR should map to officiant, not default witness")
+}
+
+// TestImportASSOEvent_VoidSkipped tests that ASSO @VOID@ (unknown person) is skipped.
+func TestImportASSOEvent_VoidSkipped(t *testing.T) {
+	gedcom := `0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+0 @I1@ INDI
+1 NAME John /Smith/
+1 BIRT
+2 DATE 15 JAN 1850
+2 ASSO @VOID@
+3 ROLE OFFICIATOR
+0 TRLR`
+
+	glxFile, _, err := ImportGEDCOM(strings.NewReader(gedcom), nil)
+	require.NoError(t, err)
+
+	var birthEvent *Event
+	for _, event := range glxFile.Events {
+		if event.Type == EventTypeBirth {
+			birthEvent = event
+			break
+		}
+	}
+	require.NotNil(t, birthEvent)
+
+	// @VOID@ ASSO should be skipped — only principal participant
+	assert.Len(t, birthEvent.Participants, 1, "VOID ASSO should not create a participant")
+}
+
+// TestImportASSOFamily_MarriageWitness tests that ASSO on a FAM MARR event
+// adds a witness participant to the marriage event.
+func TestImportASSOFamily_MarriageWitness(t *testing.T) {
+	gedcom := `0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Mary /Jones/
+1 SEX F
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Best /Friend/
+1 SEX M
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 15 JUN 1950
+2 ASSO @I3@
+3 ROLE WITN
+0 TRLR`
+
+	glxFile, _, err := ImportGEDCOM(strings.NewReader(gedcom), nil)
+	require.NoError(t, err)
+
+	var marrEvent *Event
+	for _, event := range glxFile.Events {
+		if event.Type == EventTypeMarriage {
+			marrEvent = event
+			break
+		}
+	}
+	require.NotNil(t, marrEvent, "marriage event should exist")
+
+	// Should have 3 participants: 2 spouses + 1 witness
+	assert.Len(t, marrEvent.Participants, 3, "marriage should have 2 spouses + 1 witness")
+
+	var hasWitness bool
+	for _, p := range marrEvent.Participants {
+		if p.Role == ParticipantRoleWitness {
+			hasWitness = true
+		}
+	}
+	assert.True(t, hasWitness, "marriage event should have a witness from ASSO")
+}
+
+// TestImportASSOEvent_RELAMapping tests that GEDCOM 5.5.1 RELA tags on ASSO
+// subrecords are parsed and mapped to participant roles.
+func TestImportASSOEvent_RELAMapping(t *testing.T) {
+	gedcom := `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME John /Smith/
+1 BIRT
+2 DATE 15 JAN 1850
+2 ASSO @I2@
+3 RELA Godfather
+0 @I2@ INDI
+1 NAME Thomas /Brown/
+0 TRLR`
+
+	glxFile, _, err := ImportGEDCOM(strings.NewReader(gedcom), nil)
+	require.NoError(t, err)
+
+	var birthEvent *Event
+	for _, event := range glxFile.Events {
+		if event.Type == EventTypeBirth {
+			birthEvent = event
+			break
+		}
+	}
+	require.NotNil(t, birthEvent)
+	require.Len(t, birthEvent.Participants, 2, "birth should have principal + ASSO participant")
+
+	// RELA "Godfather" is not in the role map, so it should be preserved
+	// in notes and the role should default to witness
+	var assoParticipant *Participant
+	for i := range birthEvent.Participants {
+		if birthEvent.Participants[i].Role != ParticipantRolePrincipal {
+			assoParticipant = &birthEvent.Participants[i]
+		}
+	}
+	require.NotNil(t, assoParticipant, "ASSO participant should exist")
+	assert.Equal(t, ParticipantRoleWitness, assoParticipant.Role,
+		"unmapped RELA should default to witness")
+	assert.Contains(t, assoParticipant.Notes, "GEDCOM RELA: Godfather",
+		"original RELA value should be preserved in notes")
+}
+
+// TestImportASSOEvent_MissingPersonWarning tests that ASSO referencing a
+// non-existent person produces a warning (not a silent drop).
+func TestImportASSOEvent_MissingPersonWarning(t *testing.T) {
+	gedcom := `0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+0 @I1@ INDI
+1 NAME John /Smith/
+1 BIRT
+2 DATE 15 JAN 1850
+2 ASSO @I999@
+3 ROLE WITN
+0 TRLR`
+
+	glxFile, stats, err := ImportGEDCOM(strings.NewReader(gedcom), nil)
+	require.NoError(t, err)
+
+	// Birth should have only the principal (ASSO skipped)
+	var birthEvent *Event
+	for _, event := range glxFile.Events {
+		if event.Type == EventTypeBirth {
+			birthEvent = event
+			break
+		}
+	}
+	require.NotNil(t, birthEvent)
+	assert.Len(t, birthEvent.Participants, 1, "missing ASSO person should be skipped")
+
+	// Should have produced a warning
+	var foundWarning bool
+	for _, w := range stats.Statistics.Warnings {
+		if strings.Contains(w.Message, "@I999@") {
+			foundWarning = true
+		}
+	}
+	assert.True(t, foundWarning, "missing ASSO reference should produce a warning")
 }
 
 // TestImportSex_UnrecognizedValuePreserved tests that non-standard GEDCOM SEX

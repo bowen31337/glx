@@ -27,9 +27,12 @@ func convertIndividual(indiRecord *GEDCOMRecord, conv *ConversionContext) error 
 		return fmt.Errorf("%w: expected %s, got %s", ErrUnexpectedRecordType, GedcomTagIndi, indiRecord.Tag)
 	}
 
-	// Generate person ID
-	personID := generatePersonID(conv)
-	conv.PersonIDMap[indiRecord.XRef] = personID
+	// Use pre-assigned person ID (from ASSO pre-pass) or generate a new one
+	personID, exists := conv.PersonIDMap[indiRecord.XRef]
+	if !exists {
+		personID = generatePersonID(conv)
+		conv.PersonIDMap[indiRecord.XRef] = personID
+	}
 
 	conv.Logger.LogInfof("Converting INDI %s -> %s", indiRecord.XRef, personID)
 
@@ -277,13 +280,16 @@ func convertIndividualEvent(personID string, person *Person, eventRecord *GEDCOM
 		}
 	}
 
-	// Add participant to event
+	// Add principal participant
 	event.Participants = []Participant{
 		{
 			Person: personID,
 			Role:   ParticipantRolePrincipal,
 		},
 	}
+
+	// Add ASSO participants (witnesses, officiants, etc.). Fixes #527.
+	appendASSOParticipants(event, eventRecord, conv)
 
 	// Generate event title
 	event.Title = GenerateEventTitle(eventType, []string{PersonDisplayName(person)}, event.Date)
@@ -533,6 +539,7 @@ func convertResidence(personID string, person *Person, resiRecord *GEDCOMRecord,
 	}
 
 	if placeID != "" {
+		// RESI with PLAC → store as residence property (place reference)
 		if dateStr != "" {
 			appendResidence(person, map[string]any{
 				"value": placeID,
@@ -543,6 +550,58 @@ func convertResidence(personID string, person *Person, resiRecord *GEDCOMRecord,
 		}
 
 		createPropertyAssertion(personID, PersonPropertyResidence, placeID, resiRecord, conv)
+	} else {
+		// RESI without PLAC → create a residence event to preserve
+		// date/type/notes that would otherwise be lost. Fixes #488.
+		eventID := generateEventID(conv)
+
+		event := &Event{
+			Type:       EventTypeResidence,
+			Properties: make(map[string]any),
+		}
+
+		// Extract common event details (DATE, NOTE, ADDR, SOUR, OBJE)
+		extractEventDetails(eventID, resiRecord, event, conv, true)
+
+		// Process RESI-specific tags (TYPE, AGE, CAUS)
+		for _, sub := range resiRecord.SubRecords {
+			switch sub.Tag {
+			case GedcomTagType:
+				if propertyKey, ok := conv.GEDCOMIndex.EventProperties[sub.Tag]; ok {
+					event.Properties[propertyKey] = sub.Value
+				}
+			case GedcomTagAge:
+				if propertyKey, ok := conv.GEDCOMIndex.EventProperties[sub.Tag]; ok {
+					event.Properties[propertyKey] = sub.Value
+				}
+			case GedcomTagCaus:
+				if propertyKey, ok := conv.GEDCOMIndex.EventProperties[sub.Tag]; ok {
+					event.Properties[propertyKey] = sub.Value
+				}
+			}
+		}
+
+		// Preserve non-standard RESI line value (e.g., a descriptive string)
+		// in notes. "Y" is a standard GEDCOM marker and is not preserved.
+		if resiRecord.Value != "" && resiRecord.Value != "Y" {
+			note := "GEDCOM RESI value: " + resiRecord.Value
+			if event.Notes != "" {
+				event.Notes += "\n" + note
+			} else {
+				event.Notes = note
+			}
+		}
+
+		// Add participant
+		event.Participants = []Participant{
+			{Person: personID, Role: ParticipantRolePrincipal},
+		}
+
+		// Generate title for consistency with other imported events
+		event.Title = GenerateEventTitle(EventTypeResidence, []string{PersonDisplayName(person)}, event.Date)
+
+		conv.GLX.Events[eventID] = event
+		conv.Stats.EventsCreated++
 	}
 }
 
@@ -792,4 +851,84 @@ func convertNegativeAssertion(personID string, noRecord *GEDCOMRecord, conv *Con
 		Citations: refs.CitationIDs,
 	}
 	conv.Stats.AssertionsCreated++
+}
+
+// convertASSOToParticipant converts a GEDCOM ASSO subrecord to a GLX Participant.
+// Returns nil if the ASSO references @VOID@ or an unresolvable person.
+func convertASSOToParticipant(assoRecord *GEDCOMRecord, conv *ConversionContext) *Participant {
+	// Resolve person reference
+	personRef := assoRecord.Value
+	if personRef == "" || personRef == "@VOID@" {
+		return nil // Unknown person — skip
+	}
+
+	personID, ok := conv.PersonIDMap[personRef]
+	if !ok {
+		conv.addWarning(0, GedcomTagAsso,
+			fmt.Sprintf("ASSO references unknown person %s — skipping participant", personRef))
+		return nil
+	}
+
+	// Extract ROLE or RELA
+	// GEDCOM 7.0 uses ROLE; GEDCOM 5.5.1 uses RELA for the relationship
+	// to the principal. Both are mapped through gedcomRoleToGLX when possible.
+	role := ParticipantRoleWitness // default for ASSO without ROLE/RELA (most common case)
+	var notes []string
+	for _, sub := range assoRecord.SubRecords {
+		switch sub.Tag {
+		case GedcomTagRole:
+			glxRole, mapped := gedcomRoleToGLX[strings.ToUpper(sub.Value)]
+			if mapped {
+				role = glxRole
+			} else if sub.Value != "" {
+				// Unknown role — don't set as Role (would fail vocab validation).
+				// Use witness as default and preserve original in notes.
+				role = ParticipantRoleWitness
+				notes = append(notes, "GEDCOM ROLE: "+sub.Value)
+			}
+			// Check for PHRASE sub-sub-record (GEDCOM 7.0)
+			for _, roleSub := range sub.SubRecords {
+				if roleSub.Tag == "PHRASE" && roleSub.Value != "" {
+					notes = append(notes, "Role: "+roleSub.Value)
+				}
+			}
+		case "RELA":
+			// GEDCOM 5.5.1 RELA tag — try to map, otherwise preserve in notes
+			glxRole, mapped := gedcomRoleToGLX[strings.ToUpper(sub.Value)]
+			if mapped {
+				role = glxRole
+			} else if sub.Value != "" {
+				notes = append(notes, "GEDCOM RELA: "+sub.Value)
+			}
+		case GedcomTagNote:
+			noteText := extractNoteText(sub, conv)
+			if noteText != "" {
+				notes = append(notes, noteText)
+			}
+		}
+	}
+
+	participant := &Participant{
+		Person: personID,
+		Role:   role,
+	}
+	if len(notes) > 0 {
+		participant.Notes = strings.Join(notes, "\n")
+	}
+
+	return participant
+}
+
+// appendASSOParticipants scans an event record's sub-records for ASSO tags
+// and appends the resulting participants to the event. Used by both individual
+// and family event converters.
+func appendASSOParticipants(event *Event, eventRecord *GEDCOMRecord, conv *ConversionContext) {
+	for _, sub := range eventRecord.SubRecords {
+		if sub.Tag == GedcomTagAsso {
+			p := convertASSOToParticipant(sub, conv)
+			if p != nil {
+				event.Participants = append(event.Participants, *p)
+			}
+		}
+	}
 }
